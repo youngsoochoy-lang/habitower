@@ -1,0 +1,8 @@
+# your own progress (quests, XP, coins, history, home upgrades) stays on each machine
+claude-office/data/quests.json
+claude-office/data/*.tmp
+# per-machine Claude Code settings
+.claude/settings.local.json
+node_modules/
+.DS_Store
+Thumbs.db

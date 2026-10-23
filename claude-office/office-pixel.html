@@ -1,0 +1,874 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Habitower · pixel</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/galmuri@2.39.4/dist/galmuri.css">
+<style>
+:root{--bg:#12141c;--panel:#1b1e2b;--panel2:#232738;--line:#2e3248;--ink:#ece8dc;--dim:#8b90a8;--green:#5ee38a;--red:#ff6b6b;--amber:#ffcc4d;--coral:#d97757}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:12px/1.45 Galmuri11,"Malgun Gothic","Apple SD Gothic Neo","Segoe UI",sans-serif}
+.app{display:grid;grid-template-columns:250px 1fr;grid-template-rows:auto 1fr;height:100vh}
+header{grid-column:1/-1;display:flex;align-items:center;gap:14px;padding:8px 16px;background:var(--panel);border-bottom:2px solid var(--line)}
+.brand{font-family:Galmuri14,Galmuri11,sans-serif;font-size:15px;letter-spacing:1px;color:var(--coral)}
+.lift{display:flex;align-items:center;gap:6px;background:#000;border:2px solid #444;border-radius:4px;padding:2px 10px;font-family:Galmuri9,monospace;color:#ff9b3d;font-size:16px;min-width:76px;justify-content:center;text-shadow:0 0 6px #ff7a00}
+.lift.moving .arrow{animation:blink .4s steps(2) infinite}
+@keyframes blink{50%{opacity:.15}}
+.sess{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--dim)}
+.sess b{color:var(--ink);font-weight:normal}
+.live{display:flex;align-items:center;gap:6px;color:var(--dim)}
+.dot{width:8px;height:8px;border-radius:50%;background:#555;flex:none}
+.dot.on{background:var(--green);box-shadow:0 0 6px var(--green)}
+aside{background:var(--panel);border-right:2px solid var(--line);overflow:auto;padding:10px 8px}
+aside h2{font-size:11px;font-weight:normal;color:var(--dim);margin:2px 6px 8px;letter-spacing:1px}
+.floor{display:flex;gap:8px;align-items:flex-start;padding:6px;border-radius:4px;cursor:pointer;border:1px solid transparent}
+.floor:hover{background:var(--panel2)}
+.floor.cur{background:var(--panel2);border-color:var(--coral)}
+.fnum{font-family:Galmuri9,monospace;min-width:34px;text-align:right;color:var(--amber)}
+.fbody{flex:1;min-width:0}
+.fname{display:flex;align-items:center;gap:6px}
+.fname span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.floor.dark .fname span,.floor.dark .fnum{opacity:.45}
+.shops{margin-top:4px;display:flex;flex-direction:column;gap:2px}
+.shop{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--dim);padding:2px 4px;border-radius:3px}
+.shop:hover{background:#ffffff10;color:var(--ink)}
+.shop.cur{color:var(--ink);background:#d9775722}
+.shop span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.more{font-size:11px;color:var(--dim);padding-left:4px}
+main{display:flex;flex-direction:column;min-height:0;padding:12px 16px;gap:10px;overflow:auto}
+.stage{position:relative;width:100%;max-width:1200px;margin:0 auto;border:3px solid #000;border-radius:4px;box-shadow:0 0 0 2px var(--line);background:#000}
+canvas{display:block;width:100%;height:auto;image-rendering:pixelated}
+.overlay{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+.stage.switching canvas{animation:lift 1s ease}
+@keyframes lift{0%{filter:brightness(1)}35%{filter:brightness(0)}65%{filter:brightness(0)}100%{filter:brightness(1)}}
+.tag{position:absolute;font-size:var(--fs);padding:.1em .45em;background:#000a;color:#fff;border-radius:3px;white-space:nowrap;transform:translateY(2px)}
+.tag i{font-style:normal;opacity:.6;margin-left:.4em}
+.board{position:absolute;font-size:calc(var(--fs)*.88);line-height:1.3;color:#223;overflow:hidden;padding:.2em .5em}
+.board div{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.board .done{color:#7a8;text-decoration:line-through}
+.board .doing{color:#c33}
+.bub{position:absolute;transform:translate(-50%,-100%);max-width:calc(var(--fs)*20);width:max-content;font-size:var(--fs);line-height:1.35;padding:.35em .6em;border-radius:6px;background:#fff;color:#222;border:2px solid #222;box-shadow:2px 2px 0 #0006;transition:opacity .2s;word-break:keep-all;overflow-wrap:anywhere}
+.bub::after{content:"";position:absolute;left:50%;bottom:-7px;margin-left:-5px;border:5px solid transparent;border-top-color:#222;border-bottom:0}
+.bub.tool{background:#222c;color:#fff;border-color:#000;border-radius:4px;padding:.15em .5em;white-space:nowrap;max-width:none}
+.bub.tool::after{border-top-color:#000}
+.bub.think{border-radius:1.2em;font-style:italic;color:#445;background:#f4f6ff}
+.bub.think::after{width:7px;height:7px;border:2px solid #222;border-radius:50%;background:#f4f6ff;bottom:-12px;margin-left:-14px}
+.bub.error{background:#ffdede;border-color:#b11;color:#811}
+.bub.error::after{border-top-color:#b11}
+.bub.ask{background:#fff4c2;border-color:#a77b00}
+.bub.report{background:#ddf7e3;border-color:#2a8a45}
+.bub.me{background:#dfe9ff;border-color:#2a4fa8}
+.bub.zzz{background:none;border:none;box-shadow:none;color:#cde;font-weight:bold;padding:0}
+.bub.zzz::after{display:none}
+.banner{position:absolute;left:50%;top:44%;transform:translate(-50%,-50%);font-family:Galmuri14,Galmuri11,sans-serif;font-size:calc(var(--fs)*1.6);background:#000c;color:#fff;padding:.5em 1em;border-radius:6px;opacity:0;transition:opacity .3s;white-space:nowrap}
+.banner.show{opacity:1}
+.legend{max-width:1200px;margin:0 auto;width:100%;display:flex;flex-wrap:wrap;gap:6px 14px;color:var(--dim);font-size:11px}
+.log{max-width:1200px;margin:0 auto;width:100%;background:var(--panel);border:2px solid var(--line);border-radius:4px;font-size:11.5px;min-height:120px;flex:1;overflow:auto}
+.log div{display:grid;grid-template-columns:64px 96px 1fr;gap:8px;padding:2px 10px;border-bottom:1px solid #ffffff08}
+.log time{color:var(--dim)}
+.log .who{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.log .txt{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.log .err{color:var(--red)}
+.empty{padding:40px;text-align:center;color:var(--dim)}
+@media (max-width:760px){.app{grid-template-columns:1fr;grid-template-rows:auto auto 1fr}aside{max-height:180px;border-right:0;border-bottom:2px solid var(--line)}main{padding:10px}}
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <div class="brand">HABITOWER</div>
+    <div class="lift" id="lift"><span class="arrow" id="arrow"></span><span id="liftNum">--</span></div>
+    <div class="sess" id="sess">Loading…</div>
+    <div class="live"><span class="dot" id="liveDot"></span><span id="liveTxt">offline</span></div>
+  </header>
+  <aside>
+    <h2>층별 안내 · FLOOR GUIDE</h2>
+    <div id="floors"></div>
+  </aside>
+  <main>
+    <div class="stage" id="stage">
+      <canvas id="cv"></canvas>
+      <div class="overlay" id="ov"><div class="banner" id="banner"></div></div>
+    </div>
+    <div class="legend">
+      <span>📚 Read · Grep · Glob</span><span>💻 Edit · Write</span><span>🗄️ Bash · PowerShell · git</span>
+      <span>🌐 Web · MCP · Browser</span><span>🗒️ Plans · Todos</span><span>🧑‍💻 Questions for you</span>
+      <span>🛗 Subagents (Explore 🟢 · Plan 🟣)</span>
+    </div>
+    <div class="log" id="log"></div>
+  </main>
+</div>
+<script>
+// ======================================================================
+//  World geometry (logical pixels; drawn at 3x and scaled by CSS)
+// ======================================================================
+const W = 480, H = 300, S = 3, HALL = 150;
+const cv = document.getElementById('cv');
+cv.width = W * S; cv.height = H * S;
+const g = cv.getContext('2d');
+g.imageSmoothingEnabled = false;
+g.setTransform(S, 0, 0, S, 0, 0);
+const R = (x, y, w, h, c) => { g.fillStyle = c; g.fillRect(Math.round(x), Math.round(y), w, h); };
+
+// spot = [x, y, pose, facing, seated]
+const ROOMS = {
+  library:  { x: 0,   y: 8,   w: 150, h: 128, wall: '#e8d9bb', floor: '#b48656', door: 75,  label: '📚 Library', ko: '자료실',
+              spots: [[34,82,'read','front'],[64,82,'read','front'],[94,82,'read','front'],[124,82,'read','front'],[50,124,'read','front'],[110,124,'read','front']] },
+  dev:      { x: 150, y: 8,   w: 150, h: 128, wall: '#dbe5ee', floor: '#8b98a8', door: 225, label: '💻 Dev', ko: '개발실',
+              spots: [[203,78,'type','front',1],[273,78,'type','front',1],[200,122,'type','back'],[250,122,'type','back']] },
+  server:   { x: 300, y: 8,   w: 140, h: 128, wall: '#28303d', floor: '#3a4453', door: 370, label: '🗄️ Server', ko: '서버실',
+              spots: [[334,98,'work','back'],[398,98,'work','back'],[366,122,'work','back'],[318,122,'work','back']] },
+  research: { x: 0,   y: 164, w: 150, h: 136, wall: '#d4ece1', floor: '#7aac9b', door: 75,  label: '🌐 Research', ko: '정보검색실',
+              spots: [[75,240,'type','front',1],[42,284,'work','back'],[108,284,'work','back']] },
+  meeting:  { x: 150, y: 164, w: 150, h: 136, wall: '#eee3d2', floor: '#c19669', door: 225, label: '🗒️ Meeting', ko: '회의실',
+              spots: [[162,232,'write','back'],[186,238,'stand','front'],[264,238,'stand','front'],[225,290,'stand','back']] },
+  office:   { x: 300, y: 164, w: 140, h: 136, wall: '#efe0c8', floor: '#a27f59', door: 371, label: '🧑‍💻 Desks', ko: '내 자리',
+              spots: [[318,282,'stand','back'],[340,286,'stand','back'],[352,276,'stand','back']] },
+  elevator: { x: 440, y: 8,   w: 40,  h: 292, door: 460, spots: [[460,156,'stand','front']] },
+};
+const CLAUDE_SEAT = [334, 240, 'sit', 'front', 1];
+const ME_SEAT     = [408, 240, 'type', 'front', 1];
+const VISIT       = [400, 280, 'stand', 'back'];
+const LIFT_SPOT   = [460, 156, 'stand', 'front'];
+const BOARD = { x: 172, y: 167, w: 124, h: 46 };
+
+const roomAt = (x, y) => {
+  if (x >= 440) return 'elevator';
+  if (y > 136 && y < 164) return 'hall';
+  for (const [k, r] of Object.entries(ROOMS)) if (x >= r.x && x < r.x + r.w && y >= r.y && y < r.y + r.h) return k;
+  return 'hall';
+};
+
+// ======================================================================
+//  Tool -> room mapping
+// ======================================================================
+function roomFor(name) {
+  if (/^(TodoWrite|TaskCreate|TaskUpdate|TaskList|TaskGet|EnterPlanMode)$|update_plan$|wrap_up$|mark_chapter$/.test(name)) return 'meeting';
+  if (/^(AskUserQuestion|ExitPlanMode)$/.test(name)) return 'mydesk';
+  if (/^(Read|Glob|Grep|LS|NotebookRead|ToolSearch|ListMcpResourcesTool|ReadMcpResourceTool)$/.test(name)) return 'library';
+  if (/^(Edit|Write|MultiEdit|NotebookEdit)$/.test(name)) return 'dev';
+  if (/^(Bash|PowerShell|BashOutput|KillShell|KillBash|Monitor|TaskStop|TaskOutput)$/.test(name)) return 'server';
+  if (/^(Agent|Task|SendMessage|ScheduleWakeup|CronCreate|CronDelete|CronList)$/.test(name)) return 'desk';
+  return 'research';  // WebSearch, WebFetch, Skill, mcp__*, anything else
+}
+function emojiFor(name, label) {
+  if (/^(Grep|Glob|ToolSearch)$/.test(name)) return '🔍';
+  if (name === 'Read' || name === 'NotebookRead') return '📖';
+  if (/^(Edit|MultiEdit|NotebookEdit)$/.test(name)) return '✏️';
+  if (name === 'Write') return '📝';
+  if (/^(Bash|PowerShell)$/.test(name)) return /\bgit\b/.test(label) ? '🌿' : '⚡';
+  if (name === 'WebSearch') return '🔎';
+  if (name === 'WebFetch') return '🌐';
+  if (/Browser|chrome/i.test(name)) return '🧭';
+  if (name.startsWith('mcp__')) return '🔌';
+  if (name === 'Skill') return '🎓';
+  if (roomFor(name) === 'meeting') return '🗒️';
+  if (roomFor(name) === 'mydesk') return '❓';
+  return '🔧';
+}
+
+// ======================================================================
+//  Characters
+// ======================================================================
+const LOOKS = {
+  claude:  { shirt: '#d97757', pants: '#5a4434', hair: '#3a281c', skin: '#f2c7a5', badge: true },
+  me:      { shirt: '#3b6fd4', pants: '#2a2e3a', hair: '#1b1717', skin: '#eec09c', hood: true },
+  Explore: { shirt: '#3da35a', pants: '#4a3a2a', hair: '#5a3a1a', skin: '#f0c49f', hat: '#2b7a40' },
+  Plan:    { shirt: '#8a5bd6', pants: '#30284a', hair: '#2a1f1a', skin: '#efc6a6', glasses: true },
+  'general-purpose': { shirt: '#4a8fc2', pants: '#2f3542', hair: '#6b4a2a', skin: '#f1c8a8', tie: '#c84b4b' },
+};
+function lookFor(type) {
+  if (LOOKS[type]) return LOOKS[type];
+  let h = 0; for (const ch of type) h = (h * 31 + ch.charCodeAt(0)) >>> 0;
+  return { shirt: `hsl(${h % 360} 55% 52%)`, pants: '#33323a', hair: '#3a2a1f', skin: '#f0c6a2', tie: `hsl(${(h + 180) % 360} 60% 45%)` };
+}
+const WORK_ROOM = { Explore: 'library', Plan: 'meeting' };
+
+const ov = document.getElementById('ov');
+let now = performance.now();
+let instant = false;           // true while replaying history: no walking, no bubbles
+const chars = [];
+
+class Char {
+  constructor(id, kind, look, name) {
+    Object.assign(this, { id, kind, look, name, x: 460, y: 156, path: [], pose: 'stand', facing: 'front', seated: 0,
+      room: 'elevator', spot: null, hidden: false, bubbleData: null, timers: [], sweatUntil: 0, thinkUntil: 0, onArrive: null });
+    this.el = document.createElement('div');
+    this.el.className = 'bub'; this.el.style.display = 'none';
+    ov.appendChild(this.el);
+    chars.push(this);
+  }
+  place(spot, room) {
+    this.spot = spot; this.room = room;
+    this.x = spot[0]; this.y = spot[1]; this.path = [];
+    this.arrive();
+  }
+  goTo(room, spot, onArrive) {
+    spot = spot || pickSpot(room, this);
+    if (room === 'desk') room = 'office';
+    this.onArrive = onArrive || null;
+    if (instant || this.hidden) { this.place(spot, room); return; }
+    if (this.spot === spot && !this.path.length) { this.arrive(); return; }
+    const from = roomAt(this.x, this.y);
+    const pts = [];
+    const doorOf = r => (ROOMS[r] || ROOMS.office).door;
+    if (from !== room || from === 'hall') {
+      const d1 = doorOf(from), d2 = doorOf(room);
+      if (from !== 'hall') pts.push({ x: d1, y: this.y }, { x: d1, y: HALL });
+      pts.push({ x: d2, y: HALL }, { x: d2, y: spot[1] });
+    }
+    pts.push({ x: spot[0], y: spot[1] });
+    this.path = pts; this.spot = spot; this.room = room; this.seated = 0;
+  }
+  arrive() {
+    const s = this.spot;
+    this.pose = s[2]; this.facing = s[3]; this.seated = s[4] || 0;
+    const f = this.onArrive; this.onArrive = null; f && f();
+  }
+  bubble(type, text, ms = 3500) {
+    if (instant) return;
+    this.bubbleData = { type, text, until: now + ms };
+  }
+  clearBubble(type) { if (!type || this.bubbleData?.type === type) this.bubbleData = null; }
+  later(ms, fn) { if (instant) fn(); else this.timers.push({ at: now + ms, fn }); }
+  cancel() { this.timers = []; this.onArrive = null; }
+  remove() { this.el.remove(); chars.splice(chars.indexOf(this), 1); }
+  update(dt) {
+    for (const t of this.timers.splice(0)) if (t.at <= now) t.fn(); else this.timers.push(t);
+    if (this.path.length) {
+      let step = 115 * dt;
+      while (step > 0 && this.path.length) {
+        const p = this.path[0], dx = p.x - this.x, dy = p.y - this.y, d = Math.hypot(dx, dy);
+        this.facing = Math.abs(dy) > Math.abs(dx) && dy < 0 ? 'back' : 'front';
+        if (d <= step) { this.x = p.x; this.y = p.y; this.path.shift(); step -= d; if (!this.path.length) this.arrive(); }
+        else { this.x += dx / d * step; this.y += dy / d * step; step = 0; }
+      }
+    }
+    if (this.bubbleData && this.bubbleData.until < now) this.bubbleData = null;
+  }
+}
+function pickSpot(room, who) {
+  if (room === 'desk') return CLAUDE_SEAT;
+  const spots = ROOMS[room].spots;
+  const taken = new Set(chars.filter(c => c !== who && !c.hidden).map(c => c.spot));
+  if (who.kind === 'claude' && !taken.has(spots[0])) return spots[0];
+  return spots.find(s => !taken.has(s)) || spots[(chars.indexOf(who) + 1) % spots.length];
+}
+const roomOfSpot = s => s === CLAUDE_SEAT || s === VISIT ? 'office' : s === LIFT_SPOT ? 'elevator' : null;
+
+let claude, me;
+const agents = new Map();      // tool_use id / agentId -> Char
+const departed = new Set();    // keys of agents that already went home
+let replaying = false;
+let agentSeq = 0;
+
+// ======================================================================
+//  Office state driven by events
+// ======================================================================
+const pending = new Map();     // tool_use id -> { who, room, ts }
+const busy = { library: 0, dev: 0, server: 0, research: 0 };
+let boardItems = [];
+let lastEventTs = 0, liftOpenUntil = 0, floorNum = 0;
+
+function resetOffice() {
+  for (const c of [...chars]) c.remove();
+  agents.clear(); departed.clear(); pending.clear(); boardItems = []; agentSeq = 0;
+  for (const k in busy) busy[k] = 0;
+  claude = new Char('main', 'claude', LOOKS.claude, 'Claude');
+  me = new Char('me', 'me', LOOKS.me, 'Me');
+  claude.place(CLAUDE_SEAT, 'office');
+  me.place(ME_SEAT, 'office');
+  renderBoard();
+}
+
+function newAgent(key, type, desc) {
+  const a = new Char(key, 'agent', lookFor(type), `${type}#${++agentSeq}`);
+  a.type = type; a.desc = desc; a.state = 'arriving'; a.hidden = true; a.workRoom = WORK_ROOM[type] || 'dev';
+  agents.set(key, a);
+  return a;
+}
+function agentArrives(a) {
+  if (instant) { a.hidden = false; a.state = 'working'; a.place(pickSpot(a.workRoom, a), a.workRoom); return; }
+  liftOpenUntil = now + 1600;
+  a.later(500, () => {
+    a.hidden = false; a.place(LIFT_SPOT, 'elevator'); a.state = 'working';
+    a.bubble('say', `${a.type === 'Explore' ? '🧢' : a.type === 'Plan' ? '👓' : '💼'} ${a.desc || a.type}`, 2500);
+    a.goTo(a.workRoom);
+  });
+}
+function agentReports(a, text, error) {
+  if (!a || a.state === 'leaving') return;
+  if (instant || a.hidden) { agents.forEach((v, k) => { if (v === a) { agents.delete(k); departed.add(k); } }); a.remove(); return; }
+  a.cancel(); a.state = 'reporting';
+  // walk up next to Claude, wherever Claude is
+  const side = claude.x > 420 ? -1 : 1;
+  const spot = [Math.min(434, Math.max(6, claude.x + side * 14)), Math.min(296, claude.y + (claude.seated ? 40 : 4)), 'stand', 'front'];
+  if (claude.room === 'office' || claude.spot === CLAUDE_SEAT) { spot[0] = 320 + (agentSeq % 3) * 16; spot[1] = 286; spot[3] = 'back'; }
+  a.goTo(claude.room === 'hall' ? 'office' : claude.room, spot, () => {
+    a.bubble(error ? 'error' : 'report', (error ? '😓 ' : '📋 ') + (text || 'Done!'), 3200);
+    a.later(3300, () => {
+      a.state = 'leaving';
+      a.bubble('say', '👋 퇴근합니다!', 1800);
+      a.later(1200, () => {
+        a.goTo('elevator', LIFT_SPOT, () => { liftOpenUntil = now + 1200; a.later(400, () => { agents.forEach((v, k) => { if (v === a) { agents.delete(k); departed.add(k); } }); a.remove(); }); });
+      });
+    });
+  });
+}
+
+function handle(e) {
+  lastEventTs = Math.max(lastEventTs, e.ts || 0);
+  let c = claude;
+  if (e.agent && e.agent !== 'main') {
+    if (e.kind === 'prompt') return;                          // the subagent's task brief, not you talking
+    c = agents.get(e.agent);
+    if (!c && departed.has(e.agent) && e.kind !== 'tool') return;   // leftovers after it went home
+    if (!c) { departed.delete(e.agent); c = newAgent(e.agent, 'general-purpose', ''); c.linked = true; c.state = 'working'; agentArrives(c); }
+    if (c.state === 'reporting' || c.state === 'leaving') {     // got more work on the way out → back to work
+      if (e.kind === 'tool') { c.cancel(); c.state = 'working'; c.bubble('say', '앗, 하나 더!', 1500); }
+    }
+  }
+  switch (e.kind) {
+    case 'prompt':
+      me.bubble('me', '💬 ' + e.text, 5000);
+      if (claude.pose === 'sleep') claude.pose = 'sit';
+      claude.bubble('say', '!', 900);
+      log('Me', '💬 ' + e.text);
+      break;
+    case 'think':
+      c.thinkUntil = now + 2600;
+      c.bubble('think', e.text ? '💭 ' + e.text : '💭 …', 2600);
+      break;
+    case 'say':
+      log(c.name, '💬 ' + e.text);
+      if (e.end && c === claude && !pending.size) {
+        c.goTo('office', VISIT, () => { c.bubble('say', e.text, 6000); c.later(6200, () => { if (c.spot === VISIT) c.goTo('desk'); }); });
+      } else if (e.end && c.kind === 'agent' && c.background) {
+        agentReports(c, e.text);
+      } else c.bubble('say', e.text, 4200);
+      break;
+    case 'tool': {
+      const room = roomFor(e.name);
+      const icon = emojiFor(e.name, e.label);
+      pending.set(e.id, { who: c, room, ts: e.ts });
+      if (busy[room] !== undefined) busy[room]++;
+      if (e.board) applyBoard(e.board);
+      if (room === 'mydesk') c.goTo('office', VISIT, () => c.bubble('ask', '❓ ' + (e.label || 'Can I ask you something?'), 1e9));
+      else if (room === 'desk') c.goTo('desk');
+      else if (c.kind === 'agent' && c.hidden) c.workRoom = room;
+      else c.goTo(room);
+      if (room !== 'mydesk') c.bubble('tool', `${icon} ${e.name.startsWith('mcp__') ? e.label : e.name + (e.label ? ' · ' + e.label : '')}`, 1e9);
+      c.toolId = e.id;
+      log(c.name, e.name.startsWith('mcp__') ? `${icon} ${e.label}` : `${icon} ${e.name}${e.label ? ' — ' + e.label : ''}`);
+      break;
+    }
+    case 'spawn': {
+      pending.set(e.id, { who: c, room: 'desk', ts: e.ts });
+      claude.goTo('desk', null, () => { claude.pose = 'phone'; });
+      claude.bubble('say', `📞 ${e.agentType}: ${e.label}`, 2600);
+      const a = newAgent(e.id, e.agentType, e.label);
+      a.background = e.background; a.spawnTs = e.ts;
+      if (instant) agentArrives(a); else claude.later(1300, () => { if (claude.pose === 'phone') claude.pose = 'sit'; agentArrives(a); });
+      log('Claude', `📞 calls ${e.agentType} — ${e.label}`);
+      break;
+    }
+    case 'result': {
+      const p = pending.get(e.id);
+      pending.delete(e.id);
+      if (p && busy[p.room] !== undefined) busy[p.room] = Math.max(0, busy[p.room] - 1);
+      const who = p?.who || c;
+      if (p?.room === 'desk' && agents.has(e.id)) {               // a subagent's Agent/Task call returned
+        const a = agents.get(e.id);
+        if (e.async) a.background = true; else agentReports(a, e.text, e.error);
+        log(a.name, (e.error ? '😓 ' : '📋 ') + (e.async ? 'working in the background' : 'reports: ' + e.text), e.error);
+        break;
+      }
+      if (e.error) {
+        who.sweatUntil = now + 3800;
+        who.bubble('error', '💦 ' + (e.text || 'failed'), 3800);
+        log(who.name, '💦 ' + (e.text || 'tool failed'), true);
+      } else if (who.toolId === e.id) who.clearBubble('tool');
+      if (p?.room === 'mydesk') { who.clearBubble('ask'); me.bubble('me', '🙋 ' + (e.text || 'OK'), 3500); who.later(1200, () => who.goTo('desk')); }
+      break;
+    }
+    case 'end':
+      if (c === claude && ![...pending.values()].some(p => p.who === claude)) { claude.clearBubble('tool'); if (claude.spot !== VISIT) claude.goTo('desk'); }
+      if (c.kind === 'agent' && c.background) agentReports(c, '');
+      break;
+    case 'handback':                               // newer Claude Code: background agents hand back explicitly
+      if (c.kind === 'agent') { agentReports(c, e.text); log(c.name, '📋 reports: ' + e.text); }
+      break;
+    case 'clear':
+      if (!instant) banner('🧹 /clear');
+      break;
+  }
+}
+
+function applyBoard(b) {
+  if (b.items) boardItems = b.items.slice();
+  if (b.add) boardItems.push(b.add);
+  if (b.advance) {
+    const i = boardItems.findIndex(t => t.status === 'in_progress');
+    if (i >= 0) boardItems[i].status = 'completed';
+    const n = boardItems.findIndex(t => t.status === 'pending');
+    if (n >= 0) boardItems[n].status = 'in_progress';
+  }
+  for (const d of b.done || []) if (boardItems[d - 1]) boardItems[d - 1].status = 'completed';
+  if (b.start && boardItems[b.start - 1]) boardItems[b.start - 1].status = 'in_progress';
+  renderBoard();
+}
+
+// ======================================================================
+//  Drawing
+// ======================================================================
+const hash = (a, b, c) => { let h = (a * 374761393 + b * 668265263 + c * 2147483647) >>> 0; h = (h ^ (h >> 13)) * 1274126177 >>> 0; return (h & 0xffff) / 0xffff; };
+const BOOKS = ['#c0392b', '#2e86c1', '#27ae60', '#f39c12', '#8e44ad', '#16a085', '#d35400', '#7f8c8d'];
+
+function drawRoomShell(k) {
+  const r = ROOMS[k];
+  R(r.x, r.y, r.w, r.h, r.floor);
+  // floor texture
+  if (k === 'library' || k === 'office' || k === 'meeting') for (let yy = r.y + 40; yy < r.y + r.h; yy += 8) R(r.x, yy, r.w, 1, '#0000001a');
+  if (k === 'server') for (let yy = r.y + 36; yy < r.y + r.h; yy += 12) for (let xx = r.x; xx < r.x + r.w; xx += 12) R(xx, yy, 1, 1, '#ffffff22');
+  if (k === 'dev' || k === 'research') for (let yy = r.y + 38; yy < r.y + r.h; yy += 4) for (let xx = r.x + ((yy / 4) % 2) * 2; xx < r.x + r.w; xx += 4) R(xx, yy, 1, 1, '#ffffff12');
+  R(r.x, r.y, r.w, 36, r.wall);
+  R(r.x, r.y + 34, r.w, 2, '#00000033');
+  R(r.x, r.y + 36, r.w, 1, '#0000001f');
+}
+function drawWalls() {
+  const c = '#1b1712';
+  // outer + row walls with door gaps toward the hall
+  for (const k of ['library', 'dev', 'server', 'research', 'meeting', 'office']) {
+    const r = ROOMS[k], top = r.y < 100;
+    R(r.x + r.w - 1, r.y, 2, r.h, c);
+    const wy = top ? r.y + r.h - 2 : r.y - 1;
+    R(r.x, wy, r.door - 12 - r.x, 3, c);
+    R(r.door + 12, wy, r.x + r.w - r.door - 12, 3, c);
+    // door frame
+    R(r.door - 12, wy, 1, 3, '#7a5a3a'); R(r.door + 11, wy, 1, 3, '#7a5a3a');
+  }
+  R(0, 6, 440, 2, c); R(0, 298, 440, 2, c);
+}
+function drawHall(t) {
+  R(0, 136, 440, 28, '#5d5146');
+  R(0, 144, 440, 12, '#7e3434');
+  for (let x = 4; x < 440; x += 16) R(x, 149, 6, 1, '#a35252');
+  // ceiling slab (the floor above)
+  R(0, 0, 480, 6, '#3a3f52');
+  for (let x = 30; x < 440; x += 75) R(x, 4, 18, 2, lightsOn ? '#fff6c8' : '#555');
+}
+function drawElevator(t) {
+  R(440, 0, 40, 300, '#2a2e3d');
+  R(442, 8, 36, 292, '#333849');
+  // cables
+  R(452, 8, 1, 108, '#151820'); R(468, 8, 1, 108, '#151820');
+  R(442, 164, 36, 136, '#2b2f3f');
+  // door frame
+  R(443, 118, 34, 44, '#9aa0b4');
+  R(445, 122, 30, 40, '#1d2029');
+  const open = Math.max(0, Math.min(1, (liftOpenUntil - now) / 400));
+  const gap = Math.round(open * 14);
+  R(445, 122, 15 - gap, 40, '#b8bfd0'); R(460 + gap, 122, 15 - gap, 40, '#b8bfd0');
+  R(459 - gap, 122, 1, 40, '#7d849a'); R(460 + gap, 122, 1, 40, '#7d849a');
+  // floor indicator
+  R(448, 110, 24, 7, '#000');
+  R(476, 140, 2, 4, '#ffcc4d');
+}
+function drawLibrary(t) {
+  for (let s = 0; s < 3; s++) {
+    const sx = 8 + s * 46;
+    R(sx, 12, 42, 46, '#6b4426'); R(sx + 2, 14, 38, 42, '#4a2d17');
+    for (let row = 0; row < 4; row++) {
+      const yy = 15 + row * 10;
+      let xx = sx + 3;
+      while (xx < sx + 38) {
+        const w = 2 + Math.floor(hash(s, row, xx) * 3), hgt = 6 + Math.floor(hash(xx, row, s) * 3);
+        if (xx + w > sx + 39) break;
+        R(xx, yy + 9 - hgt, w, hgt, BOOKS[Math.floor(hash(row, xx, s) * BOOKS.length)]);
+        xx += w + (hash(xx, s, row) > .85 ? 2 : 0);
+      }
+      R(sx + 2, yy + 9, 38, 1, '#6b4426');
+    }
+  }
+}
+function drawLibraryFront() {
+  return [{ y: 110, fn: () => { R(36, 100, 78, 8, '#8a5a32'); R(36, 108, 78, 2, '#5d3b1f'); R(40, 110, 3, 6, '#5d3b1f'); R(107, 110, 3, 6, '#5d3b1f'); R(70, 98, 8, 3, '#f5f0e0'); R(73, 98, 1, 3, '#aaa'); } }];
+}
+function drawDev(t) {
+  // wall: window + poster
+  R(190, 14, 40, 18, '#9fd0f0'); R(209, 14, 2, 18, '#fff'); R(190, 22, 40, 1, '#fff');
+  R(250, 14, 22, 16, '#2b2b2b'); R(252, 16, 18, 12, '#d97757'); R(258, 19, 6, 6, '#fff3');
+}
+function drawImac(x, y, active, t, seed) {
+  R(x, y, 24, 17, '#d8dde3'); R(x + 1, y + 1, 22, 13, '#1e2230');
+  if (active) {
+    const off = Math.floor(t * 6);
+    for (let i = 0; i < 6; i++) {
+      const n = off + i, w = 3 + Math.floor(hash(n, seed, 1) * 15), ind = Math.floor(hash(n, seed, 2) * 3) * 2;
+      R(x + 2 + ind, y + 2 + i * 2, Math.min(w, 19 - ind), 1, ['#7fd7ff', '#ffcc66', '#c792ea', '#9be27a'][n % 4]);
+    }
+  } else R(x + 9, y + 6, 6, 3, '#3a4258');
+  R(x + 10, y + 17, 4, 3, '#b8bec6'); R(x + 7, y + 20, 10, 1, '#b8bec6');
+}
+function drawDevFront(t) {
+  const typingAt = i => chars.some(c => !c.hidden && !c.path.length && c.spot === ROOMS.dev.spots[i]);
+  return [
+    { y: 88, fn: () => { R(158, 76, 62, 10, '#e4d3b5'); R(158, 86, 62, 2, '#a88f68'); drawImac(163, 59, typingAt(0) || (busy.dev && typingAt(2)), t, 1); R(212, 80, 8, 3, '#333'); } },
+    { y: 88, fn: () => { R(228, 76, 62, 10, '#e4d3b5'); R(228, 86, 62, 2, '#a88f68'); drawImac(233, 59, typingAt(1) || (busy.dev && typingAt(3)), t, 2); R(282, 80, 6, 4, '#fff'); R(283, 79, 4, 1, '#c8a'); } },
+  ];
+}
+function drawServer(t) {
+  const fast = busy.server > 0;
+  for (let i = 0; i < 4; i++) {
+    const x = 306 + i * 33;
+    R(x, 14, 29, 70, '#151a22'); R(x + 1, 15, 27, 68, '#232a36');
+    for (let u = 0; u < 9; u++) {
+      const y = 18 + u * 7;
+      R(x + 3, y, 23, 5, '#2f3746'); R(x + 3, y + 5, 23, 1, '#11151c');
+      const tick = Math.floor(t * (fast ? 14 : 1.5));
+      for (let l = 0; l < 3; l++) {
+        const on = hash(i * 9 + u, l, tick + l * 7) > (fast ? .35 : .6);
+        R(x + 17 + l * 3, y + 2, 2, 1, on ? (l === 2 ? '#ff5050' : '#4cff7a') : '#1c3a24');
+      }
+      R(x + 5, y + 2, 8, 1, '#4a5466');
+    }
+  }
+}
+function drawResearch(t) {
+  // world map poster
+  R(10, 170, 50, 26, '#f6f1e2'); R(12, 172, 46, 22, '#7cc4e8');
+  [[15,175,10,6],[27,174,6,10],[36,176,12,6],[44,184,8,6],[20,184,5,6]].forEach(([x, y, w, h]) => R(x, y, w, h, '#6fbf6a'));
+  // server-ish cable & plug for MCP
+  R(110, 172, 30, 20, '#3a3f52'); R(114, 176, 22, 2, '#7cf'); R(114, 181, 16, 2, '#fc6'); R(114, 186, 19, 2, '#c9f');
+  // globe
+  R(130, 216, 12, 12, '#3b8ed0'); R(132, 218, 4, 4, '#5cc46a'); R(137, 222, 3, 4, '#5cc46a'); R(135, 228, 2, 6, '#555'); R(131, 234, 10, 2, '#444');
+}
+function drawResearchFront(t) {
+  const active = busy.research > 0;
+  const screen = (x, seed) => {
+    R(x, 220, 26, 18, '#222'); R(x + 1, 221, 24, 14, active ? '#f4f6fb' : '#1c2333');
+    if (active) {
+      R(x + 1, 221, 24, 3, '#d0d6e4'); R(x + 2, 222, 1, 1, '#f55'); R(x + 4, 222, 1, 1, '#fb3'); R(x + 6, 222, 1, 1, '#4c4');
+      const n = Math.floor(t * 3);
+      for (let i = 0; i < 4; i++) R(x + 3, 226 + i * 2, 4 + Math.floor(hash(n + i, seed, 3) * 17), 1, i === 0 ? '#36c' : '#9aa3b5');
+    }
+    R(x + 11, 238, 4, 2, '#333');
+  };
+  return [{ y: 252, fn: () => { R(18, 240, 114, 10, '#cfe0d8'); R(18, 250, 114, 2, '#8fa79c'); screen(26, 1); screen(98, 2); } }];
+}
+function drawMeeting(t) {
+  R(BOARD.x - 2, BOARD.y - 2, BOARD.w + 4, BOARD.h + 4, '#8b8f99');
+  R(BOARD.x, BOARD.y, BOARD.w, BOARD.h, '#fbfbf7');
+  R(BOARD.x + 10, BOARD.y + BOARD.h + 2, 30, 2, '#8b8f99');
+  R(BOARD.x + 14, BOARD.y + BOARD.h, 4, 2, '#d33'); R(BOARD.x + 20, BOARD.y + BOARD.h, 4, 2, '#33d');
+}
+function drawMeetingFront() {
+  return [{ y: 266, fn: () => {
+    R(186, 248, 78, 14, '#7b5233'); R(186, 262, 78, 3, '#553820');
+    [[194, 244], [214, 244], [234, 244], [254, 244]].forEach(([x, y]) => R(x - 3, y - 2, 6, 3, '#d8c6a2'));
+    R(222, 251, 6, 4, '#fff'); R(223, 250, 4, 1, '#bbb');
+  } }];
+}
+function drawOffice(t) {
+  // wall clock + window + plant
+  R(316, 170, 34, 20, '#a7dbf5'); R(332, 170, 2, 20, '#fff'); R(316, 179, 34, 1, '#fff');
+  R(380, 170, 12, 12, '#fff'); R(381, 171, 10, 10, '#f4f4f4'); R(385, 173, 1, 4, '#222'); R(386, 176, 3, 1, '#222');
+  R(420, 186, 10, 10, '#b5653a'); R(418, 176, 4, 10, '#3c9a4b'); R(424, 172, 4, 14, '#47b058'); R(428, 178, 4, 8, '#3c9a4b');
+}
+function drawOfficeFront(t) {
+  return [
+    { y: 252, fn: () => {   // Claude's desk with phone + nameplate
+      R(304, 240, 60, 10, '#c79a62'); R(304, 250, 60, 2, '#8a6538');
+      R(346, 236, 8, 4, '#222'); R(347, 235, 6, 1, claude?.pose === 'phone' ? '#d97757' : '#333');
+      R(310, 244, 18, 4, '#f4ead6'); R(312, 245, 2, 2, '#d97757');
+      R(320, 236, 6, 4, '#fff'); R(321, 235, 4, 1, '#999');
+    } },
+    { y: 252, fn: () => {   // my desk
+      R(378, 240, 60, 10, '#9fb0c2'); R(378, 250, 60, 2, '#6e8094');
+      R(384, 226, 18, 13, '#222'); R(385, 227, 16, 10, '#2b3f6b');
+      if (me && !me.bubbleData) for (let i = 0; i < 3; i++) R(387, 229 + i * 3, 6 + ((i * 5 + Math.floor(now / 700)) % 8), 1, '#9cf');
+      R(392, 239, 2, 1, '#222'); R(420, 244, 12, 3, '#eee');
+    } },
+  ];
+}
+
+function drawChar(c, t) {
+  if (c.hidden) return;
+  const x = Math.round(c.x), L = c.look;
+  const walking = c.path.length > 0;
+  const oy = c.seated ? 3 : 0;
+  const y = Math.round(c.y) + oy;
+  const back = c.facing === 'back';
+  const f = Math.floor(t * 8 + c.x) % 2;
+  const pose = walking ? 'walk' : (c.thinkUntil > now ? 'think' : c.pose);
+  const sleeping = pose === 'sleep';
+  R(x - 5, Math.round(c.y) - 1, 10, 2, 'rgba(0,0,0,.25)');
+  // legs
+  if (!c.seated) {
+    const a = walking && f ? 1 : 0, b = walking && !f ? 1 : 0;
+    R(x - 3, y - 5, 2, 4 - a, L.pants); R(x + 1, y - 5, 2, 4 - b, L.pants);
+    R(x - 3, y - 1 - a, 2, 1, '#1c1c1c'); R(x + 1, y - 1 - b, 2, 1, '#1c1c1c');
+  }
+  // body
+  R(x - 4, y - 11, 8, 6, L.shirt);
+  if (L.hood && !back) R(x - 1, y - 11, 2, 3, '#ffffff55');
+  if (L.badge && !back) { R(x - 2, y - 9, 1, 1, '#fff'); R(x - 3, y - 9, 3, 1, '#fff8'); R(x - 2, y - 10, 1, 3, '#fff8'); }
+  if (L.tie && !back) R(x - 0.5, y - 11, 1, 4, L.tie);
+  // arms
+  const arm = L.shirt, hand = L.skin;
+  if (pose === 'type') {
+    const bob = Math.floor(t * 10) % 2;
+    R(x - 5, y - 10, 1, 3, arm); R(x + 4, y - 10, 1, 3, arm);
+    R(x - 4, y - 7 - bob, 2, 1, hand); R(x + 2, y - 7 - (1 - bob), 2, 1, hand);
+  } else if (pose === 'read') {
+    R(x - 5, y - 10, 1, 3, arm); R(x + 4, y - 10, 1, 3, arm);
+    R(x - 5, y - 9, 10, 4, '#f7f2e2'); R(x, y - 9, 1, 4, '#b9ab8a');
+    if (Math.floor(t * 1.2 + c.x) % 3 === 0) R(x + 1, y - 10, 3, 1, '#f7f2e2');
+    R(x - 4, y - 8, 3, 1, '#9a9a9a'); R(x + 2, y - 7, 3, 1, '#9a9a9a');
+  } else if (pose === 'think') {
+    R(x - 5, y - 10, 1, 4, arm); R(x - 5, y - 6, 1, 1, hand);
+    R(x + 3, y - 10, 2, 2, arm); R(x + 1, y - 12, 2, 2, hand);
+  } else if (pose === 'phone') {
+    R(x - 5, y - 10, 1, 4, arm); R(x + 4, y - 14, 1, 5, arm); R(x + 3, y - 16, 2, 4, '#222');
+  } else if (pose === 'write' || pose === 'work') {
+    const up = pose === 'write' ? (Math.floor(t * 4) % 2) : 0;
+    R(x - 5, y - 10, 1, 4, arm);
+    R(x + 4, y - 15 - up, 1, 6, arm); R(x + 4, y - 16 - up, 1, 1, hand);
+  } else if (pose === 'wave') {
+    R(x - 5, y - 10, 1, 4, arm); R(x + 4, y - 15, 1, 5, arm); R(x + 4 + (Math.floor(t * 6) % 2), y - 17, 2, 2, hand);
+  } else {
+    R(x - 5, y - 10, 1, 4, arm); R(x + 4, y - 10, 1, 4, arm);
+    R(x - 5, y - 6, 1, 1, hand); R(x + 4, y - 6, 1, 1, hand);
+  }
+  // head
+  const hy = y - 17 + (sleeping ? 1 : 0);
+  R(x - 3, hy, 6, 6, L.skin);
+  if (back) { R(x - 3, hy - 1, 6, 6, L.hair); }
+  else {
+    R(x - 3, hy - 1, 6, 2, L.hair); R(x - 3, hy + 1, 1, 2, L.hair); R(x + 2, hy + 1, 1, 2, L.hair);
+    const blink = (t + c.x * .37) % 4 < .12 || sleeping;
+    if (blink) { R(x - 2, hy + 3, 2, 1, '#333'); R(x + 1, hy + 3, 2, 1, '#333'); }
+    else { R(x - 2, hy + 2, 1, 2, '#222'); R(x + 1, hy + 2, 1, 2, '#222'); }
+    if (pose === 'think') R(x - 1, hy + 5, 2, 1, '#a0522d');
+    if (L.glasses) { R(x - 3, hy + 2, 3, 1, '#111'); R(x, hy + 2, 3, 1, '#111'); R(x - 2, hy + 3, 1, 1, '#9cf'); R(x + 1, hy + 3, 1, 1, '#9cf'); }
+  }
+  if (L.hat) { R(x - 4, hy - 2, 8, 2, L.hat); R(x - 3, hy - 3, 6, 1, L.hat); if (!back) R(x - 4, hy, 9, 1, L.hat); }
+  if (L.hood && back) R(x - 4, hy + 4, 8, 2, L.shirt);
+  // sweat
+  if (c.sweatUntil > now) {
+    const d = Math.floor(t * 6) % 4;
+    R(x + 4, hy + d, 1, 2, '#6cc8ff'); R(x - 5, hy + 1 + ((d + 2) % 4), 1, 2, '#6cc8ff');
+  }
+}
+
+let lightsOn = true;
+const IDLE_SLEEP = 90e3, LIGHTS_OFF = 10 * 60e3;
+
+function frame(ts) {
+  const dt = Math.min(0.05, (ts - now) / 1000);
+  now = ts;
+  const t = ts / 1000;
+  for (const c of [...chars]) c.update(dt);
+  const quiet = Date.now() - lastEventTs;
+  lightsOn = quiet < LIGHTS_OFF;
+  if (claude && !claude.path.length && claude.spot === CLAUDE_SEAT && quiet > IDLE_SLEEP && !pending.size && claude.pose !== 'phone') claude.pose = 'sleep';
+  else if (claude && claude.pose === 'sleep' && quiet < IDLE_SLEEP) claude.pose = 'sit';
+
+  g.fillStyle = '#0f1118'; g.fillRect(0, 0, W, H);
+  for (const k of ['library', 'dev', 'server', 'research', 'meeting', 'office']) drawRoomShell(k);
+  drawLibrary(t); drawDev(t); drawServer(t); drawResearch(t); drawMeeting(t); drawOffice(t);
+  drawHall(t); drawWalls(); drawElevator(t);
+  const items = [...drawLibraryFront(t), ...drawDevFront(t), ...drawResearchFront(t), ...drawMeetingFront(t), ...drawOfficeFront(t)];
+  for (const c of chars) items.push({ y: c.y + (c.seated ? 0 : 0.5), fn: () => drawChar(c, t) });
+  items.sort((a, b) => a.y - b.y).forEach(i => i.fn());
+  if (!lightsOn) { g.fillStyle = 'rgba(5,8,25,.62)'; g.fillRect(0, 0, W, H); }
+  drawOverlayText();
+  requestAnimationFrame(frame);
+}
+
+// ======================================================================
+//  DOM overlay: bubbles, room tags, whiteboard
+// ======================================================================
+const boardEl = document.createElement('div'); boardEl.className = 'board'; ov.appendChild(boardEl);
+Object.assign(boardEl.style, { left: BOARD.x / W * 100 + '%', top: BOARD.y / H * 100 + '%', width: BOARD.w / W * 100 + '%', height: BOARD.h / H * 100 + '%' });
+for (const [k, r] of Object.entries(ROOMS)) {
+  if (!r.label) continue;
+  const el = document.createElement('div'); el.className = 'tag';
+  el.innerHTML = `${r.label}<i>${r.ko}</i>`;
+  const dy = { library: 51, server: 72, meeting: 52 }[k] || 1;
+  Object.assign(el.style, { left: (r.x + 3) / W * 100 + '%', top: (r.y + dy) / H * 100 + '%' });
+  ov.appendChild(el);
+}
+const liftTag = document.createElement('div'); liftTag.className = 'tag';
+Object.assign(liftTag.style, { left: 448 / W * 100 + '%', top: 108 / H * 100 + '%', background: 'none', color: '#ff9b3d', padding: 0, textShadow: '0 0 4px #ff7a00' });
+ov.appendChild(liftTag);
+const esc = s => String(s).replace(/[&<>"]/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[ch]));
+function renderBoard() {
+  if (!boardItems.length) { boardEl.innerHTML = '<div style="opacity:.45">— plan —</div>'; return; }
+  boardEl.innerHTML = boardItems.slice(0, 8).map(it =>
+    `<div class="${it.status === 'completed' ? 'done' : it.status === 'in_progress' ? 'doing' : ''}">${it.status === 'completed' ? '☑' : it.status === 'in_progress' ? '▶' : '☐'} ${esc(it.content)}</div>`).join('');
+}
+function drawOverlayText() {
+  const ppl = cv.clientWidth / W;
+  ov.style.setProperty('--fs', Math.max(9, ppl * 4.1).toFixed(1) + 'px');
+  for (const c of chars) {
+    let b = c.bubbleData;
+    if (!b && c === claude && claude.pose === 'sleep') b = { type: 'zzz', text: 'z Z z' };
+    if (!b || c.hidden) { c.el.style.display = 'none'; continue; }
+    c.el.style.display = '';
+    const cls = 'bub ' + b.type;
+    if (c.el.className !== cls) c.el.className = cls;
+    if (c.el.dataset.t !== b.text) { c.el.textContent = b.text; c.el.dataset.t = b.text; }
+    const top = c.y + (c.seated ? 3 : 0) - 20 - (c.look.hat ? 3 : 0);
+    c.el.style.left = Math.min(W - 30, Math.max(30, c.x)) / W * 100 + '%';
+    c.el.style.top = top / H * 100 + '%';
+    c.el.style.zIndex = b.type === 'tool' ? 1 : 2;
+  }
+}
+const bannerEl = document.getElementById('banner');
+function banner(text) { bannerEl.textContent = text; bannerEl.classList.add('show'); setTimeout(() => bannerEl.classList.remove('show'), 1800); }
+
+// ======================================================================
+//  Activity log
+// ======================================================================
+const logEl = document.getElementById('log');
+function log(who, text, err) {
+  if (instant) return;
+  const row = document.createElement('div');
+  row.innerHTML = `<time>${new Date().toTimeString().slice(0, 8)}</time><span class="who"></span><span class="txt${err ? ' err' : ''}"></span>`;
+  row.children[1].textContent = who; row.children[2].textContent = text;
+  logEl.prepend(row);
+  while (logEl.children.length > 150) logEl.lastChild.remove();
+}
+
+// ======================================================================
+//  Building: floors, sessions, live stream
+// ======================================================================
+let floors = [], cur = { floor: null, session: 'auto' }, es = null, liveSession = null;
+const floorsEl = document.getElementById('floors');
+
+async function loadFloors() {
+  try {
+    const r = await fetch('/api/floors'); const j = await r.json();
+    floors = j.floors;
+    if (!floors.length) floorsEl.innerHTML = `<div class="empty">No Claude Code sessions found in<br>${esc(j.projects)}</div>`;
+    renderFloors();
+    if (!cur.floor && floors.length) {
+      const fromHash = new URLSearchParams(location.hash.slice(1));
+      const want = floors.find(f => f.id === fromHash.get('floor'));
+      const latest = floors.slice().sort((a, b) => b.lastMtime - a.lastMtime)[0];
+      enterFloor((want || latest).id, want ? fromHash.get('session') || 'auto' : 'auto');
+    }
+    updateHeader();
+  } catch (e) { document.getElementById('liveTxt').textContent = 'server offline'; }
+}
+function renderFloors() {
+  floorsEl.innerHTML = '';
+  for (const f of floors.slice().reverse()) {
+    const isCur = f.id === cur.floor;
+    const el = document.createElement('div');
+    el.className = 'floor' + (isCur ? ' cur' : '') + (f.active ? '' : ' dark');
+    el.title = f.cwd || f.id;
+    el.innerHTML = `<div class="fnum">${f.floor}F</div><div class="fbody"><div class="fname"><span class="dot${f.active ? ' on' : ''}"></span><span></span></div><div class="shops"></div></div>`;
+    el.querySelector('.fname span:last-child').textContent = f.name;
+    el.onclick = () => enterFloor(f.id, 'auto');
+    const shops = el.querySelector('.shops');
+    const list = isCur ? f.sessions.slice(0, 8) : f.sessions.filter(s => s.active).slice(0, 3);
+    for (const s of list) {
+      const sh = document.createElement('div');
+      sh.className = 'shop' + (isCur && s.id === liveSession ? ' cur' : '');
+      sh.innerHTML = `<span class="dot${s.active ? ' on' : ''}"></span><span></span>`;
+      sh.lastChild.textContent = '🏪 ' + s.title;
+      sh.title = `${s.title}\n${s.id}\n${new Date(s.mtime).toLocaleString()}`;
+      sh.onclick = ev => { ev.stopPropagation(); enterFloor(f.id, s.id); };
+      shops.appendChild(sh);
+    }
+    const rest = (isCur ? f.sessions.length : f.sessions.filter(s => s.active).length) - list.length;
+    if (rest > 0) shops.insertAdjacentHTML('beforeend', `<div class="more">+${rest} more</div>`);
+    floorsEl.appendChild(el);
+  }
+}
+function updateHeader() {
+  const f = floors.find(x => x.id === cur.floor);
+  const s = f?.sessions.find(x => x.id === liveSession);
+  const sess = document.getElementById('sess');
+  sess.innerHTML = f ? `<b></b> · <span></span>` : 'No session';
+  if (f) { sess.querySelector('b').textContent = f.name; sess.querySelector('span').textContent = s ? s.title : '(no session yet)'; sess.title = f.cwd || ''; }
+  const active = Date.now() - lastEventTs < 2 * 60e3;
+  document.getElementById('liveDot').classList.toggle('on', !!es && active);
+  document.getElementById('liveTxt').textContent = !es ? 'offline' : active ? 'working' : 'idle';
+}
+
+function enterFloor(floorId, session) {
+  const f = floors.find(x => x.id === floorId);
+  const target = f ? f.floor : 0;
+  const lift = document.getElementById('lift');
+  document.getElementById('arrow').textContent = target >= floorNum ? '▲' : '▼';
+  document.getElementById('liftNum').textContent = target + 'F';
+  if (floorNum && floorNum !== target) {
+    lift.classList.add('moving');
+    const st = document.getElementById('stage'); st.classList.remove('switching'); void st.offsetWidth; st.classList.add('switching');
+    setTimeout(() => lift.classList.remove('moving'), 1200);
+  }
+  floorNum = target;
+  liftTag.textContent = target ? target + 'F' : '';
+  cur = { floor: floorId, session };
+  try { history.replaceState(null, '', `#floor=${encodeURIComponent(floorId)}&session=${encodeURIComponent(session)}`); } catch {}
+  connect();
+  renderFloors();
+}
+
+function connect() {
+  es?.close();
+  resetOffice();
+  logEl.innerHTML = '';
+  lastEventTs = 0;
+  es = new EventSource(`/api/stream?floor=${encodeURIComponent(cur.floor)}&session=${encodeURIComponent(cur.session)}`);
+  const pendingLinks = [];
+  es.onmessage = m => {
+    const msg = JSON.parse(m.data);
+    if (msg.type === 'hello') {
+      liveSession = msg.session; resetOffice(); instant = true; replaying = true;
+      if (!msg.session) { claude.hidden = true; me.hidden = true; }
+    } else if (msg.type === 'events') {
+      instant = !!msg.replay;
+      for (const e of msg.events) handle(e);
+      instant = false;
+    } else if (msg.type === 'link') {
+      // a subagent transcript file appeared: tie it to the character that came for that Agent/Task call
+      if (msg.toolId && departed.has(msg.toolId)) { departed.add(msg.agent); return; }
+      let a = msg.toolId && agents.get(msg.toolId);
+      if (!a && !msg.toolId) a = [...agents.values()].find(x => x.kind === 'agent' && !x.linked && x.state !== 'leaving');
+      if (!a && msg.agentType) { instant = replaying; a = newAgent(msg.agent, msg.agentType, msg.description); a.spawnTs = Date.now(); agentArrives(a); instant = false; }
+      if (a) { a.linked = true; agents.set(msg.agent, a); }
+    } else if (msg.type === 'live') {
+      instant = false; replaying = false;
+      // drop stale state from interrupted sessions
+      for (const [id, p] of pending) if (Date.now() - p.ts > 15 * 60e3) pending.delete(id);
+      for (const a of new Set(agents.values())) if (a.spawnTs && Date.now() - a.spawnTs > 30 * 60e3 && !pending.has(a.id)) { agents.forEach((v, k) => { if (v === a) { agents.delete(k); departed.add(k); } }); a.remove(); }
+      const claudeBusy = [...pending.values()].some(p => p.who === claude);
+      if (!claudeBusy && (claude.spot === VISIT || Date.now() - lastEventTs > IDLE_SLEEP)) claude.place(CLAUDE_SEAT, 'office');
+      claude.thinkUntil = 0;
+      for (const c of chars) c.bubbleData = null;
+      if (pending.size) { const last = [...pending.entries()].pop(); const p = last[1]; if (p.who === claude) claude.bubble('tool', '⏳ …', 1e9); }
+      log('Building', `🛗 ${floors.find(f => f.id === cur.floor)?.floor || '?'}F — session ${String(liveSession).slice(0, 8)} (watching live)`);
+      updateHeader(); renderFloors();
+    } else if (msg.type === 'switch') {
+      banner('🧹 New session → following');
+      liveSession = msg.session;
+      loadFloors();
+    } else if (msg.type === 'warn') log('Building', '⚠️ ' + msg.text, true);
+  };
+  es.onerror = () => { document.getElementById('liveTxt').textContent = 'reconnecting…'; };
+}
+
+resetOffice();
+loadFloors();
+setInterval(loadFloors, 4000);
+setInterval(updateHeader, 1000);
+requestAnimationFrame(t => { now = t; requestAnimationFrame(frame); });
+</script>
+</body>
+</html>

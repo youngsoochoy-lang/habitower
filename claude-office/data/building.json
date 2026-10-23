@@ -1,0 +1,1163 @@
+{
+  "version": 1,
+  "progression": {
+    "curve": "linear",
+    "base": 40,
+    "step": 16
+  },
+  "maps": [
+    {
+      "id": "tower",
+      "icon": "🏢",
+      "ko": "사무실 타워",
+      "en": "OFFICE TOWER",
+      "unlock": {
+        "level": 1
+      },
+      "scene": "tower"
+    },
+    {
+      "id": "rooftop",
+      "icon": "🌿",
+      "ko": "옥탑 정원",
+      "en": "ROOFTOP GARDEN",
+      "unlock": {
+        "level": 10
+      },
+      "scene": "home",
+      "home": true,
+      "planned": true
+    },
+    {
+      "id": "studio",
+      "icon": "🏠",
+      "ko": "원룸",
+      "en": "STUDIO FLAT",
+      "unlock": {
+        "level": 15
+      },
+      "scene": "home",
+      "home": true,
+      "planned": true
+    },
+    {
+      "id": "townhouse",
+      "icon": "🏡",
+      "ko": "타운하우스",
+      "en": "TOWNHOUSE",
+      "unlock": {
+        "level": 25
+      },
+      "scene": "home",
+      "home": true,
+      "planned": true
+    },
+    {
+      "id": "beach",
+      "icon": "🏖️",
+      "ko": "비치 하우스 섬",
+      "en": "BEACH HOUSE",
+      "unlock": {
+        "level": 40
+      },
+      "scene": "beach",
+      "planned": true
+    },
+    {
+      "id": "cabin",
+      "icon": "🏔️",
+      "ko": "산장 섬",
+      "en": "MOUNTAIN CABIN",
+      "unlock": {
+        "level": 50
+      },
+      "scene": "cabin",
+      "planned": true
+    },
+    {
+      "id": "penthouse",
+      "icon": "🌃",
+      "ko": "펜트하우스",
+      "en": "PENTHOUSE",
+      "unlock": {
+        "level": 60
+      },
+      "scene": "penthouse",
+      "planned": true
+    },
+    {
+      "id": "villa",
+      "icon": "🏛️",
+      "ko": "힐사이드 빌라",
+      "en": "HILLSIDE VILLA",
+      "unlock": {
+        "level": 80
+      },
+      "scene": "villa",
+      "planned": true
+    },
+    {
+      "id": "resort",
+      "icon": "🏝️",
+      "ko": "나만의 섬 리조트",
+      "en": "ISLAND RESORT",
+      "unlock": {
+        "level": 100
+      },
+      "scene": "resort",
+      "home": true,
+      "planned": true
+    }
+  ],
+  "pathRules": {
+    "minLevel": 15,
+    "focusShare": 0.45,
+    "balancedMax": 0.4,
+    "windowDays": 30
+  },
+  "paths": [
+    {
+      "id": "entrepreneur",
+      "icon": "💼",
+      "ko": "사업가",
+      "en": "ENTREPRENEUR",
+      "desc": "부업을 키워 내 사업으로. 언젠가 사무실을 떠나 집에서 일해요.",
+      "categories": [
+        "hustle"
+      ],
+      "stages": [
+        {
+          "ko": "부업러",
+          "en": "SIDE HUSTLER",
+          "title": "부업러",
+          "needXP": 0,
+          "unlocks": [
+            {
+              "icon": "💼",
+              "ko": "사업가 배지"
+            }
+          ]
+        },
+        {
+          "ko": "1인 사업자",
+          "en": "SOLO FOUNDER",
+          "title": "1인 사업자",
+          "needXP": 1500,
+          "milestone": {
+            "streak": 14
+          },
+          "perk": {
+            "xp": 0.05
+          },
+          "unlocks": [
+            {
+              "icon": "🏠",
+              "ko": "홈 오피스 · 집에서 일하기",
+              "planned": true
+            },
+            {
+              "icon": "🪧",
+              "ko": "거리의 작은 가게 간판",
+              "planned": true
+            }
+          ]
+        },
+        {
+          "ko": "스타트업 대표",
+          "en": "STARTUP FOUNDER",
+          "title": "대표",
+          "needXP": 6000,
+          "milestone": {
+            "focused": 40
+          },
+          "perk": {
+            "xp": 0.1
+          },
+          "unlocks": [
+            {
+              "icon": "🏬",
+              "ko": "스토어프론트",
+              "planned": true
+            },
+            {
+              "icon": "🔀",
+              "ko": "분기: 리테일 또는 테크",
+              "planned": true
+            }
+          ]
+        },
+        {
+          "ko": "CEO",
+          "en": "CEO",
+          "title": "CEO",
+          "needXP": 20000,
+          "milestone": {
+            "streak": 60
+          },
+          "perk": {
+            "xp": 0.15
+          },
+          "unlocks": [
+            {
+              "icon": "🏢",
+              "ko": "타워를 본사로",
+              "planned": true
+            },
+            {
+              "icon": "🏛️",
+              "ko": "빌라에서 원격 근무",
+              "planned": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "athlete",
+      "icon": "🏅",
+      "ko": "운동선수",
+      "en": "ATHLETE",
+      "desc": "몸을 쓰는 습관을 쌓아 챔피언까지.",
+      "categories": [
+        "ballet",
+        "pilates",
+        "gym"
+      ],
+      "stages": [
+        {
+          "ko": "운동 입문",
+          "en": "ROOKIE",
+          "title": "운동 입문",
+          "needXP": 0,
+          "unlocks": [
+            {
+              "icon": "🏅",
+              "ko": "운동선수 배지"
+            }
+          ]
+        },
+        {
+          "ko": "생활 체육인",
+          "en": "REGULAR",
+          "title": "생활 체육인",
+          "needXP": 1500,
+          "milestone": {
+            "streak": 14
+          },
+          "perk": {
+            "xp": 0.05
+          },
+          "unlocks": [
+            {
+              "icon": "🏃",
+              "ko": "야외 러닝 트랙",
+              "planned": true
+            }
+          ]
+        },
+        {
+          "ko": "코치",
+          "en": "COACH",
+          "title": "코치",
+          "needXP": 6000,
+          "milestone": {
+            "focused": 40
+          },
+          "perk": {
+            "xp": 0.1
+          },
+          "unlocks": [
+            {
+              "icon": "🧑‍🏫",
+              "ko": "전용 스튜디오",
+              "planned": true
+            },
+            {
+              "icon": "🏆",
+              "ko": "대회 트로피",
+              "planned": true
+            }
+          ]
+        },
+        {
+          "ko": "챔피언",
+          "en": "CHAMPION",
+          "title": "챔피언",
+          "needXP": 20000,
+          "milestone": {
+            "streak": 60
+          },
+          "perk": {
+            "xp": 0.15
+          },
+          "unlocks": [
+            {
+              "icon": "🥇",
+              "ko": "챔피언 무대",
+              "planned": true
+            },
+            {
+              "icon": "🚗",
+              "ko": "스포츠카 할인",
+              "planned": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "creator",
+      "icon": "🎨",
+      "ko": "크리에이터",
+      "en": "CREATOR",
+      "desc": "연습과 작업을 쌓아 무대에 서요.",
+      "categories": [
+        "piano",
+        "video"
+      ],
+      "stages": [
+        {
+          "ko": "취미러",
+          "en": "HOBBYIST",
+          "title": "취미러",
+          "needXP": 0,
+          "unlocks": [
+            {
+              "icon": "🎨",
+              "ko": "크리에이터 배지"
+            }
+          ]
+        },
+        {
+          "ko": "크리에이터",
+          "en": "CREATOR",
+          "title": "크리에이터",
+          "needXP": 1500,
+          "milestone": {
+            "streak": 14
+          },
+          "perk": {
+            "xp": 0.05
+          },
+          "unlocks": [
+            {
+              "icon": "🎙️",
+              "ko": "홈 녹음실",
+              "planned": true
+            }
+          ]
+        },
+        {
+          "ko": "아티스트",
+          "en": "ARTIST",
+          "title": "아티스트",
+          "needXP": 6000,
+          "milestone": {
+            "focused": 40
+          },
+          "perk": {
+            "xp": 0.1
+          },
+          "unlocks": [
+            {
+              "icon": "🎤",
+              "ko": "공연 무대",
+              "planned": true
+            },
+            {
+              "icon": "💌",
+              "ko": "퀘스트 보드에 팬레터",
+              "planned": true
+            }
+          ]
+        },
+        {
+          "ko": "스타",
+          "en": "STAR",
+          "title": "스타",
+          "needXP": 20000,
+          "milestone": {
+            "streak": 60
+          },
+          "perk": {
+            "xp": 0.15
+          },
+          "unlocks": [
+            {
+              "icon": "🌟",
+              "ko": "레드카펫 입장",
+              "planned": true
+            },
+            {
+              "icon": "🏛️",
+              "ko": "빌라 그랜드 살롱",
+              "planned": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "scholar",
+      "icon": "📚",
+      "ko": "학자",
+      "en": "SCHOLAR",
+      "desc": "배우고 나를 가꾸는 시간을 쌓아 마스터로.",
+      "categories": [
+        "learning",
+        "growth"
+      ],
+      "stages": [
+        {
+          "ko": "학생",
+          "en": "STUDENT",
+          "title": "학생",
+          "needXP": 0,
+          "unlocks": [
+            {
+              "icon": "📚",
+              "ko": "학자 배지"
+            }
+          ]
+        },
+        {
+          "ko": "연구자",
+          "en": "RESEARCHER",
+          "title": "연구자",
+          "needXP": 1500,
+          "milestone": {
+            "streak": 14
+          },
+          "perk": {
+            "xp": 0.05
+          },
+          "unlocks": [
+            {
+              "icon": "🗄️",
+              "ko": "개인 서재 확장",
+              "planned": true
+            }
+          ]
+        },
+        {
+          "ko": "교수",
+          "en": "PROFESSOR",
+          "title": "교수",
+          "needXP": 6000,
+          "milestone": {
+            "focused": 40
+          },
+          "perk": {
+            "xp": 0.1
+          },
+          "unlocks": [
+            {
+              "icon": "🏛️",
+              "ko": "도서관 타워",
+              "planned": true
+            }
+          ]
+        },
+        {
+          "ko": "마스터",
+          "en": "MASTER",
+          "title": "마스터",
+          "needXP": 20000,
+          "milestone": {
+            "streak": 60
+          },
+          "perk": {
+            "xp": 0.15
+          },
+          "unlocks": [
+            {
+              "icon": "🔭",
+              "ko": "옥상 천문대",
+              "planned": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "balanced",
+      "icon": "🌿",
+      "ko": "균형 잡힌 삶",
+      "en": "BALANCED LIFE",
+      "desc": "어느 한쪽에 치우치지 않고 골고루. 모든 분야에 작은 보너스.",
+      "categories": "*",
+      "balanced": true,
+      "stages": [
+        {
+          "ko": "균형 찾기",
+          "en": "SEEKER",
+          "title": "균형 찾기",
+          "needXP": 0,
+          "unlocks": [
+            {
+              "icon": "🌿",
+              "ko": "균형 배지"
+            }
+          ]
+        },
+        {
+          "ko": "조화",
+          "en": "HARMONY",
+          "title": "조화로운",
+          "needXP": 3000,
+          "milestone": {
+            "balance": 0.15
+          },
+          "perk": {
+            "xp": 0.03
+          },
+          "unlocks": [
+            {
+              "icon": "🪴",
+              "ko": "선 정원",
+              "planned": true
+            }
+          ]
+        },
+        {
+          "ko": "현자",
+          "en": "SAGE",
+          "title": "현자",
+          "needXP": 12000,
+          "milestone": {
+            "streak": 60
+          },
+          "perk": {
+            "xp": 0.06
+          },
+          "unlocks": [
+            {
+              "icon": "⛩️",
+              "ko": "명상 정자",
+              "planned": true
+            },
+            {
+              "icon": "🌅",
+              "ko": "모든 지도에 일출 테라스",
+              "planned": true
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "areas": [
+    {
+      "id": "home",
+      "ko": "홈 & 스터디",
+      "en": "HOME & STUDY",
+      "icon": "🏠",
+      "categories": [
+        {
+          "id": "chores",
+          "ko": "집안일",
+          "en": "HOME CARE",
+          "icon": "🧹",
+          "verb": "집안일 하는 중",
+          "pose": "sweep",
+          "subs": [
+            {
+              "id": "laundry",
+              "ko": "빨래",
+              "en": "LAUNDRY",
+              "icon": "🧺",
+              "verb": "빨래 하는 중",
+              "pose": "sweep"
+            },
+            {
+              "id": "cleaning",
+              "ko": "청소",
+              "en": "CLEANING",
+              "icon": "🧽",
+              "verb": "청소 하는 중",
+              "pose": "sweep"
+            },
+            {
+              "id": "cooking",
+              "ko": "요리",
+              "en": "COOKING",
+              "icon": "🍳",
+              "verb": "요리 하는 중",
+              "pose": "sweep"
+            }
+          ]
+        },
+        {
+          "id": "learning",
+          "ko": "공부",
+          "en": "STUDY",
+          "icon": "📚",
+          "verb": "공부하는 중",
+          "pose": "read",
+          "subs": [
+            {
+              "id": "lecture",
+              "ko": "강의",
+              "en": "LECTURE",
+              "icon": "🎧",
+              "verb": "강의 하는 중",
+              "pose": "read"
+            },
+            {
+              "id": "reading",
+              "ko": "독서",
+              "en": "READING",
+              "icon": "📖",
+              "verb": "독서 하는 중",
+              "pose": "read"
+            },
+            {
+              "id": "notes",
+              "ko": "정리 노트",
+              "en": "NOTES",
+              "icon": "📝",
+              "verb": "정리 노트 하는 중",
+              "pose": "write"
+            }
+          ]
+        },
+        {
+          "id": "growth",
+          "ko": "자기계발",
+          "en": "GROWTH",
+          "icon": "🌱",
+          "verb": "나를 가꾸는 중",
+          "pose": "meditate"
+        }
+      ]
+    },
+    {
+      "id": "wellness",
+      "ko": "웰니스",
+      "en": "WELLNESS",
+      "icon": "🩰",
+      "categories": [
+        {
+          "id": "ballet",
+          "ko": "발레",
+          "en": "BALLET",
+          "icon": "🩰",
+          "verb": "발레 연습 중",
+          "pose": "ballet"
+        },
+        {
+          "id": "pilates",
+          "ko": "필라테스",
+          "en": "PILATES",
+          "icon": "🧘",
+          "verb": "필라테스 중",
+          "pose": "pilates"
+        },
+        {
+          "id": "gym",
+          "ko": "헬스",
+          "en": "GYM",
+          "icon": "🏋️",
+          "verb": "운동하는 중",
+          "pose": "lift",
+          "subs": [
+            {
+              "id": "legs",
+              "ko": "하체",
+              "en": "LEGS",
+              "icon": "🦵",
+              "verb": "하체 하는 중",
+              "pose": "lift"
+            },
+            {
+              "id": "upper",
+              "ko": "상체",
+              "en": "UPPER BODY",
+              "icon": "💪",
+              "verb": "상체 하는 중",
+              "pose": "lift"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "creative",
+      "ko": "크리에이티브",
+      "en": "CREATIVE",
+      "icon": "🎹",
+      "categories": [
+        {
+          "id": "piano",
+          "ko": "피아노",
+          "en": "PIANO",
+          "icon": "🎹",
+          "verb": "피아노 연습 중",
+          "pose": "piano"
+        },
+        {
+          "id": "video",
+          "ko": "영상 편집",
+          "en": "EDIT BAY",
+          "icon": "🎬",
+          "verb": "영상 편집 중",
+          "pose": "type"
+        },
+        {
+          "id": "hustle",
+          "ko": "부업",
+          "en": "SIDE HUSTLE",
+          "icon": "💰",
+          "verb": "부업 하는 중",
+          "pose": "type"
+        }
+      ]
+    }
+  ],
+  "floors": [
+    {
+      "id": "life:home",
+      "name": "🏠 홈 & 스터디",
+      "en": "HOME & STUDY",
+      "rooms": [
+        {
+          "template": "chores",
+          "cat": "chores"
+        },
+        {
+          "template": "learning",
+          "cat": "learning"
+        },
+        {
+          "template": "growth",
+          "cat": "growth"
+        }
+      ]
+    },
+    {
+      "id": "life:wellness",
+      "name": "🩰 웰니스 센터",
+      "en": "WELLNESS",
+      "rooms": [
+        {
+          "template": "ballet",
+          "cat": "ballet"
+        },
+        {
+          "template": "pilates",
+          "cat": "pilates"
+        },
+        {
+          "template": "gym",
+          "cat": "gym"
+        }
+      ]
+    },
+    {
+      "id": "life:creative",
+      "name": "🎹 크리에이터 스튜디오",
+      "en": "CREATOR STUDIO",
+      "rooms": [
+        {
+          "template": "piano",
+          "cat": "piano"
+        },
+        {
+          "template": "video",
+          "cat": "video"
+        },
+        {
+          "template": "hustle",
+          "cat": "hustle"
+        }
+      ]
+    }
+  ],
+  "shop": {
+    "decor": [
+      {
+        "id": "cat",
+        "model": "cat",
+        "template": "chores",
+        "icon": "🐱",
+        "name": "고양이와 방석",
+        "price": 60
+      },
+      {
+        "id": "sunflower",
+        "model": "sunflower",
+        "template": "chores",
+        "icon": "🌻",
+        "name": "해바라기 화병",
+        "price": 25
+      },
+      {
+        "id": "globe",
+        "model": "globe",
+        "template": "learning",
+        "icon": "🌍",
+        "name": "빈티지 지구본",
+        "price": 40
+      },
+      {
+        "id": "moodrug",
+        "model": "moodrug",
+        "template": "learning",
+        "icon": "🕯️",
+        "name": "원형 러그와 무드등",
+        "price": 30
+      },
+      {
+        "id": "lanterns",
+        "model": "lanterns",
+        "template": "growth",
+        "icon": "🏮",
+        "name": "종이 랜턴",
+        "price": 35
+      },
+      {
+        "id": "monstera",
+        "model": "monstera",
+        "template": "growth",
+        "icon": "🪴",
+        "name": "큰 몬스테라",
+        "price": 30
+      },
+      {
+        "id": "mirrorball",
+        "model": "mirrorball",
+        "template": "ballet",
+        "icon": "🪩",
+        "name": "미러볼",
+        "price": 80
+      },
+      {
+        "id": "swan",
+        "model": "swan",
+        "template": "ballet",
+        "icon": "🦢",
+        "name": "백조의 호수 포스터",
+        "price": 45
+      },
+      {
+        "id": "mats",
+        "model": "mats",
+        "template": "pilates",
+        "icon": "🟪",
+        "name": "컬러 요가 매트",
+        "price": 30
+      },
+      {
+        "id": "hanging",
+        "model": "hanging",
+        "template": "pilates",
+        "icon": "🌿",
+        "name": "행잉 플랜트",
+        "price": 40
+      },
+      {
+        "id": "bag",
+        "model": "bag",
+        "template": "gym",
+        "icon": "🥊",
+        "name": "샌드백",
+        "price": 60
+      },
+      {
+        "id": "nopain",
+        "model": "nopain",
+        "template": "gym",
+        "icon": "💪",
+        "name": "네온 \"NO PAIN NO GAIN\"",
+        "price": 45
+      },
+      {
+        "id": "chandelier",
+        "model": "chandelier",
+        "template": "piano",
+        "icon": "🕯️",
+        "name": "크리스털 샹들리에",
+        "price": 90
+      },
+      {
+        "id": "cello",
+        "model": "cello",
+        "template": "piano",
+        "icon": "🎻",
+        "name": "첼로",
+        "price": 70
+      },
+      {
+        "id": "mic",
+        "model": "mic",
+        "template": "video",
+        "icon": "🎙️",
+        "name": "팟캐스트 마이크",
+        "price": 50
+      },
+      {
+        "id": "rgb",
+        "model": "rgb",
+        "template": "video",
+        "icon": "🌈",
+        "name": "RGB 네온 패널",
+        "price": 35
+      },
+      {
+        "id": "boss",
+        "model": "boss",
+        "template": "hustle",
+        "icon": "😎",
+        "name": "네온 \"LIKE A BOSS\"",
+        "price": 45
+      },
+      {
+        "id": "safe",
+        "model": "safe",
+        "template": "hustle",
+        "icon": "💸",
+        "name": "황금 금고",
+        "price": 60
+      }
+    ],
+    "outfits": {
+      "hairStyle:bun": 20,
+      "hairStyle:spiky": 20,
+      "hair:#ff8fc8": 25,
+      "hair:#7fd8c4": 25,
+      "hair:#d8d8e0": 25,
+      "top:hoodie": 40,
+      "top:dress": 40,
+      "shirt:#ffc8d2": 20,
+      "shirt:#f2c14e": 35,
+      "acc:beanie": 30,
+      "acc:cap": 30,
+      "acc:fedora": 50,
+      "acc:halo": 120
+    }
+  },
+  "seed": [
+    {
+      "title": "빨래 개고 정리하기",
+      "cat": "chores",
+      "minutes": 15,
+      "repeat": "daily"
+    },
+    {
+      "title": "강의 한 편 듣고 정리",
+      "cat": "learning",
+      "minutes": 30,
+      "repeat": "daily"
+    },
+    {
+      "title": "감사 일기 3줄",
+      "cat": "growth",
+      "minutes": 10,
+      "repeat": "daily"
+    },
+    {
+      "title": "발레 바 워크",
+      "cat": "ballet",
+      "minutes": 30,
+      "repeat": "daily"
+    },
+    {
+      "title": "필라테스 매트 루틴",
+      "cat": "pilates",
+      "minutes": 30,
+      "repeat": "weekly"
+    },
+    {
+      "title": "하체 근력 운동",
+      "cat": "gym",
+      "minutes": 45,
+      "repeat": "weekly"
+    },
+    {
+      "title": "하농 + 소나티네 연습",
+      "cat": "piano",
+      "minutes": 25,
+      "repeat": "daily"
+    },
+    {
+      "title": "릴스 1편 편집",
+      "cat": "video",
+      "minutes": 60,
+      "repeat": "weekly"
+    },
+    {
+      "title": "스토어 신상품 등록",
+      "cat": "hustle",
+      "minutes": 45,
+      "repeat": "once"
+    }
+  ],
+  "home": {
+    "id": "rooftop",
+    "ko": "옥탑방",
+    "icon": "🏚️",
+    "slots": [
+      {
+        "id": "bed",
+        "icon": "🛏️",
+        "ko": "침대",
+        "tiers": [
+          {
+            "ko": "바닥 매트리스"
+          },
+          {
+            "ko": "싱글 침대",
+            "price": 40
+          },
+          {
+            "ko": "퀸 침대",
+            "price": 200
+          },
+          {
+            "ko": "캐노피 침대",
+            "price": 900,
+            "minLevel": 25
+          }
+        ]
+      },
+      {
+        "id": "light",
+        "icon": "💡",
+        "ko": "조명",
+        "tiers": [
+          {
+            "ko": "깜빡이는 전구"
+          },
+          {
+            "ko": "LED 스탠드",
+            "price": 25
+          },
+          {
+            "ko": "펜던트 조명",
+            "price": 60
+          },
+          {
+            "ko": "샹들리에",
+            "price": 500,
+            "minLevel": 25
+          }
+        ]
+      },
+      {
+        "id": "ceiling",
+        "icon": "🏚️",
+        "ko": "천장",
+        "tiers": [
+          {
+            "ko": "비 새는 천장 + 양동이"
+          },
+          {
+            "ko": "방수 수리",
+            "price": 30
+          },
+          {
+            "ko": "새 천장",
+            "price": 120
+          },
+          {
+            "ko": "천창",
+            "price": 600,
+            "minLevel": 25
+          }
+        ]
+      },
+      {
+        "id": "walls",
+        "icon": "🧱",
+        "ko": "벽",
+        "tiers": [
+          {
+            "ko": "벗겨진 벽지"
+          },
+          {
+            "ko": "새 벽지",
+            "price": 50
+          },
+          {
+            "ko": "원목 패널",
+            "price": 250
+          },
+          {
+            "ko": "갤러리 월",
+            "price": 800,
+            "minLevel": 25
+          }
+        ]
+      },
+      {
+        "id": "air",
+        "icon": "❄️",
+        "ko": "냉방",
+        "tiers": [
+          {
+            "ko": "덜덜이 선풍기"
+          },
+          {
+            "ko": "새 선풍기",
+            "price": 20
+          },
+          {
+            "ko": "에어컨",
+            "price": 120
+          },
+          {
+            "ko": "시스템 냉난방",
+            "price": 700,
+            "minLevel": 25
+          }
+        ]
+      },
+      {
+        "id": "table",
+        "icon": "🪵",
+        "ko": "책상",
+        "tiers": [
+          {
+            "ko": "박스 테이블"
+          },
+          {
+            "ko": "접이식 테이블",
+            "price": 25
+          },
+          {
+            "ko": "원목 책상",
+            "price": 150
+          },
+          {
+            "ko": "월넛 대형 책상",
+            "price": 900,
+            "minLevel": 25
+          }
+        ]
+      },
+      {
+        "id": "screen",
+        "icon": "📺",
+        "ko": "화면",
+        "tiers": [
+          {
+            "ko": "브라운관 TV"
+          },
+          {
+            "ko": "평면 TV",
+            "price": 80
+          },
+          {
+            "ko": "대형 TV + 사운드바",
+            "price": 300
+          },
+          {
+            "ko": "홈시어터",
+            "price": 1200,
+            "minLevel": 25
+          }
+        ]
+      }
+    ]
+  }
+}

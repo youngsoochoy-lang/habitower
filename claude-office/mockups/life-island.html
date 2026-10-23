@@ -1,0 +1,237 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Habitower · Life island mockup</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/galmuri@2.39.4/dist/galmuri.css">
+<style>
+  :root { --bg: #14121c; --card: #1d1a28; --line: #ffffff1a; --ink: #f3f0e8; --dim: #b9b2c6; --amber: #ffd166; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 14px/1.5 "Segoe UI", "Malgun Gothic", sans-serif; }
+  main { max-width: 1180px; margin: 0 auto; padding: 24px 16px 40px; }
+  h1 { font-family: Galmuri11, sans-serif; font-weight: 400; font-size: 22px; margin: 0 0 4px; }
+  h1 + p { color: var(--dim); margin: 0 0 20px; }
+  h2 { font-size: 15px; margin: 26px 0 10px; color: var(--amber); }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  figure { margin: 0; background: var(--card); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
+  canvas { display: block; width: 100%; height: auto; }
+  figcaption { padding: 10px 14px 12px; color: var(--dim); font-size: 12.5px; }
+  figcaption b { color: var(--ink); font-family: Galmuri11, sans-serif; font-weight: 400; font-size: 13px; display: block; margin-bottom: 2px; }
+  @media (max-width: 760px) { .grid { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<main>
+  <h1>🏝️ 나의 라이프 아일랜드 — 목업</h1>
+  <p>사무실 타워는 저 멀리, 내 삶은 이 작은 섬에서. 낡은 옥탑방에서 시작해 습관을 쌓을수록 집과 동네가 바뀌어요. (컨셉 스케치 · 실제 게임 그래픽 아님)</p>
+
+  <h2>섬 전체</h2>
+  <div class="grid">
+    <figure><canvas id="islandDay1" width="1120" height="760"></canvas>
+      <figcaption><b>1일차 · Lv.1</b>옥탑방 하나, 빈 땅에는 '매물' 팻말, 차고에 녹슨 벤치 하나. 저 멀리 사무실 타워.</figcaption></figure>
+    <figure><canvas id="islandLater" width="1120" height="760"></canvas>
+      <figcaption><b>몇 달 뒤 · Lv.30 무렵</b>타운하우스와 정원, 스킬 레벨만큼 자란 헬스장 · 음악 학원 · 북카페, 💼 사업가 진로의 내 가게, 다리로 이어진 공원 섬.</figcaption></figure>
+  </div>
+
+  <h2>옥탑방 안 — 낡은 물건을 하나씩 바꿔요</h2>
+  <div class="grid">
+    <figure><canvas id="roomDay1" width="1120" height="760"></canvas>
+      <figcaption><b>처음 옥탑방</b>바닥 매트리스, 깜빡이는 전구, 비 새는 천장 아래 양동이, 벗겨진 벽지, 덜덜거리는 선풍기, 박스 테이블.</figcaption></figure>
+    <figure><canvas id="roomLater" width="1120" height="760"></canvas>
+      <figcaption><b>코인으로 하나씩 교체한 뒤</b>침대 · 펜던트 조명 · 천장 수리 · 새 벽지 · 에어컨 · 원목 책상 · 러그와 화분. 교체할 때마다 옛 물건은 사라지고 방이 조금씩 달라져요.</figcaption></figure>
+  </div>
+</main>
+<script>
+// A tiny isometric painter: boxes in grid units, drawn back to front.
+function shade(hex, k) {
+  const n = parseInt(hex.slice(1), 16), r = n >> 16, g = (n >> 8) & 255, b = n & 255;
+  const f = v => Math.max(0, Math.min(255, Math.round(k < 0 ? v * (1 + k) : v + (255 - v) * k)));
+  return `rgb(${f(r)},${f(g)},${f(b)})`;
+}
+function scene(id, ox, oy, sky, [TW, TH, TZ] = [72, 36, 48], fs = 15) {
+  const cv = document.getElementById(id), c = cv.getContext('2d'), items = [], post = [];
+  const P = (x, y, z = 0) => [ox + (x - y) * TW / 2, oy + (x + y) * TH / 2 - z * TZ];
+  const font = `${fs}px Galmuri11, "Malgun Gothic"`;
+  const poly = (pts, fill, stroke) => { c.beginPath(); pts.forEach(([x, y], i) => (i ? c.lineTo(x, y) : c.moveTo(x, y))); c.closePath(); c.fillStyle = fill; c.fill(); if (stroke) { c.strokeStyle = stroke; c.lineWidth = 1.2; c.stroke(); } };
+  const S = {
+    c, P, poly,
+    box(x, y, z, w, d, h, color, o = {}) { items.push({ k: x + y + w / 2 + d / 2 + z * 0.02 + (o.bias || 0), draw: () => {
+      const top = [P(x, y, z + h), P(x + w, y, z + h), P(x + w, y + d, z + h), P(x, y + d, z + h)];
+      const left = [P(x, y + d, z), P(x + w, y + d, z), P(x + w, y + d, z + h), P(x, y + d, z + h)];
+      const right = [P(x + w, y, z), P(x + w, y + d, z), P(x + w, y + d, z + h), P(x + w, y, z + h)];
+      const edge = o.edge === false ? null : 'rgba(0,0,0,.35)';
+      poly(left, o.left || shade(color, -0.18), edge); poly(right, o.right || shade(color, -0.34), edge); poly(top, o.top || color, edge);
+      if (o.windows) {                                   // window grid on the two visible walls
+        const { rows, cols, lit, color: wc } = o.windows;
+        for (let r = 0; r < rows; r++) for (let i = 0; i < cols; i++) {
+          const on = lit && (r * 7 + i * 3) % 5 !== 0, col = on ? '#ffd58a' : wc || '#2b3346';
+          const z0 = z + h * (r + 0.35) / rows, z1 = z0 + h * 0.4 / rows;
+          const x0 = x + w * (i + 0.25) / cols, x1 = x0 + w * 0.5 / cols;
+          poly([P(x0, y + d, z0), P(x1, y + d, z0), P(x1, y + d, z1), P(x0, y + d, z1)], col);
+          const y0 = y + d * (i + 0.25) / cols, y1 = y0 + d * 0.5 / cols;
+          poly([P(x + w, y0, z0), P(x + w, y1, z0), P(x + w, y1, z1), P(x + w, y0, z1)], on ? '#f2c477' : col);
+        }
+      }
+    } }); },
+    tree(x, y, s = 1, leaf = '#5f9b4e') { S.box(x - 0.08, y - 0.08, 0.1, 0.16, 0.16, 0.7 * s, '#6b4a32', { edge: false }); S.box(x - 0.42 * s, y - 0.42 * s, 0.1 + 0.6 * s, 0.84 * s, 0.84 * s, 0.75 * s, leaf, { bias: 0.01 }); },
+    lamp(x, y, on) { S.box(x - 0.04, y - 0.04, 0.1, 0.08, 0.08, 1.5, '#3a3a44', { edge: false }); S.box(x - 0.12, y - 0.12, 1.6, 0.24, 0.24, 0.12, on ? '#ffe2a0' : '#6b6b70', { bias: 0.02 }); if (on) post.push(() => { const [px, py] = P(x, y, 1.66); const g = c.createRadialGradient(px, py, 2, px, py, 70); g.addColorStop(0, 'rgba(255,214,140,.55)'); g.addColorStop(1, 'rgba(255,214,140,0)'); c.fillStyle = g; c.fillRect(px - 72, py - 72, 144, 144); }); },
+    sign(x, y, text, color = '#e9dcc4', ink = '#3a2a1a') { S.box(x - 0.03, y - 0.03, 0.1, 0.06, 0.06, 0.8, '#6b4a32', { edge: false }); post.push(() => S.board(P(x, y, 1.05), text, color, ink)); },
+    board([px, py], text, bg, ink) { c.font = font; const w = c.measureText(text).width + 16; c.fillStyle = bg; c.strokeStyle = '#2a1a0a'; c.lineWidth = 2; c.beginPath(); c.roundRect(px - w / 2, py - fs, w, fs * 2, 3); c.fill(); c.stroke(); c.fillStyle = ink; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText(text, px, py + 1); },
+    label(x, y, z, text, tone = 'old') { post.push(() => { const [px, py] = P(x, y, z); c.font = font; const w = c.measureText(text).width + 16, hh = fs + 12; const bg = tone === 'old' ? 'rgba(40,24,20,.88)' : tone === 'new' ? 'rgba(18,44,30,.9)' : 'rgba(20,16,30,.88)'; const bd = tone === 'old' ? '#ff8f6b' : tone === 'new' ? '#4fe08a' : '#ffd166'; c.strokeStyle = bd; c.lineWidth = 1.5; c.beginPath(); c.moveTo(px, py); c.lineTo(px, py - 24); c.stroke(); c.fillStyle = bg; c.beginPath(); c.roundRect(px - w / 2, py - 24 - hh, w, hh, 5); c.fill(); c.stroke(); c.fillStyle = '#f3f0e8'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText(text, px, py - 24 - hh / 2 + 1); }); },
+    after(fn) { post.push(fn); },
+    render() {
+      const g = c.createLinearGradient(0, 0, 0, cv.height); sky.forEach(([p, col]) => g.addColorStop(p, col)); c.fillStyle = g; c.fillRect(0, 0, cv.width, cv.height);
+      for (const f of (S.backdrop || [])) f();
+      items.sort((a, b) => a.k - b.k).forEach(i => i.draw()); post.forEach(f => f());
+    },
+  };
+  return S;
+}
+// the floating island: grass slab with a rocky underside
+function island(S, x, y, w, d, grass, rock = '#6b5a4a') {
+  const { P, poly } = S;
+  S.backdrop = S.backdrop || [];
+  S.backdrop.push(() => {
+    const tip = P(x + w * 0.55, y + d * 0.55, -3.4);
+    poly([P(x, y + d, -0.4), P(x + w, y + d, -0.4), tip], shade(rock, -0.2));
+    poly([P(x + w, y, -0.4), P(x + w, y + d, -0.4), tip], shade(rock, -0.38));
+    poly([P(x + w * 0.2, y + d, -0.4), P(x + w * 0.45, y + d, -0.4), P(x + w * 0.4, y + d * 0.8, -1.8)], shade(rock, -0.05));
+  });
+  S.box(x, y, -0.4, w, d, 0.4, grass, { bias: -100 });
+}
+function distantTower(S, x, y, lit) {
+  S.backdrop = S.backdrop || [];
+  S.backdrop.push(() => {
+    const c = S.c; c.fillStyle = lit ? '#2a2d48' : '#3a3c4a'; c.fillRect(x, y, 70, 230); c.fillRect(x + 22, y - 26, 26, 26);
+    for (let r = 0; r < 14; r++) for (let i = 0; i < 4; i++) { c.fillStyle = (r * 5 + i * 3) % 4 ? (lit ? '#f4c98a' : '#596079') : '#1d2030'; c.fillRect(x + 8 + i * 15, y + 10 + r * 15, 9, 8); }
+    c.font = '15px Galmuri11, "Malgun Gothic"'; c.fillStyle = 'rgba(255,255,255,.7)'; c.textAlign = 'center'; c.fillText('💼 사무실 타워', x + 35, y + 248);
+    c.fillStyle = 'rgba(30,30,50,.5)'; for (let i = 0; i < 9; i++) c.fillRect(x - 230 + i * 34, y + 120 + (i * 37) % 60, 26, 140);
+  });
+}
+const SHABBY_SKY = [[0, '#59607a'], [0.55, '#8a8a95'], [1, '#a59a8e']];
+const SUNSET_SKY = [[0, '#2c2f6e'], [0.45, '#c26a7a'], [0.8, '#f2a65e'], [1, '#ffd08a']];
+
+// ---------- island, day 1 ----------
+{
+  const S = scene('islandDay1', 420, 250, SHABBY_SKY);
+  distantTower(S, 1010, 60, false);
+  island(S, 0, 0, 14, 10, '#7d8c5a');
+  S.box(0, 4.2, 0, 14, 1.6, 0.04, '#5b5d63', { bias: -50 });                     // the street, patched and cracked
+  for (const [x, w] of [[2, 1.2], [6.5, 0.8], [10.2, 1.4]]) S.box(x, 4.7, 0.04, w, 0.5, 0.01, '#4a4b50', { edge: false, bias: -49 });
+  // home lot: a tired 3-storey block with a rooftop room (옥탑방)
+  S.box(1, 0.6, 0, 3.8, 3, 2.6, '#9a958c', { windows: { rows: 3, cols: 3, color: '#3a3f4c' } });
+  S.box(1.4, 1, 2.6, 1.7, 1.5, 0.95, '#b9a98a', { windows: { rows: 1, cols: 1, color: '#4a4030' } });   // 옥탑방
+  S.box(1.3, 0.9, 3.55, 1.9, 1.7, 0.06, '#3f78b8', { bias: 0.3 });                  // blue tarp on the leaky roof
+  S.box(3.4, 1.2, 2.6, 0.25, 0.25, 0.25, '#4a86c8', { bias: 0.2 });                 // bucket
+  S.box(3.3, 2.3, 2.6, 1.2, 0.04, 0.6, '#d8d2c6', { edge: false, bias: 0.25 });     // drying laundry
+  S.label(2.2, 1.7, 3.7, '🏚️ 내 옥탑방', 'tag');
+  // empty lots
+  for (const [x, y, t] of [[6, 0.6, '매물'], [6, 6.6, '공사 예정'], [9.8, 6.6, '매물']]) {
+    S.box(x, y, 0, 3.4, 2.8, 0.05, '#8b7355', { bias: -40 });
+    S.sign(x + 1.6, y + 1.6, t);
+    for (let i = 0; i < 5; i++) S.box(x + 0.4 + (i * 0.7) % 3, y + 0.3 + (i * 1.3) % 2.4, 0.05, 0.18, 0.18, 0.2, '#6f8a3a', { edge: false });
+  }
+  // a garage with one rusty bench: the first "gym"
+  S.box(10, 0.8, 0, 3, 2.4, 1.2, '#8d8f93');
+  S.box(11.2, 3.2, 0, 1, 0.02, 0.9, '#2a2a30', { edge: false, bias: 0.4 });
+  S.box(11, 3.5, 0, 1.2, 0.35, 0.3, '#7a4a3a', { bias: 0.5 });
+  S.label(11.5, 2, 1.3, '🏋️ 차고 헬스장 Lv.1', 'tag');
+  // kiosk, a dead tree, a broken lamp
+  S.box(1, 7, 0, 1, 1, 1.5, '#a8b4c0', { windows: { rows: 1, cols: 1, color: '#6d7b8a' } });
+  S.label(1.5, 7.5, 1.6, '🛗 리프트 → 사무실', 'tag');
+  S.tree(4.5, 8, 1, '#8a7a4a'); S.lamp(5, 3.9, false); S.lamp(12.5, 6.1, false);
+  S.render();
+}
+// ---------- island, months later ----------
+{
+  const S = scene('islandLater', 400, 250, SUNSET_SKY, [66, 33, 46]);
+  distantTower(S, 1020, 60, true);
+  island(S, 0, 0, 14, 10, '#6fae5a');
+  island(S, 15.2, 5, 4.4, 5, '#79b862');                                            // a park island, joined by a bridge
+  S.box(14, 6.8, 0.05, 1.2, 0.8, 0.08, '#b08a5a', { bias: -30 });
+  S.box(0, 4.2, 0, 14, 1.6, 0.04, '#4f5260', { bias: -50 });
+  for (let x = 0.5; x < 14; x += 1.6) S.box(x, 4.95, 0.04, 0.7, 0.1, 0.01, '#e8e2d0', { edge: false, bias: -49 });
+  // home: a townhouse with a garden
+  S.box(0.8, 0.5, 0, 4, 3.1, 0.05, '#5f9b4e', { bias: -40 });
+  S.box(1, 0.6, 0, 3.6, 2.4, 2.1, '#efe6d6', { windows: { rows: 2, cols: 3, lit: true } });
+  S.box(0.9, 0.5, 2.1, 3.8, 2.6, 0.35, '#7a4a3a');
+  S.box(1.4, 0.8, 2.45, 2.8, 2, 0.3, '#8a5444', { bias: 0.1 });
+  for (let i = 0; i < 6; i++) S.box(0.9 + i * 0.68, 3.4, 0, 0.08, 0.08, 0.45, '#ffffff', { edge: false });
+  S.tree(4.3, 3.2, 0.7, '#4f9d55');
+  S.label(2.8, 1.8, 2.9, '🏡 타운하우스 (Lv.25)', 'new');
+  // music school, fitness club, library café, your shop
+  S.box(6, 0.6, 0, 3.2, 2.6, 2.7, '#b5654a', { windows: { rows: 3, cols: 3, lit: true } });
+  S.label(7.6, 1.9, 2.8, '🎹 음악 학원 (피아노 Lv.6)', 'new');
+  S.box(10, 0.7, 0, 3.2, 2.5, 2.2, '#2c3e50', { windows: { rows: 2, cols: 4, lit: true, color: '#5fc8d8' } });
+  S.box(10, 3.15, 1.6, 3.2, 0.05, 0.4, '#3fd6c6', { bias: 0.3 });
+  S.label(11.6, 1.9, 2.3, '🏋️ 피트니스 클럽 (헬스 Lv.8)', 'new');
+  S.box(6, 6.6, 0, 3.2, 2.6, 1.8, '#c49a6c', { windows: { rows: 2, cols: 3, lit: true } });
+  S.box(6, 6.4, 1.1, 3.2, 0.4, 0.08, '#5a8a5a', { bias: 0.2 });
+  for (const x of [6.6, 7.8]) { S.box(x, 9.4, 0, 0.5, 0.5, 0.35, '#e8e1d5'); }
+  S.label(7.6, 7.9, 1.9, '📚 북카페 (공부 Lv.5)', 'new');
+  S.box(9.8, 6.6, 0, 3.2, 2.6, 1.6, '#f3ead8', { windows: { rows: 1, cols: 3, lit: true } });
+  for (let i = 0; i < 6; i++) S.box(9.8 + i * 0.53, 6.4, 1.15, 0.53, 0.4, 0.08, i % 2 ? '#ffffff' : '#e0505a', { bias: 0.2, edge: false });
+  S.label(11.4, 7.9, 1.7, '💼 내 가게 (사업가 · 1인 사업자)', 'new');
+  // kiosk, trees, lamps, the park
+  S.box(1, 7, 0, 1, 1, 1.5, '#cfe4f4', { windows: { rows: 1, cols: 1, color: '#7fb0d8' } });
+  S.label(1.5, 7.5, 1.6, '🛗 리프트', 'tag');
+  for (const [x, y] of [[3.5, 7.4], [4.6, 8.8], [3, 9.2], [16, 6], [17.5, 7.2], [16.6, 8.8], [18.6, 9.3]]) S.tree(x, y, 0.9);
+  for (const x of [2.5, 6.5, 10, 13.2]) S.lamp(x, 3.9, true);
+  S.box(16.4, 7.6, 0, 1.4, 1, 0.05, '#7fc4e8', { bias: -20 });
+  S.label(17.4, 6.6, 1.4, '🌳 공원 섬', 'new');
+  S.render();
+}
+// ---------- inside the rooftop room ----------
+function roomShell(S, wall, floor, peel) {
+  const { P, poly } = S;
+  S.backdrop = [() => {
+    poly([P(0, 0, 0), P(0, 0, 3), P(7, 0, 3), P(7, 0, 0)], shade(wall, -0.1));          // back wall (x)
+    poly([P(0, 0, 0), P(0, 6, 0), P(0, 6, 3), P(0, 0, 3)], shade(wall, -0.25));        // back wall (y)
+    poly([P(0, 0, 0), P(7, 0, 0), P(7, 6, 0), P(0, 6, 0)], floor);
+    if (peel) for (const [a, b, z] of [[1.2, 2.2, 2.1], [4.6, 5.3, 1.2], [5.6, 6.6, 2.4]]) poly([P(a, 0, z), P(b, 0, z - 0.2), P(b, 0, z - 0.9), P(a + 0.2, 0, z - 0.7)], '#c9bb98');
+    if (peel) poly([P(0, 1.5, 2.4), P(0, 2.8, 2.6), P(0, 2.6, 1.6), P(0, 1.7, 1.8)], '#c9bb98');
+  }];
+}
+{
+  const S = scene('roomDay1', 470, 290, [[0, '#2a2a33'], [1, '#3a3640']], [110, 55, 75], 17);
+  roomShell(S, '#b8b09a', '#8d8778', true);
+  S.box(0.4, 3.4, 0, 2.6, 2.2, 0.22, '#d9d4c8');                                       // mattress on the floor
+  S.box(0.5, 3.5, 0.22, 0.7, 0.5, 0.12, '#f0eee6', { bias: 0.1 });
+  S.label(1.7, 4.5, 0.4, '바닥 매트리스', 'old');
+  S.box(3.6, 2.6, 0, 1, 0.8, 0.6, '#b08a5a');                                          // a crate as a table
+  S.box(3.9, 2.8, 0.6, 0.4, 0.3, 0.22, '#3a3a40', { bias: 0.1 });                     // old CRT TV
+  S.label(4.1, 3, 1, '박스 테이블 + 브라운관', 'old');
+  S.box(5.6, 4.2, 0, 0.3, 0.3, 0.3, '#4a86c8');                                        // bucket under the leak
+  S.after(() => { const [x, y] = S.P(5.75, 4.35, 3); S.c.strokeStyle = '#8fc4ff'; S.c.setLineDash([4, 6]); S.c.beginPath(); S.c.moveTo(x, y); S.c.lineTo(x, y + 150); S.c.stroke(); S.c.setLineDash([]); });
+  S.label(5.75, 4.35, 0.4, '비 새는 천장 · 양동이', 'old');
+  S.box(5.6, 1, 0, 0.5, 0.5, 1.1, '#9aa0a8');                                          // rattling fan
+  S.label(5.85, 1.25, 1.2, '덜덜이 선풍기', 'old');
+  S.after(() => { const [x, y] = S.P(3.5, 3, 3); S.c.strokeStyle = '#666'; S.c.beginPath(); S.c.moveTo(x, y); S.c.lineTo(x, y + 50); S.c.stroke(); S.c.fillStyle = '#e8d890'; S.c.beginPath(); S.c.arc(x, y + 60, 12, 0, 7); S.c.fill(); });
+  S.label(3.5, 3, 2.7, '깜빡이는 전구', 'old');
+  S.label(2.6, 0, 2.2, '벗겨진 벽지', 'old');
+  S.render();
+}
+{
+  const S = scene('roomLater', 470, 290, [[0, '#2c2638'], [1, '#463a4a']], [110, 55, 75], 17);
+  roomShell(S, '#e9dcc4', '#a07850', false);
+  S.backdrop.push(() => { const { P, poly } = S; for (let x = 0.5; x < 7; x += 0.7) poly([P(x, 0, 0), P(x + 0.02, 0, 0), P(x + 0.02, 0, 3), P(x, 0, 3)], '#d9c9ab'); poly([P(1.3, 1, 0.01), P(4.8, 1, 0.01), P(4.8, 5.4, 0.01), P(1.3, 5.4, 0.01)], '#7a4a5a'); });
+  S.box(0.3, 3.2, 0, 2.6, 2.5, 0.5, '#6b4a3a');                                        // a real bed
+  S.box(0.35, 3.25, 0.5, 2.5, 2.4, 0.18, '#f6f2ea', { bias: 0.1 });
+  S.box(0.3, 3.2, 0, 0.2, 2.5, 1.3, '#6b4a3a', { bias: -0.1 });
+  S.label(1.7, 4.5, 0.8, '🛏️ 침대 🪙200', 'new');
+  S.box(3.6, 0.5, 0, 1.8, 0.9, 0.74, '#b08a5a');                                       // wooden desk
+  S.box(4.1, 0.6, 0.74, 0.8, 0.1, 0.5, '#2a2d38', { bias: 0.1 });
+  S.label(4.5, 0.9, 1.4, '🖥️ 원목 책상 🪙150', 'new');
+  S.box(0.1, 0.4, 2.2, 0.4, 1.2, 0.4, '#f0f0f2');                                      // AC unit
+  S.label(0.3, 1, 2.6, '❄️ 에어컨 🪙120', 'new');
+  S.after(() => { const [x, y] = S.P(3.5, 3, 3); S.c.strokeStyle = '#333'; S.c.beginPath(); S.c.moveTo(x, y); S.c.lineTo(x, y + 50); S.c.stroke(); S.c.fillStyle = '#2f5a3a'; S.c.beginPath(); S.c.moveTo(x - 28, y + 76); S.c.lineTo(x + 28, y + 76); S.c.lineTo(x + 14, y + 50); S.c.lineTo(x - 14, y + 50); S.c.fill(); const g = S.c.createRadialGradient(x, y + 50, 2, x, y + 50, 70); g.addColorStop(0, 'rgba(255,214,140,.5)'); g.addColorStop(1, 'rgba(255,214,140,0)'); S.c.fillStyle = g; S.c.fillRect(x - 70, y - 20, 140, 140); });
+  S.label(3.5, 3, 2.7, '💡 펜던트 조명 🪙60', 'new');
+  S.box(5.7, 4.4, 0, 0.5, 0.5, 0.45, '#d8d2c6'); S.box(5.6, 4.3, 0.45, 0.7, 0.7, 0.8, '#4f9d55', { bias: 0.1 });
+  S.label(5.95, 4.65, 1.4, '🪴 화분 · 천장 수리 🪙80', 'new');
+  S.label(2.6, 0, 2.4, '🎨 새 벽지 🪙50', 'new');
+  S.render();
+}
+</script>
+</body>
+</html>

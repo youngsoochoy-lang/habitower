@@ -1,0 +1,6 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    { "name": "claude-office", "runtimeExecutable": "node", "runtimeArgs": ["claude-office/server.js"], "port": 7777 }
+  ]
+}
