@@ -176,7 +176,7 @@ h2 small{font-size:10px;font-weight:600;letter-spacing:1.5px;color:var(--faint)}
 .quest button[data-a=start]{background:#4fe08a22;border-color:#4fe08a55;color:var(--green)}
 .quest .qok{color:var(--green);font-weight:800;padding:0 6px}
 .qadd{display:flex;flex-direction:column;gap:6px;margin-top:6px;padding-top:8px;border-top:1px solid var(--line)}
-.qadd input,.qadd select{background:#0006;border:1px solid var(--line);color:var(--ink);border-radius:8px;padding:6px 8px;font:inherit;font-size:12px;min-width:0}
+.qadd input,.qadd select,.gform input{background:#0006;border:1px solid var(--line);color:var(--ink);border-radius:8px;padding:6px 8px;font:inherit;font-size:12px;min-width:0}
 .qrow{display:flex;gap:6px}.qrow select{flex:1}
 .qadd button{padding:6px 12px;border-radius:8px;border:0;background:var(--amber);color:#2a1a08;font-weight:800;cursor:pointer}
 .skills{display:grid;grid-template-columns:1fr 1fr;gap:6px}
@@ -357,8 +357,8 @@ h2 small{font-size:10.5px;font-weight:500;letter-spacing:.06em;color:var(--faint
 .quest .qok{color:var(--accent)}
 .qsubs{margin:-4px 0 8px 32px;gap:4px}
 .qadd{margin-top:22px;padding-top:0;border-top:0;gap:8px}
-.qadd input,.qadd select,.qadd textarea,.barea input,.brow input,.brow select{background:var(--raise);border:1px solid transparent;border-radius:10px;padding:8px 10px}
-.qadd input:focus,.qadd select:focus,.qadd textarea:focus,.barea input:focus,.brow input:focus,.brow select:focus{outline:none;border-color:var(--accent)}
+.qadd input,.qadd select,.qadd textarea,.barea input,.brow input,.brow select,.gform input{background:var(--raise);border:1px solid transparent;border-radius:10px;padding:8px 10px}
+.qadd input:focus,.qadd select:focus,.qadd textarea:focus,.gform input:focus,.barea input:focus,.brow input:focus,.brow select:focus{outline:none;border-color:var(--accent)}
 .qadd button{background:var(--accent);color:var(--accent-ink);border-radius:10px;padding:8px 16px;font-weight:700}
 .skills{grid-template-columns:1fr 1fr;gap:0 22px}
 .skill em{color:var(--accent)}
@@ -401,9 +401,21 @@ h2 small{font-size:10.5px;font-weight:500;letter-spacing:.06em;color:var(--faint
 .req{grid-template-columns:1fr 84px auto;gap:10px}
 .gives{gap:6px}.gives span{background:var(--raise);border:0;color:var(--dim)}
 .gives em{color:var(--faint)}
+/* atomic-habit hints on a quest, and the goals tab */
+.quest .hab{display:block;white-space:normal;margin-top:2px}.quest .miss{color:var(--accent)}
+.goal{padding:14px 0 16px;border-top:1px solid var(--line);display:grid;gap:8px}
+.goal .gh{display:flex;align-items:baseline;gap:8px}.goal .gh b{font-size:13px;letter-spacing:-.02em}.goal .gh small{margin-left:auto;color:var(--dim);font-variant-numeric:tabular-nums}
+.goal .gnote{color:var(--faint);font-size:11px;line-height:1.45}
+.gms{display:flex;flex-wrap:wrap;gap:4px 12px;font-size:10.5px;color:var(--faint);font-variant-numeric:tabular-nums}.gms .hit{color:var(--accent)}
+.gform{display:flex;gap:6px}.gform input{flex:1;min-width:0;color:var(--ink);font:inherit;font-size:12px}
+.gform button{border:0;cursor:pointer;background:var(--accent);color:var(--accent-ink);border-radius:10px;padding:8px 16px;font:inherit;font-size:12px;font-weight:700}
+.gitems{display:grid;gap:3px;font-size:11.5px}.gitems .tier{color:var(--faint);font-size:10.5px;margin-top:6px}
+.gitems label{display:flex;gap:7px;align-items:flex-start}.gitems input{margin-top:2px}
+.wk{display:grid;grid-template-columns:96px 1fr 64px;gap:6px 10px;align-items:center;font-size:11px}.wk b{text-align:right;color:var(--dim);font-weight:500;font-variant-numeric:tabular-nums}
 /* building editor */
 .barea{margin-top:22px}
 .bcat{background:none;border:0;border-radius:0;padding:12px 0 14px;border-top:1px solid var(--line);gap:6px}
+[data-pack]{opacity:.55}
 .badd{border:1px dashed var(--line);border-radius:10px;padding:6px 12px;margin-top:10px}
 @media (max-width:1100px){.app{grid-template-columns:240px 1fr}}
 @media (max-width:720px){.app{grid-template-columns:1fr;grid-template-rows:170px 1fr}.panel{padding:16px}.chip{left:12px;top:12px;max-width:calc(100% - 110px)}.live,.custom{right:12px}.zoom{left:12px;bottom:12px}.clock{right:12px;bottom:76px}.hint{display:none}}
@@ -1676,7 +1688,38 @@ function buildDecor(B) {
 // the config arrives before the rest of the tower is drawn, so the floors are built here, in the same order as ever
 let BUILDING = { areas: [], floors: [] }, buildingMtime = -1, lifeBuilt = false;
 const LIFE_SEED = randSeed;
-try { const j = await (await fetch('/api/building', { cache: 'no-store' })).json(); BUILDING = j.data || BUILDING; buildingMtime = j.mtime; } catch {}
+// Course packs (data/packs/*.json) lay their areas, categories, subs, floors, paths and goals over building.json.
+// Everything a pack adds is tagged _pack, and BUILDING.packs holds the packs themselves; stripPacks() takes both out
+// again before the editor saves, so building.json never absorbs a pack.
+function withPacks(base, packs = []) {
+  const B = JSON.parse(JSON.stringify(base || { areas: [], floors: [] }));
+  B.areas ||= []; B.floors ||= []; B.paths ||= []; B.packs = [];
+  const tag = (o, id) => ({ ...o, _pack: id });
+  const findCat = id => { for (const a of B.areas) { const c = (a.categories || []).find(x => x.id === id); if (c) return c; } };
+  for (const p of packs) {
+    const id = p.pack.id;
+    B.packs.push({ ...p.pack, goals: p.goals || [], weeklyHours: p.weeklyHours || {}, seed: p.seed || [] });
+    for (const a of p.areas || []) {
+      let area = B.areas.find(x => x.id === a.id);
+      if (!area) { area = tag({ ...a, categories: [] }, id); B.areas.push(area); }
+      for (const c of a.categories || []) {
+        const have = findCat(c.id);
+        if (!have) { (area.categories ||= []).push(tag({ ...c, subs: (c.subs || []).map(s => tag(s, id)) }, id)); continue; }
+        const subs = (have.subs ||= []);            // a category that already exists only gains the pack's subs
+        for (const s of c.subs || []) if (!subs.some(x => x.id === s.id)) subs.push(tag(s, id));
+      }
+    }
+    for (const f of p.floors || []) if (!B.floors.some(x => x.id === f.id)) B.floors.push(tag(f, id));
+    for (const pa of p.paths || []) if (!B.paths.some(x => x.id === pa.id)) B.paths.push(tag(pa, id));
+  }
+  return B;
+}
+function stripPacks(B) {
+  const clean = v => Array.isArray(v) ? v.filter(x => !x?._pack).map(clean)
+    : v && typeof v === 'object' ? Object.fromEntries(Object.entries(v).filter(([k]) => k !== 'packs').map(([k, x]) => [k, clean(x)])) : v;
+  return clean(B);
+}
+try { const j = await (await fetch('/api/building', { cache: 'no-store' })).json(); BUILDING = withPacks(j.data, j.packs); buildingMtime = j.mtime; } catch {}
 buildLife(BUILDING);
 // ======================================================================
 //  The life island: your 옥탑방 and one building per studio floor, away
@@ -3120,7 +3163,9 @@ function gameStats() {
 }
 // a subtask's done is the day it was ticked; it counts for the quest's current day / week like the quest itself
 const periodDone = (repeat, d) => !!d && (repeat === 'daily' ? d === dayKey() : repeat === 'weekly' ? weekOf(d) === weekOf(new Date()) : true);
+// cue and easy come from Atomic Habits: the habit stack ("after X, I…") and the two-minute version for bad days
 const newQuest = (o, i = '') => ({ id: 'q' + Date.now().toString(36) + i, title: o.title, cat: o.cat, ...(o.sub ? { sub: o.sub } : {}), minutes: o.minutes || 25, repeat: o.repeat || 'daily',
+  ...(o.cue ? { cue: o.cue } : {}), ...(o.easy ? { easy: o.easy } : {}), ...(o.pack ? { pack: o.pack } : {}),
   ...(o.subtasks?.length ? { subtasks: o.subtasks.map(t => ({ title: typeof t === 'string' ? t : t.title, done: null })) } : {}), done: [], created: Date.now() });
 async function loadGame() {
   try {
@@ -3130,12 +3175,29 @@ async function loadGame() {
     if (j.data) game = { quests: [], history: [], ...j.data };
     else { game = { quests: (BUILDING.seed || []).map((o, i) => newQuest(o, i)), history: [] }; saveGame(); }
     gameReady = true;
+    seedPacks();
     if (!game.owned) {                     // what you already wear stays yours when the locks arrive
       game.owned = Object.keys(OUTFIT_LOCKS).filter(id => { const [k, v] = id.split(':'); return myLook[k] === v; });
       saveGame();
     }
     renderGame();
   } catch {}
+}
+// a pack's starter quests arrive once per pack version; quests you deleted are not brought back by the same version
+function seedPacks() {
+  if (!gameReady) return;
+  const seen = (game.packs ||= {});
+  let added = 0, changed = false;
+  for (const p of BUILDING.packs || []) {
+    const v = p.version || 1;
+    if (seen[p.id] >= v) continue;
+    changed = true;
+    const have = new Set(game.quests.map(q => q.title));
+    p.seed.filter(o => !have.has(o.title)).forEach((o, i) => { game.quests.push(newQuest({ ...o, pack: p.id }, 'p' + i)); added++; });
+    seen[p.id] = v;
+  }
+  if (changed) saveGame();
+  if (added) { banner(`📦 새 코스 퀘스트 ${added}개를 받았어요`); renderGame(); }
 }
 let saveTimer = 0;
 function saveGame() {
@@ -3348,6 +3410,83 @@ function paintQuestBoard(def) {
 }
 const pathOpen = new Set();               // path cards you opened in the 🧭 tab
 const pct = (a, b) => (b > 0 ? Math.min(100, Math.round(a / b * 100)) : 100);
+// ---------- atomic habits: cue, two-minute version, never miss twice ----------
+function habitHint(q) {
+  const y = new Date(); y.setDate(y.getDate() - 1);
+  const missed = q.repeat === 'daily' && q.created < new Date(dayKey(y) + 'T00:00').getTime() && !(q.done || []).includes(dayKey(y));
+  const bits = [];
+  if (missed) bits.push(`<span class="miss">어제 놓쳤어요 · 두 번 연속은 안 돼요${q.easy ? ` → 오늘은 2분 버전: ${esc(q.easy)}` : ''}</span>`);
+  else {
+    if (q.cue) bits.push(`⏰ ${esc(q.cue)}`);
+    if (q.easy) bits.push(`2분 버전: ${esc(q.easy)}`);
+  }
+  return bits.length ? `<small class="hab">${bits.join(' · ')}</small>` : '';
+}
+// ---------- goals: real-world numbers (followers, net worth, kg) and checklists (repertoire), from packs ----------
+const allGoals = () => (BUILDING.packs || []).flatMap(p => p.goals);
+const goalState = id => ((game.goals ||= {})[id] ||= { log: [], done: {} });
+const fmtGoal = (g, v) => v == null ? '—' : `${g.prefix || ''}${Number(v).toLocaleString('ko-KR')}${g.unit || ''}`;
+function weekMinutes(cat) {
+  const wk = weekOf(new Date());
+  return game.quests.filter(q => q.cat === cat).reduce((m, q) => m + (q.done || []).filter(d => weekOf(d) === wk).length * q.minutes, 0);
+}
+function goalsHTML() {
+  let h = `<div class="shophead">🎯 <b>목표</b><small>퀘스트는 습관을, 목표는 실제 숫자를 따라가요. 숫자는 이 기기에만 저장돼요.</small></div>`;
+  const hours = Object.assign({}, ...(BUILDING.packs || []).map(p => p.weeklyHours));
+  const cats = Object.keys(hours).filter(k => SKILLS[k]);
+  if (cats.length) {
+    const plan = cats.reduce((t, k) => t + hours[k], 0), did = cats.reduce((t, k) => t + weekMinutes(k), 0) / 60;
+    h += `<div class="qfloor">이번 주 시간 · ${did.toFixed(1)} / ${plan}시간</div><div class="wk">` + cats.map(k => {
+      const m = weekMinutes(k) / 60;
+      return `<span>${SKILLS[k].icon} ${esc(SKILLS[k].ko)}</span><div class="sbar"><i style="width:${pct(m, hours[k])}%"></i></div><b>${m.toFixed(1)}/${hours[k]}h</b>`;
+    }).join('') + '</div>';
+  }
+  for (const g of allGoals()) {
+    const st = game.goals?.[g.id] || { log: [], done: {} };
+    h += `<div class="goal"><div class="gh"><span>${g.icon || '🎯'}</span><b>${esc(g.ko)}</b>`;
+    if (g.kind === 'checklist') {
+      const items = g.items || [], n = items.filter(it => st.done[it.id]).length;
+      h += `<small>${n}/${items.length}</small></div><div class="sbar"><i style="width:${pct(n, items.length)}%"></i></div>`;
+      if (g.note) h += `<div class="gnote">${esc(g.note)}</div>`;
+      let tier = null;
+      h += '<div class="gitems">' + items.map(it => {
+        const head = it.tier && it.tier !== tier ? `<div class="tier">${esc((tier = it.tier))}</div>` : '';
+        return head + `<label><input type="checkbox" data-gi="${esc(g.id)}" data-item="${esc(it.id)}"${st.done[it.id] ? ' checked' : ''}><span>${esc(it.ko)}</span></label>`;
+      }).join('') + '</div>';
+    } else {
+      const have = st.value == null ? null : g.delta ? st.value - st.start : st.value;
+      const ms = g.milestones || [], next = ms.find(m => have == null || have < m.at), top = ms[ms.length - 1];
+      h += `<small>${g.delta && have != null ? (have >= 0 ? '+' : '') : ''}${fmtGoal(g, have)}${next ? ` → ${fmtGoal(g, next.at)}` : ' 🎉'}</small></div>`;
+      if (top) h += `<div class="sbar"><i style="width:${pct(Math.max(0, have || 0), top.at)}%"></i></div>`;
+      h += `<div class="gms">${ms.map(m => `<span class="${have != null && have >= m.at ? 'hit' : ''}">${have != null && have >= m.at ? '✓' : '○'} ${esc(m.ko || fmtGoal(g, m.at))}${m.by ? ` · ${esc(m.by)}` : ''}</span>`).join('')}</div>`;
+      if (g.note) h += `<div class="gnote">${esc(g.note)}</div>`;
+      h += `<form class="gform" data-g="${esc(g.id)}"><input name="v" type="number" step="any" inputmode="decimal" placeholder="${g.delta && st.start == null ? '시작 값' : '지금 값'}${g.unit || g.prefix ? ` (${esc(g.unit || g.prefix)})` : ''}" aria-label="${esc(g.ko)} 기록"><button>기록</button></form>`;
+      if (st.log.length) h += `<div class="gnote">마지막 기록 ${new Date(st.log[st.log.length - 1][0]).toLocaleDateString('ko-KR')}${g.delta ? ` · 시작 ${fmtGoal(g, st.start)}` : ''}</div>`;
+    }
+    h += '</div>';
+  }
+  return h;
+}
+qpanel.addEventListener('submit', ev => {
+  const g = ev.target.dataset?.g; if (!g) return;
+  ev.preventDefault();
+  const v = Number(new FormData(ev.target).get('v'));
+  if (!Number.isFinite(v) || String(new FormData(ev.target).get('v')).trim() === '') return;
+  const goal = allGoals().find(x => x.id === g), st = goalState(g);
+  if (goal?.delta && st.start == null) st.start = v;
+  const before = st.value == null ? null : goal?.delta ? st.value - st.start : st.value;
+  st.value = v; st.log.push([Date.now(), v]);
+  const now = goal?.delta ? v - st.start : v;
+  const hit = (goal?.milestones || []).find(m => (before == null || before < m.at) && now >= m.at);
+  if (hit) banner(`🎯 ${goal.ko} — ${hit.ko || fmtGoal(goal, hit.at)} 달성!`);
+  saveGame(); renderQuestPanel();
+});
+qpanel.addEventListener('change', ev => {
+  const el = ev.target; if (!el.dataset?.gi) return;
+  const st = goalState(el.dataset.gi);
+  if (el.checked) st.done[el.dataset.item] = dayKey(); else delete st.done[el.dataset.item];
+  saveGame(); renderQuestPanel();
+});
 function pathsHTML(level) {
   const r = RULES(), f = focusShares(), cur = activePath(), rec = recommendedPath(level), canJoin = level >= r.minLevel;
   let h = `<div class="shophead">🧭 <b>${cur ? `${cur.icon} ${esc(cur.ko)} · ${esc(cur.stages[pathProgress(cur).stage].ko)}` : '아직 진로가 없어요'}</b>
@@ -3397,7 +3536,7 @@ qpanel.addEventListener('click', ev => {
 const subOptions = k => `<option value="">— 하위 없음</option>` + catOf(k).subs.map(x => `<option value="${esc(x.id)}">${x.icon || '•'} ${esc(x.ko)}</option>`).join('');
 function renderQuestPanel() {
   const s = gameStats(), scroll = qpanel.querySelector('.qbody')?.scrollTop || 0;
-  const tabs = [['today', '오늘'], ['all', '전체'], ['skills', '스킬'], ['path', '🧭 진로'], ['shop', '🛍️ 상점'], ['log', '기록'], ['build', '🏗️ 건물']];
+  const tabs = [['today', '오늘'], ['all', '전체'], ...((BUILDING.packs || []).some(p => p.goals.length) ? [['goals', '🎯 목표']] : []), ['skills', '스킬'], ['path', '🧭 진로'], ['shop', '🛍️ 상점'], ['log', '기록'], ['build', '🏗️ 건물']];
   let body = '';
   if (qTab === 'today' || qTab === 'all') {
     const list = game.quests.filter(q => qTab === 'all' || !isDone(q) || (q.done || []).includes(dayKey()));
@@ -3406,7 +3545,7 @@ function renderQuestPanel() {
     body = byFloor.filter(([, l]) => l.length).map(([name, l]) => `<div class="qfloor">${esc(name)}</div>` + l.map(q => {
       const done = isDone(q), run = focusRun?.id === q.id, st = q.subtasks || [], ticked = st.filter(x => periodDone(q.repeat, x.done)).length;
       return `<div class="quest${done ? ' done' : ''}${run ? ' run' : ''}"><span class="qi">${qIcon(q)}</span>
-        <div class="qt"><b>${esc(q.title)}</b><small>${esc(qKind(q))} · ${q.minutes}분 · ${REPEAT[q.repeat] || ''} · +${questXP(q)} XP${st.length ? ` · ☑ ${ticked}/${st.length}` : ''}</small></div>
+        <div class="qt"><b>${esc(q.title)}</b><small>${esc(qKind(q))} · ${q.minutes}분 · ${REPEAT[q.repeat] || ''} · +${questXP(q)} XP${st.length ? ` · ☑ ${ticked}/${st.length}` : ''}</small>${done ? '' : habitHint(q)}</div>
         ${done ? '<span class="qok">✔</span>' : `<button data-a="${run ? 'go' : 'start'}" data-id="${q.id}" title="${run ? '그 방으로 가기' : '집중 타이머를 켜고 그 방으로 이동'}"${SKILL_ZONE[q.cat] ? '' : ' disabled'}>${run ? '🛗' : '▶'}</button><button data-a="done" data-id="${q.id}" title="바로 완료">✓</button>`}
         ${qTab === 'all' ? `<button data-a="addst" data-id="${q.id}" title="하위 작업 추가">＋</button><button class="x" data-a="del" data-id="${q.id}" title="삭제">🗑</button>` : ''}</div>` +
         (st.length ? `<div class="qsubs">${st.map((x, i) => `<label><input type="checkbox" data-st="${q.id}" data-i="${i}"${periodDone(q.repeat, x.done) ? ' checked' : ''}${done ? ' disabled' : ''}><span>${esc(x.title)}</span></label>`).join('')}</div>` : '');
@@ -3419,6 +3558,8 @@ function renderQuestPanel() {
       <div class="qrow"><select name="m">${[10, 15, 20, 25, 30, 45, 60, 90].map(m => `<option value="${m}"${m === 25 ? ' selected' : ''}>${m}분</option>`).join('')}</select>
       <select name="r"><option value="daily">매일</option><option value="weekly">매주</option><option value="once">한 번</option></select>
       <button${first ? '' : ' disabled'}>추가</button></div></form>`;
+  } else if (qTab === 'goals') {
+    body = goalsHTML();
   } else if (qTab === 'path') {
     body = pathsHTML(s.level);
   } else if (qTab === 'build') {
@@ -3452,6 +3593,7 @@ qpanel.addEventListener('click', ev => {
 });
 qpanel.addEventListener('submit', ev => {
   ev.preventDefault();
+  if (ev.target.id !== 'qadd') return;
   const f = new FormData(ev.target);
   const subtasks = String(f.get('st') || '').split('\n').map(x => x.trim().slice(0, 60)).filter(Boolean);
   addQuest(String(f.get('t')).trim(), f.get('c'), Number(f.get('m')), f.get('r'), f.get('s') || null, subtasks);
@@ -3740,13 +3882,14 @@ async function loadBuilding() {
     const j = await (await fetch('/api/building', { cache: 'no-store' })).json();
     if (j.mtime === buildingMtime) return;
     buildingMtime = j.mtime;
-    applyBuilding(j.data || { areas: [], floors: [] });
+    applyBuilding(withPacks(j.data, j.packs));
+    seedPacks();
   } catch {}
 }
 async function saveBuilding() {
   applyBuilding(BUILDING);
   try {
-    const r = await fetch('/api/building', { method: 'PUT', headers: { 'Content-Type': 'application/json', 'X-Tower': '1' }, body: JSON.stringify(BUILDING) });
+    const r = await fetch('/api/building', { method: 'PUT', headers: { 'Content-Type': 'application/json', 'X-Tower': '1' }, body: JSON.stringify(stripPacks(BUILDING)) });
     buildingMtime = (await r.json()).mtime || buildingMtime;
   } catch { banner('⚠️ 건물을 저장하지 못했어요'); }
 }
@@ -3770,27 +3913,29 @@ function placeNewRoom(c, a) {
   putRoom(fl, { template: 'blank', cat: c.id });
 }
 function editorHTML() {
-  const floorOpts = BUILDING.floors.map(f => [f.id, f.name]).concat([['__new', '＋ 새 층']]);
+  const floorOpts = BUILDING.floors.filter(f => !f._pack).map(f => [f.id, f.name]).concat([['__new', '＋ 새 층']]);
   const inp = (e, id, f, v, extra = '') => `<input data-e="${e}" data-id="${esc(id)}" data-f="${f}" value="${esc(v || '')}" ${extra}>`;
-  let h = `<div class="shophead">🏗️ <b>내 건물</b><small>카테고리마다 방이 하나 생겨요 · 한 층에 방 3개, 넘치면 층이 늘어나요 · data/building.json에 저장돼요</small></div>`;
+  // what a course pack added is shown but locked: it lives in data/packs/, and saving would drop edits to it
+  const lock = o => (o?._pack ? ` inert data-pack title="📦 코스 팩 '${esc(o._pack)}'에서 왔어요 · data/packs/에서 고쳐요"` : '');
+  let h = `<div class="shophead">🏗️ <b>내 건물</b><small>카테고리마다 방이 하나 생겨요 · 한 층에 방 3개, 넘치면 층이 늘어나요 · data/building.json에 저장돼요${(BUILDING.packs || []).length ? ' · 📦 표시는 코스 팩에서 와서 여기서는 못 고쳐요' : ''}</small></div>`;
   for (const a of BUILDING.areas) {
     const n = (a.categories || []).length;
-    h += `<div class="barea">${inp('area', a.id, 'icon', a.icon, 'class="ic" maxlength="4"')}${inp('area', a.id, 'ko', a.ko, 'maxlength="20" title="영역 이름"')}<button data-b="delArea" data-id="${esc(a.id)}"${n ? ' disabled title="카테고리를 먼저 지워 주세요"' : ' title="영역 지우기"'}>🗑</button></div>`;
+    h += `<div class="barea"${lock(a)}>${inp('area', a.id, 'icon', a.icon, 'class="ic" maxlength="4"')}${inp('area', a.id, 'ko', a.ko, 'maxlength="20" title="영역 이름"')}<button data-b="delArea" data-id="${esc(a.id)}"${n ? ' disabled title="카테고리를 먼저 지워 주세요"' : ' title="영역 지우기"'}>🗑</button></div>`;
     for (const c of a.categories || []) {
       const { f, r } = cfgRoom(c.id), t = r ? tplOf(r) : 'blank';
-      h += `<div class="bcat">
+      h += `<div class="bcat"${lock(c)}>
         <div class="brow">${inp('cat', c.id, 'icon', c.icon, 'class="ic" maxlength="4" title="아이콘"')}${inp('cat', c.id, 'ko', c.ko, 'maxlength="20" title="이름"')}${inp('cat', c.id, 'en', c.en, 'maxlength="20" placeholder="ENGLISH" title="영어 이름 (방 바닥 글씨)"')}<button data-b="delCat" data-id="${esc(c.id)}" title="카테고리와 방 지우기">🗑</button></div>
         <div class="brow">${inp('cat', c.id, 'verb', c.verb, 'maxlength="30" placeholder="○○ 하는 중" title="퀘스트 하는 동안 보이는 문구"')}</div>
         <div class="brow"><select data-e="cat" data-id="${esc(c.id)}" data-f="pose" title="방에서 하는 동작">${optHTML(POSE_OPTS, c.pose)}</select><select data-e="room" data-id="${esc(c.id)}" data-f="template" title="방 템플릿">${optHTML(TPL_OPTS, t)}</select><select data-e="room" data-id="${esc(c.id)}" data-f="floor" title="층">${optHTML(floorOpts, f?.id)}</select><input type="color" data-e="room" data-id="${esc(c.id)}" data-f="tint" value="${esc(r?.tint || TEMPLATE_INFO[t].tint)}" title="바닥 색"></div>`;
-      for (const x of c.subs || []) h += `<div class="brow bsub"><span>↳</span><input data-e="sub" data-id="${esc(c.id)}" data-sub="${esc(x.id)}" data-f="icon" value="${esc(x.icon || '')}" class="ic" maxlength="4"><input data-e="sub" data-id="${esc(c.id)}" data-sub="${esc(x.id)}" data-f="ko" value="${esc(x.ko)}" maxlength="20" title="하위 카테고리 이름"><select data-e="sub" data-id="${esc(c.id)}" data-sub="${esc(x.id)}" data-f="pose" title="동작">${optHTML(POSE_OPTS, x.pose || c.pose)}</select><button data-b="delSub" data-id="${esc(c.id)}" data-sub="${esc(x.id)}" title="하위 카테고리 지우기">🗑</button></div>`;
-      h += `<button class="badd sub" data-b="addSub" data-id="${esc(c.id)}">＋ 하위 카테고리</button></div>`;
+      for (const x of c.subs || []) h += `<div class="brow bsub"${lock(x)}><span>${x._pack ? '📦' : '↳'}</span><input data-e="sub" data-id="${esc(c.id)}" data-sub="${esc(x.id)}" data-f="icon" value="${esc(x.icon || '')}" class="ic" maxlength="4"><input data-e="sub" data-id="${esc(c.id)}" data-sub="${esc(x.id)}" data-f="ko" value="${esc(x.ko)}" maxlength="20" title="하위 카테고리 이름"><select data-e="sub" data-id="${esc(c.id)}" data-sub="${esc(x.id)}" data-f="pose" title="동작">${optHTML(POSE_OPTS, x.pose || c.pose)}</select><button data-b="delSub" data-id="${esc(c.id)}" data-sub="${esc(x.id)}" title="하위 카테고리 지우기">🗑</button></div>`;
+      h += `${c._pack ? '' : `<button class="badd sub" data-b="addSub" data-id="${esc(c.id)}">＋ 하위 카테고리</button>`}</div>`;
     }
-    h += `<button class="badd" data-b="addCat" data-id="${esc(a.id)}">＋ ${esc(a.ko)}에 카테고리 추가</button>`;
+    if (!a._pack) h += `<button class="badd" data-b="addCat" data-id="${esc(a.id)}">＋ ${esc(a.ko)}에 카테고리 추가</button>`;
   }
   h += `<button class="badd" data-b="addArea">＋ 영역 추가</button><div class="qfloor">🏢 층 (아래부터)</div>`;
   for (const f of BUILDING.floors) {
     const n = roomCount(f);
-    h += `<div class="barea">${inp('floor', f.id, 'name', f.name, 'maxlength="24" title="층 이름"')}${inp('floor', f.id, 'en', f.en, 'maxlength="24" placeholder="ENGLISH" title="영어 이름 (로비 바닥 글씨)"')}<small>방 ${n}${f.rooms.length > 3 ? ` · ${Math.ceil(f.rooms.length / 3)}개 층` : ''}</small><button data-b="delFloor" data-id="${esc(f.id)}"${n ? ' disabled title="방이 있는 층은 지울 수 없어요"' : ' title="층 지우기"'}>🗑</button></div>`;
+    h += `<div class="barea"${lock(f)}>${inp('floor', f.id, 'name', f.name, 'maxlength="24" title="층 이름"')}${inp('floor', f.id, 'en', f.en, 'maxlength="24" placeholder="ENGLISH" title="영어 이름 (로비 바닥 글씨)"')}<small>방 ${n}${f.rooms.length > 3 ? ` · ${Math.ceil(f.rooms.length / 3)}개 층` : ''}</small><button data-b="delFloor" data-id="${esc(f.id)}"${n ? ' disabled title="방이 있는 층은 지울 수 없어요"' : ' title="층 지우기"'}>🗑</button></div>`;
   }
   return h;
 }

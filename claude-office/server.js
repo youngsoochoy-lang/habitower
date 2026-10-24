@@ -361,15 +361,31 @@ function startAllStream(req, res, floorId) {
 const DATA_DIR = process.env.TOWER_DATA || path.join(__dirname, 'data');
 const QUESTS_FILE = path.join(DATA_DIR, 'quests.json');
 const BUILDING_FILE = path.join(DATA_DIR, 'building.json');
-// GET returns { data, mtime } (data is null when the file does not exist yet); PUT replaces the file atomically
-function jsonStore(file, check) {
+// course packs: data/packs/*.json, read-only. The page merges them over building.json and never writes them back.
+const PACKS_DIR = path.join(DATA_DIR, 'packs');
+function readPacks() {
+  let files = []; try { files = fs.readdirSync(PACKS_DIR).filter(f => f.endsWith('.json')).sort(); } catch {}
+  const packs = [], errors = [];
+  let mtime = 0;
+  for (const f of files) {
+    const p = path.join(PACKS_DIR, f);
+    mtime = Math.max(mtime, statSafe(p)?.mtimeMs || 0);
+    try { const d = JSON.parse(fs.readFileSync(p, 'utf8')); if (d?.pack?.id) packs.push(d); else errors.push(`${f}: missing pack.id`); }
+    catch { errors.push(`${f}: not valid JSON`); }
+  }
+  return { packs, errors, mtime };
+}
+// GET returns { data, mtime } (data is null when the file does not exist yet); PUT replaces the file atomically.
+// extra() can add fields to the GET answer, and its mtime counts, so the page reloads when they change.
+function jsonStore(file, check, extra) {
   const name = 'data/' + path.basename(file);
   return (req, res) => {
     const send = (code, obj) => { res.writeHead(code, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' }); res.end(JSON.stringify(obj)); };
     if (req.method === 'GET') {
       const st = statSafe(file);
       let data = null; try { data = st && JSON.parse(fs.readFileSync(file, 'utf8')); } catch { return send(500, { error: `${name} is not valid JSON` }); }
-      return send(200, { data, mtime: st ? st.mtimeMs : 0 });
+      const { mtime: xm = 0, ...more } = extra ? extra() : {};
+      return send(200, { data, mtime: Math.max(st ? st.mtimeMs : 0, xm), ...more });
     }
     // writes need a custom header: browsers send it only from this page, so other sites cannot overwrite your files
     if (req.method !== 'PUT' || req.headers['x-tower'] !== '1') return send(403, { error: 'forbidden' });
@@ -387,7 +403,7 @@ function jsonStore(file, check) {
   };
 }
 const quests = jsonStore(QUESTS_FILE, d => (d && Array.isArray(d.quests) ? null : 'expected { quests: [...] }'));
-const buildingStore = jsonStore(BUILDING_FILE, d => (d && Array.isArray(d.areas) && Array.isArray(d.floors) ? null : 'expected { areas: [...], floors: [...] }'));
+const buildingStore = jsonStore(BUILDING_FILE, d => (d && Array.isArray(d.areas) && Array.isArray(d.floors) ? null : 'expected { areas: [...], floors: [...] }'), readPacks);
 
 // ---------- http ----------
 const server = http.createServer((req, res) => {

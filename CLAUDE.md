@@ -15,7 +15,8 @@ A gamified habit app: your to-dos are quests that earn XP and coins. Your life h
 | `claude-office/server.js` | Reads Claude Code transcripts in `~/.claude/projects` and streams events (SSE); serves `data/*.json` at `/api/quests` and `/api/building` (GET, and PUT with an `X-Tower: 1` header, atomic write). 127.0.0.1 only. |
 | `claude-office/office.html` | The whole app in one file: three.js scene, characters, life island, quests, paths, shop, editor. |
 | `claude-office/data/building.json` | The config: progression curve, maps, paths, areas > categories > subcategories, studio floors and room templates, the 옥탑방's item slots, shop, starter quests. Schema in README.md. |
-| `claude-office/data/quests.json` | **The user's own progress. Not in git.** Created from `seed` on first run. |
+| `claude-office/data/packs/*.json` | Course packs laid over `building.json` at load (areas, categories, floors, paths, goals, starter quests with habit cues). Read-only to the page; the editor locks pack items. `personal.json` is the user's own. Schema in README.md. |
+| `claude-office/data/quests.json` | **The user's own progress. Not in git.** Created from `seed` on first run; also holds goal values (`goals`) and which pack versions were seeded (`packs`). |
 | `claude-office/README.md` | What exists, and the full config schema. |
 | `claude-office/DESIGN.md` | Where it is going: life island, home and facility tiers, maps up to a Lv.80 villa, Sims-style life paths, build order and open questions. |
 | `claude-office/mockups/` | Static concept sketches (life island, a 2D concept). |
@@ -29,7 +30,12 @@ A gamified habit app: your to-dos are quests that earn XP and coins. Your life h
 - **Never test on the real `data/quests.json`** (the user's XP and coins). Start a second server: `PORT=7779 TOWER_DATA=<a temp copy of data/> node claude-office/server.js`, and delete it afterwards.
 - Verify changes in the browser: no console errors, and a screenshot. Remove any test hooks afterwards.
 
-## Where we left off (2026-10-23)
+## Where we left off (2026-10-24)
+
+- Course packs and goals: `data/packs/personal.json` is the user's pilot pack (career, creator, English, investing, piano, ballet, gym; the goals themselves are in the file). Quests follow Atomic Habits: tiny steps with a `cue` and a two-minute `easy` version. New 🎯 목표 tab for real-world goals and weekly hours.
+- Packs add to the defaults; they never replace them. Next for packs: a "choose a course" screen with curated packs (influencer, K-pop idol, sushi chef, wealthy retiree…), then an MCP server so the user's own agents can write packs.
+
+## Earlier (2026-10-23)
 
 - Built: data-driven building config and editor (🏗️), linear XP curve and next-unlock chip, life paths (🧭 진로) with stage previews and free switching, the life island with instant lift travel, the 옥탑방 with seven upgradeable item slots, studio pavilions, richer vegetation, the UI redesign above.
 - Next options (see DESIGN.md §12 and §13):

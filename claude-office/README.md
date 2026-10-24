@@ -175,6 +175,36 @@ A subtask's `done` is the day it was ticked (or `null`). It counts for today (da
 
 Room templates are drawn for one zone and carried to any other: furniture keeps its size and moves with the room (turned round when the door is on the other side), while floors and long pieces such as mirror walls stretch to fit.
 
+### Course packs (📦 `data/packs/*.json`) and goals (🎯 목표)
+
+A course pack is a ready-made life plan: its own areas, categories, subcategories, floors, paths, goals and starter quests. `/api/building` returns every pack in `data/packs/` next to `building.json`, and the page lays them over it at load time. Packs **add to** the defaults; they never replace them. The 🏗️ editor shows what a pack added with 📦 and locks it, because it saves only `building.json`; edit the pack file instead. `data/packs/personal.json` is the first one (generated from a script, but plain JSON you can edit by hand).
+
+```jsonc
+{
+  "pack": { "id": "personal", "version": 1, "ko": "나의 코스", "en": "MY COURSE", "desc": "…" },
+  "weeklyHours": { "deal": 7.5, "english": 7 },            // the weekly plan shown in 🎯 목표
+  "areas": [                                                // a new area id adds an area…
+    { "id": "career", "ko": "커리어 & 자산", "icon": "💼", "categories": [ { "id": "deal", "ko": "M&A·전략", "pose": "type", "subs": [ … ] } ] },
+    { "id": "creative", "categories": [ { "id": "video", "subs": [ … ] } ] }   // …an existing category only gains subs
+  ],
+  "floors": [ { "id": "life:career", "name": "💼 커리어 & 언어", "rooms": [ { "template": "hustle", "cat": "deal" } ] } ],
+  "paths":  [ { "id": "dealmaker", "categories": ["deal", "english", "invest"], "stages": [ … ] } ],   // same shape as building.json paths
+  "goals":  [
+    { "id": "yt", "icon": "▶️", "ko": "유튜브 구독자", "kind": "number", "unit": "명",
+      "milestones": [ { "at": 1000, "ko": "1천", "by": "2027.07" } ], "note": "…" },
+    { "id": "weight", "kind": "number", "unit": "kg", "delta": true, "milestones": [ { "at": 2 } ] },   // counted from the first value you record
+    { "id": "repertoire", "kind": "checklist", "items": [ { "id": "r1", "ko": "쇼팽 왈츠 A단조", "tier": "1단계" } ] }
+  ],
+  "seed": [ { "title": "쉐도잉: 1분 클립 따라 하기", "cat": "english", "sub": "shadow", "minutes": 5, "repeat": "daily",
+              "cue": "아침 커피 내리는 동안", "easy": "한 문장 3번", "subtasks": ["그냥 듣기", "따라 말하기 ×3"] } ]
+}
+```
+
+- **Starter quests** arrive once per pack `version` (tracked in `quests.json` → `packs`), skipping titles you already have. Bump `version` to send new ones.
+- **Small habits (Atomic Habits):** any quest can carry a `cue` (the habit stack: when or after what you do it) and an `easy` two-minute version. The quest row shows both, and a daily quest you missed yesterday says so and offers the two-minute version, so you never miss twice.
+- **Goals** follow real-world numbers that XP can't: followers, net worth, kg, pieces learned. You enter values in 🎯 목표; they are saved in `quests.json` → `goals` (on your machine only, like the rest of your progress). The tab also shows this week's hours per category against `weeklyHours`, counted from the quests you finished.
+- New categories can only use the existing poses and room templates, since the 3D rooms are drawn in code.
+
 ### Floor plans
 
 Every project floor uses the same layout for now. Rooms, door positions and seats are all defined in `ROOMDEF` / `ROOM_BOX` in `office.html`, so a per-project layout can be added later. Life floors are laid out from `data/building.json` (see above); the three room zones are `ZONES` in `office.html`.
