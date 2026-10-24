@@ -175,9 +175,18 @@ A subtask's `done` is the day it was ticked (or `null`). It counts for today (da
 
 Room templates are drawn for one zone and carried to any other: furniture keeps its size and moves with the room (turned round when the door is on the other side), while floors and long pieces such as mirror walls stretch to fit.
 
-### Course packs (📦 `data/packs/*.json`) and goals (🎯 목표)
+### Course packs (📦) and goals (🎯 목표)
 
-A course pack is a ready-made life plan: its own areas, categories, subcategories, floors, paths, goals and starter quests. `/api/building` returns every pack in `data/packs/` next to `building.json`, and the page lays them over it at load time. Packs **add to** the defaults; they never replace them. The 🏗️ editor shows what a pack added with 📦 and locks it, because it saves only `building.json`; edit the pack file instead. `data/packs/personal.json` is the first one (generated from a script, but plain JSON you can edit by hand).
+A course pack is a ready-made life plan: its own areas, categories, subcategories, floors, paths, goals and starter quests. `/api/building` returns every pack it finds next to `building.json`, and the page lays them over it at load time. Packs **add to** the defaults; they never replace them. The 🏗️ editor shows what a pack added with 📦 and locks it, because it saves only `building.json`; edit the pack file instead.
+
+Packs are read from two folders:
+
+| Folder | In git? | For |
+|---|---|---|
+| `data/packs/` | yes | packs meant to be shared (curated courses) |
+| `data/private/` | **no** (git-ignored) | your own pack, e.g. `personal.json` with your real goals |
+
+To keep a private pack in sync across computers, make a **private** GitHub repo for it and clone that repo into the folder: `git clone https://github.com/<you>/habitower-private claude-office/data/private`. The main repo stays public; the private one only you can see.
 
 ```jsonc
 {
@@ -195,12 +204,15 @@ A course pack is a ready-made life plan: its own areas, categories, subcategorie
     { "id": "weight", "kind": "number", "unit": "kg", "delta": true, "milestones": [ { "at": 2 } ] },   // counted from the first value you record
     { "id": "repertoire", "kind": "checklist", "items": [ { "id": "r1", "ko": "쇼팽 왈츠 A단조", "tier": "1단계" } ] }
   ],
-  "seed": [ { "title": "쉐도잉: 1분 클립 따라 하기", "cat": "english", "sub": "shadow", "minutes": 5, "repeat": "daily",
-              "cue": "아침 커피 내리는 동안", "easy": "한 문장 3번", "subtasks": ["그냥 듣기", "따라 말하기 ×3"] } ]
+  "seed": [ { "title": "쉐도잉: 1분 클립 따라 하기", "cat": "english", "sub": "fluency", "minutes": 5, "repeat": "daily",
+              "cue": "아침 커피 내리는 동안", "easy": "한 문장 3번", "subtasks": ["그냥 듣기", "따라 말하기 ×3"], "days": [1, 2, 3, 4, 5] },
+            { "title": "발레 클래스", "cat": "ballet", "minutes": 75, "repeat": "weekly", "times": 2 } ],
+  "retire": [ "old starter quest title" ]
 }
 ```
 
-- **Starter quests** arrive once per pack `version` (tracked in `quests.json` → `packs`), skipping titles you already have. Bump `version` to send new ones.
+- **Starter quests** arrive once per pack `version` (tracked in `quests.json` → `packs`), skipping titles you already have. Bump `version` to send new ones. A pack can list old starter quest titles in `retire`: on the upgrade those are removed, but only if you never completed them.
+- **Routines and schedules:** a daily quest can carry `days` (weekdays it's on, 0 = Sun … 6 = Sat), and a weekly quest `times` (how often a week, e.g. ballet 2). The 📅 일정 tab books flexible sessions day by day for this week or next (with an optional time), sets how often, and toggles routine weekdays. A booked session shows under 📅 오늘 일정 on its day, and a weekly quest booked for another day stays off 오늘 until then. Bookings live in `quests.json` → `book` (`{ weekStart: { questId: { date: "HH:MM" } } }`).
 - **Small habits (Atomic Habits):** any quest can carry a `cue` (the habit stack: when or after what you do it) and an `easy` two-minute version. The quest row shows both, and a daily quest you missed yesterday says so and offers the two-minute version, so you never miss twice.
 - **Goals** follow real-world numbers that XP can't: followers, net worth, kg, pieces learned. You enter values in 🎯 목표; they are saved in `quests.json` → `goals` (on your machine only, like the rest of your progress). The tab also shows this week's hours per category against `weeklyHours`, counted from the quests you finished.
 - New categories can only use the existing poses and room templates, since the 3D rooms are drawn in code.

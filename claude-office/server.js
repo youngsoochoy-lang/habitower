@@ -361,14 +361,16 @@ function startAllStream(req, res, floorId) {
 const DATA_DIR = process.env.TOWER_DATA || path.join(__dirname, 'data');
 const QUESTS_FILE = path.join(DATA_DIR, 'quests.json');
 const BUILDING_FILE = path.join(DATA_DIR, 'building.json');
-// course packs: data/packs/*.json, read-only. The page merges them over building.json and never writes them back.
-const PACKS_DIR = path.join(DATA_DIR, 'packs');
+// course packs, read-only: the page merges them over building.json and never writes them back.
+// data/packs/ is shared in git; data/private/ is git-ignored, for your own packs (clone a private repo into it to sync).
+const PACK_DIRS = [path.join(DATA_DIR, 'packs'), path.join(DATA_DIR, 'private')];
 function readPacks() {
-  let files = []; try { files = fs.readdirSync(PACKS_DIR).filter(f => f.endsWith('.json')).sort(); } catch {}
+  const files = [];
+  for (const dir of PACK_DIRS) { try { for (const f of fs.readdirSync(dir).filter(f => f.endsWith('.json')).sort()) files.push(path.join(dir, f)); } catch {} }
   const packs = [], errors = [];
   let mtime = 0;
-  for (const f of files) {
-    const p = path.join(PACKS_DIR, f);
+  for (const p of files) {
+    const f = path.relative(DATA_DIR, p);
     mtime = Math.max(mtime, statSafe(p)?.mtimeMs || 0);
     try { const d = JSON.parse(fs.readFileSync(p, 'utf8')); if (d?.pack?.id) packs.push(d); else errors.push(`${f}: missing pack.id`); }
     catch { errors.push(`${f}: not valid JSON`); }
