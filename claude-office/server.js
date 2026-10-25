@@ -419,6 +419,14 @@ const server = http.createServer((req, res) => {
     res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
     return fs.createReadStream(path.join(__dirname, 'office.html')).pipe(res);
   }
+  // static assets (3D models): only files inside assets/, no path tricks
+  if (url.pathname.startsWith('/assets/')) {
+    const root = path.join(__dirname, 'assets'), file = path.normalize(path.join(root, decodeURIComponent(url.pathname.slice(8))));
+    const type = { '.glb': 'model/gltf-binary', '.png': 'image/png', '.txt': 'text/plain; charset=utf-8' }[path.extname(file)];
+    if (!file.startsWith(root + path.sep) || !type || !statSafe(file)?.isFile()) { res.writeHead(404); return res.end('not found'); }
+    res.writeHead(200, { 'Content-Type': type, 'Cache-Control': 'max-age=3600' });
+    return fs.createReadStream(file).pipe(res);
+  }
   if (url.pathname === '/pixel') {   // the original 2D pixel-art version
     res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
     return fs.createReadStream(path.join(__dirname, 'office-pixel.html')).pipe(res);

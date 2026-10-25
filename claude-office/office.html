@@ -555,6 +555,8 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import * as SkeletonUtils from 'three/addons/utils/SkeletonUtils.js';
 
 // ======================================================================
 //  Floor plan (world units ≈ metres; y up). The two far sides (x=0 and
@@ -2284,6 +2286,72 @@ const ov = document.getElementById('ov');
 let now = performance.now(), instant = false;
 const chars = [];
 
+// ======================================================================
+//  Your figure as a real game character: a rigged, skinned 3D model (KayKit Adventurers by Kay Lousberg, CC0,
+//  assets/characters/) driven by skeletal animation. The model carries a skeleton of bones; its meshes are skinned
+//  to them, and animation clips (Idle, Walking, Sit_Chair, Lie_Down…) move the bones. An AnimationMixer plays the
+//  clip that fits the current pose and cross-fades between them. The block figure stays as the fallback.
+// ======================================================================
+const MODEL = { gltf: null, height: 1, failed: false }, MODEL_H = 1.35;   // world height: the pack's chibi head reads big, so a bit under the blocks
+const MODEL_URL = '/assets/characters/kaykit-rogue.glb';
+const MODEL_HIDE = /^(Knife|Knife_Offhand|1H_Crossbow|2H_Crossbow|Throwable|Rogue_Cape)$/;   // weapons and the cape: everyday look
+const useModel = look => MODEL.gltf && (look?.body || 'model') !== 'blocks';
+new GLTFLoader().load(MODEL_URL, g => {
+  MODEL.gltf = g;
+  const box = new THREE.Box3().setFromObject(g.scene); MODEL.height = box.max.y - box.min.y || 1;
+  if (typeof me !== 'undefined' && me && useModel(me.look)) me.rebuild(me.look);
+}, undefined, () => { MODEL.failed = true; });
+// pose → clip. A two-name entry plays the first once (getting down) and then loops the second (resting).
+function clipFor(c, pose, walking) {
+  if (walking) return ['Walking_A'];
+  const sp = c.spot || {}, floorSit = (sp.y || 0) < -0.1;
+  if (pose === 'lie' || pose === 'liephone') return ['Lie_Down', 'Lie_Idle'];
+  if (c.seated || pose === 'sit') return floorSit ? ['Sit_Floor_Down', 'Sit_Floor_Idle'] : ['Sit_Chair_Down', 'Sit_Chair_Idle'];
+  return [{ dance: 'Cheer', wave: 'Cheer', ballet: 'Cheer', stretch: 'Spellcast_Raise', eat: 'Use_Item', cook: 'Interact', sweep: 'Interact',
+    lift: 'PickUp', pilates: 'Sit_Floor_Idle', meditate: 'Sit_Floor_Idle', game: 'Sit_Floor_Idle', piano: 'Sit_Chair_Idle',
+    type: 'Interact', write: 'Interact', read: 'Idle', think: 'Idle', gaze: 'Idle', phone: 'Idle' }[pose] || 'Idle'];
+}
+class Rig {
+  constructor() {
+    const src = MODEL.gltf;
+    this.root = SkeletonUtils.clone(src.scene);
+    this.root.scale.setScalar(MODEL_H / MODEL.height);
+    this.root.traverse(o => {
+      if (MODEL_HIDE.test(o.name)) o.visible = false;
+      if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; o.frustumCulled = false; }
+    });
+    this.clips = Object.fromEntries(src.animations.map(a => [a.name, a]));
+    this.mixer = new THREE.AnimationMixer(this.root);
+    this.key = ''; this.action = null;
+    this.mixer.addEventListener('finished', e => { if (e.action === this.action && this.next) this.fadeTo(this.next, true); });
+    // a phone in the right hand (handslot.r is the bone the pack's props hang from)
+    const hand = this.root.getObjectByName('handslotr') || this.root.getObjectByName('handslot.r');   // the loader drops the dot
+    this.phone = new THREE.Mesh(new THREE.BoxGeometry(0.09, 0.17, 0.02), new THREE.MeshStandardMaterial({ color: '#1c1c1e', roughness: 0.4 }));
+    this.phone.scale.setScalar(MODEL.height / MODEL_H); this.phone.visible = false; hand?.add(this.phone);
+  }
+  fadeTo(name, loop, fade = 0.25) {
+    const clip = this.clips[name] || this.clips.Idle; if (!clip) return;
+    const a = this.mixer.clipAction(clip);
+    a.reset(); a.setLoop(loop ? THREE.LoopRepeat : THREE.LoopOnce, Infinity); a.clampWhenFinished = !loop;
+    if (this.action && this.action !== a) a.crossFadeFrom(this.action, fade, false);
+    a.play(); this.action = a;
+  }
+  update(dt, c, pose, walking) {
+    const want = clipFor(c, pose, walking), key = want.join('>');
+    if (key !== this.key) {
+      this.key = key; this.next = want[1] || null;
+      this.fadeTo(want[0], want.length === 1, walking || this.wasWalking ? 0.18 : 0.3);
+    }
+    this.wasWalking = walking;
+    // height corrections against the spot (spots were tuned for the blocks): Lie_Idle holds the body above its feet,
+    // so sink it onto the mattress; on a floor cushion (spot y < 0) sit on the cushion; on a chair, sit on the seat
+    const sp = c.spot || {}, lying = pose === 'lie' || pose === 'liephone';
+    const ly = walking ? 0 : lying ? -0.28 : c.seated ? ((sp.y || 0) < -0.1 ? 0.1 - (sp.y || 0) : 0.1) : 0;
+    this.root.position.y += (ly - this.root.position.y) * 0.12;
+    this.phone.visible = pose === 'phone' || pose === 'liephone';
+    this.mixer.update(dt);
+  }
+}
 class Char {
   constructor(id, kind, look, name) {
     Object.assign(this, { id, kind, look, name, x: 27.4, z: 14.3, face: 0, path: [], pose: 'stand', seated: 0, room: 'liftA', spot: null, at: SPOTS.liftA[0].node,
@@ -2397,6 +2465,8 @@ class Char {
     this.heart = part(g, pattern(['.X.X.', 'XXXXX', 'XXXXX', '.XXX.', '..X..'], -1.25, -1, 0, 0.5, '#e8344a').map(b => [b[0], b[1], -0.4, b[3], b[4], 0.8, b[6]]));
     this.heart.visible = false; this.heartY = (19 + top + 2.2) * V;
     this.labelY = (19 + top + 0.5) * V;
+    this.rig = null;
+    if (this.kind === 'me' && useModel(L)) { this.rig = new Rig(); g.add(this.rig.root); this.body.visible = false; this.labelY = MODEL_H + 0.12; this.heartY = MODEL_H + 0.35; }
   }
   rebuild(look) {
     world.remove(this.g); this.look = look; this.build();
@@ -2435,6 +2505,7 @@ class Char {
   cancel() { this.timers = []; this.onArrive = null; }
   remove() { this.el.remove(); world.remove(this.g); chars.splice(chars.indexOf(this), 1); }
   update(dt, t) {
+    this.dt = dt;
     for (const tm of this.timers.splice(0)) if (tm.at <= now) tm.fn(); else this.timers.push(tm);
     if (this.glide) {
       const G = this.glide, k = Math.min(1, (now - G.t0) / G.ms), e = k * k * (3 - 2 * k);
@@ -2503,8 +2574,9 @@ class Char {
     }
     // lying down tips the whole figure onto its back (head toward -z before turning to face)
     g.rotation.order = 'YXZ';
-    const lying = !walking && (pose === 'lie' || pose === 'liephone');
+    const lying = !walking && (pose === 'lie' || pose === 'liephone') && !this.rig;    // the model's own Lie_Down clip lies it down
     g.rotation.x += ((lying ? -Math.PI / 2 : 0) - g.rotation.x) * 0.07;        // slow enough to see yourself lie down
+    if (this.rig) { this.body.visible = false; this.rig.update(this.dt || 0.016, this, pose, walking); }
     this.book.visible = pose === 'read';
     this.handset.visible = pose === 'phone' || pose === 'liephone';
     this.heart.visible = this.heartUntil > now;
@@ -3222,7 +3294,8 @@ function renderPop() {
     const lk = gameReady && isLocked(key, v) ? ' lock' : '', tip = lk ? `🔒 🪙 ${OUTFIT_LOCKS[key + ':' + v]} 코인으로 잠금 해제` : v;
     return swatch ? `<button class="sw-c ${sel}${lk}" data-k="${key}" data-v="${v}" style="background:${v}" title="${tip}"></button>` : `<button class="${sel}${lk}" data-k="${key}" data-v="${v}" title="${lk ? tip : ''}">${lk ? '🔒 ' : ''}${it[1]}</button>`;
   }).join('')}</div></div>`;
-  pop.innerHTML = row('헤어', 'hairStyle', OPTIONS.hairStyle) + row('머리색', 'hair', OPTIONS.hair, 1) + row('피부', 'skin', OPTIONS.skin, 1)
+  pop.innerHTML = (MODEL.gltf ? `<div class="row"><label>몸</label><div class="opts"><button class="${myLook.body !== 'blocks' ? 'sel' : ''}" data-k="body" data-v="model">🧍 3D 캐릭터</button><button class="${myLook.body === 'blocks' ? 'sel' : ''}" data-k="body" data-v="blocks">🧱 블록</button></div></div>${myLook.body !== 'blocks' ? '<div class="row"><small class="none" style="padding-left:0">아래 옷·머리 설정은 🧱 블록 캐릭터에 적용돼요</small></div>' : ''}` : '')
+    + row('헤어', 'hairStyle', OPTIONS.hairStyle) + row('머리색', 'hair', OPTIONS.hair, 1) + row('피부', 'skin', OPTIONS.skin, 1)
     + row('옷', 'top', OPTIONS.top) + row('옷 색', 'shirt', OPTIONS.shirt, 1) + row('하의', 'pants', OPTIONS.pants, 1) + row('신발', 'shoes', OPTIONS.shoes, 1)
     + row('소품', 'acc', OPTIONS.acc) + row('소품 색', 'accColor', OPTIONS.accColor, 1)
     + `<div class="row"><label>심심할 때</label><div class="opts">${[['random', '🎲 랜덤'], ...Object.entries(IDLE_ACTS).map(([k, a]) => [k, `${a.icon} ${a.ko}`])].map(([k, l]) => `<button class="${idlePref === k ? 'sel' : ''}" data-idle="${k}">${l}</button>`).join('')}</div></div>`
