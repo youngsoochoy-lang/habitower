@@ -4,6 +4,16 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Habitower</title>
+<script>
+// online mode (cloud.js): anywhere but this computer's own server, or with ?cloud to try it locally
+window.HABITOWER_CLOUD = !/^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname) || /[?&]cloud\b/.test(location.search);
+if (window.HABITOWER_CLOUD && 'serviceWorker' in navigator && location.protocol === 'https:') addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
+</script>
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#0f1013">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
 <link rel="icon" href="data:image/svg+xml,<svg viewBox='0 0 16 16' shape-rendering='crispEdges' xmlns='http://www.w3.org/2000/svg'><rect x='7' y='0' width='1' height='3' fill='%232a1a08'/><rect x='8' y='0' width='3' height='2' fill='%23ff8fa8'/><rect x='4' y='3' width='8' height='12' fill='%23ffd166'/><rect x='3' y='15' width='10' height='1' fill='%232a1a08'/><g fill='%232a1a08'><rect x='5' y='5' width='2' height='2'/><rect x='9' y='5' width='2' height='2'/><rect x='5' y='8' width='2' height='2'/><rect x='7' y='12' width='2' height='3'/></g><rect x='9' y='8' width='2' height='2' fill='%23ff8fa8'/></svg>">
 <style>
 :root{
@@ -557,6 +567,8 @@ import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.j
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import * as SkeletonUtils from 'three/addons/utils/SkeletonUtils.js';
+// online: sign in first; cloud.js then answers the /api/... calls below from your account
+if (window.HABITOWER_CLOUD) await (await import('./cloud.js')).start();
 
 // ======================================================================
 //  Floor plan (world units ≈ metres; y up). The two far sides (x=0 and
@@ -2296,11 +2308,11 @@ const chars = [];
 // and the others were stripped of theirs (tools/strip-glb-animations.js): the rogue's clips drive every model.
 const MODEL_H = 1.35;   // world height: the pack's chibi head reads big, so a bit under the blocks
 const MODELS = {
-  rogue:   { url: '/assets/characters/kaykit-rogue.glb' },          // you (carries the clips)
-  mage:    { url: '/assets/characters/kaykit-mage.glb' },           // Claude
-  hooded:  { url: '/assets/characters/kaykit-rogue-hooded.glb' },   // Explore agents: the scout
-  knight:  { url: '/assets/characters/kaykit-knight.glb' },         // Plan agents: the strategist
-  barbarian: { url: '/assets/characters/kaykit-barbarian.glb' },    // every other agent
+  rogue:   { url: 'assets/characters/kaykit-rogue.glb' },          // you (carries the clips)
+  mage:    { url: 'assets/characters/kaykit-mage.glb' },           // Claude
+  hooded:  { url: 'assets/characters/kaykit-rogue-hooded.glb' },   // Explore agents: the scout
+  knight:  { url: 'assets/characters/kaykit-knight.glb' },         // Plan agents: the strategist
+  barbarian: { url: 'assets/characters/kaykit-barbarian.glb' },    // every other agent
 };
 const MODEL_HIDE = /^(Knife|Knife_Offhand|1H_Crossbow|2H_Crossbow|Throwable|Spellbook|Spellbook_open|1H_Wand|2H_Staff|1H_Sword|1H_Sword_Offhand|2H_Sword|Badge_Shield|Rectangle_Shield|Round_Shield|Spike_Shield|Knight_Helmet|1H_Axe|1H_Axe_Offhand|2H_Axe|Barbarian_Round_Shield|Mug|\w+_Cape)$/;   // weapons, capes, the visor: everyday office look
 // which model a character wears (agents are named "<type> #n" before their type is set)
@@ -3094,7 +3106,7 @@ async function loadFloors() {
     floors = proj.concat(lifeFloorList());
     syncStack();
     renderFloors();
-    if (!j.floors.length) floorsEl.insertAdjacentHTML('beforeend', `<div class="empty">이 컴퓨터에 Claude Code 세션이 없어서<br>사무실은 데모로 보여줘요<br><small>${esc(j.projects)}</small></div>`);
+    if (!j.floors.length) floorsEl.insertAdjacentHTML('beforeend', `<div class="empty">${j.note || `이 컴퓨터에 Claude Code 세션이 없어서<br>사무실은 데모로 보여줘요<br><small>${esc(j.projects)}</small>`}</div>`);
     if (!cur.floor && floors.length) {
       const hp = new URLSearchParams(location.hash.slice(1));
       const want = floors.find(f => f.id === hp.get('floor'));

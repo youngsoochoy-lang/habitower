@@ -23,6 +23,15 @@ The sky follows your computer's clock. It blends through dawn (🌌 새벽, 🌅
 
 The tower reads Claude Code sessions on this computer (`~/.claude/projects`). When there are none (you only use cloud sessions, or you're looking at the web preview), the office still stands as **🏢 Claude 사무실 (데모)**: a scripted session plays through the same event handler on a loop (reading, searching, an Explore agent, editing, a failed check and a fix, reporting back), so you can see how it works.
 
+### Online: any device, any session
+
+Sign in at **https://youngsoochoy-lang.github.io/habitower/** (Google, Kakao, Naver, Facebook or an email link) and the same tower opens on your phone or any computer. Quests, XP, edits and courses are saved to your account and sync between devices within seconds, and the office shows every Claude Code session you connect, including cloud sessions your PC never sees. Setup, once: [ONLINE.md](ONLINE.md).
+
+- **How:** on a web host `cloud.js` stands in for `server.js`. It answers the page's `/api/...` calls from Supabase (a `docs` table with row-level security), and `/api/stream` from the events your Claude Code hook (`tools/tower-hook.js`) sent. Supabase Realtime pushes new events and saves to every open device.
+- **☁️ 계정:** sign out, sync status, Claude keys (one per device or cloud environment; the command or variables to paste), importing your PC's `quests.json` / `user.json` / `personal.json`, and a full backup download.
+- **Offline:** saves wait on the device and go up when it reconnects. Installed as an app (Add to Home Screen), it keeps the 3D models cached.
+- **The PC server is unchanged:** `node server.js` still works without an account. Try the online mode locally at `http://localhost:7777/?cloud`.
+
 ### Moving between projects
 
 Each project is a storey of the tower. The floors below yours show as lit facades with floor signs, and the floors above are ghosted glass.
@@ -286,6 +295,8 @@ Leave it open next to your terminal or the Claude desktop app and work as usual.
 and in `<session>/subagents/agent-*.jsonl`. It checks them for new lines every 250 ms
 and streams simplified events to the page over Server-Sent Events.
 It is read-only: it changes no hooks or settings. It listens on 127.0.0.1 only, so only your machine can open it.
+
+The transcript → event conversion lives in `lib/transcript.js`, shared with `tools/tower-hook.js`, so the online office draws exactly what the local one does.
 
 Options (environment variables):
 

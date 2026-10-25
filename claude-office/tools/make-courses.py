@@ -260,3 +260,5 @@ for p in packs:
     assert len(titles) == len(set(titles)) and all(len(t) <= 60 for t in titles), p["pack"]["id"]
     json.dump(p, open(os.path.join(OUT, p["pack"]["id"] + ".json"), "w"), ensure_ascii=False, indent=2)
     print(f'{p["pack"]["id"]:16} quests {len(p["seed"]):2} · {sum(p["weeklyHours"].values()):.1f} h/week')
+# the online app (GitHub Pages) cannot list a folder, so it reads the pack files from this list
+json.dump(sorted(f for f in os.listdir(OUT) if f.endswith(".json") and f != "index.json"), open(os.path.join(OUT, "index.json"), "w"), indent=2)

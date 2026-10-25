@@ -1,0 +1,213 @@
+#!/usr/bin/env node
+// Habitower online: a Claude Code hook that sends what your sessions do to your Habitower account, so the office
+// shows them on any device (your phone too), including cloud sessions your PC never sees.
+//
+// What it sends: the same short office events server.js draws (a prompt's first 140 characters, "Read memo.md",
+// "Bash: npm test", the first lines of results). Never whole files or full outputs.
+//
+//   node tower-hook.js install --user  --url <project url> --key <anon key> --token <htw_ key>
+//        every Claude Code session on this computer (writes ~/.claude/settings.json and ~/.claude/habitower.json)
+//   node tower-hook.js install --repo <dir>
+//        sessions in that repository, cloud ones included: commits <dir>/.claude/hooks/habitower-hook.js and the
+//        hook lines in <dir>/.claude/settings.json; the keys come from the environment (HABITOWER_URL, HABITOWER_KEY,
+//        HABITOWER_TOKEN), so nothing secret goes into the repository
+//   node tower-hook.js test      sends one test event and says what happened
+//   node tower-hook.js uninstall --user | --repo <dir>
+//
+// As a hook it reads Claude Code's JSON on stdin, starts a background upload and returns at once, so Claude never
+// waits for the network. Without keys it does nothing.
+const fs = require('fs'), path = require('path'), os = require('os'), { spawn } = require('child_process');
+const T = typeof recordToEvents === 'function' ? { parseLines, textOf, recordToEvents }   // inlined copy (installed with --repo)
+  : require(path.join(__dirname, '..', 'lib', 'transcript.js'));
+
+const HOME = process.env.CLAUDE_CONFIG_DIR || path.join(os.homedir(), '.claude');
+const STATE = path.join(HOME, 'habitower-hook');
+const CONF_FILE = path.join(HOME, 'habitower.json');
+const FIRST_BYTES = 256 * 1024;      // a session the hook meets halfway: send its recent history, not all of it
+const HOOK_EVENTS = ['UserPromptSubmit', 'PreToolUse', 'PostToolUse', 'Stop', 'SubagentStop'];
+const MARK = 'habitower-hook';       // how install/uninstall recognise their own lines in settings.json
+
+function config() {
+  let c = {}; try { c = JSON.parse(fs.readFileSync(CONF_FILE, 'utf8')); } catch {}
+  const url = process.env.HABITOWER_URL || c.url, key = process.env.HABITOWER_KEY || c.key, token = process.env.HABITOWER_TOKEN || c.token;
+  return url && key && token ? { url: url.replace(/\/+$/, ''), key, token } : null;
+}
+const statSafe = f => { try { return fs.statSync(f); } catch { return null; } };
+const lsSafe = d => { try { return fs.readdirSync(d); } catch { return []; } };
+const readJSON = (f, d) => { try { return JSON.parse(fs.readFileSync(f, 'utf8')); } catch { return d; } };
+function readSlice(file, start, end) {
+  const len = Math.max(0, end - start); if (!len) return '';
+  const fd = fs.openSync(file, 'r');
+  try { const b = Buffer.alloc(len); fs.readSync(fd, b, 0, len, start); return b.toString('utf8'); } finally { fs.closeSync(fd); }
+}
+function logErr(msg) {
+  try {
+    fs.mkdirSync(STATE, { recursive: true });
+    const f = path.join(STATE, 'log.txt');
+    if ((statSafe(f)?.size || 0) > 100e3) fs.writeFileSync(f, '');
+    fs.appendFileSync(f, `${new Date().toISOString()} ${msg}\n`);
+  } catch {}
+}
+
+// ---------- hook entry: hand off to a detached uploader and return ----------
+async function hook() {
+  let input = '';
+  await new Promise(res => { const t = setTimeout(res, 1500); t.unref(); process.stdin.on('data', d => (input += d)); process.stdin.on('end', () => { clearTimeout(t); res(); }); });
+  let j; try { j = JSON.parse(input); } catch { return; }
+  if (!j.transcript_path || !j.session_id || !config()) return;
+  // Node's fetch ignores HTTPS_PROXY unless asked (cloud sessions go through a proxy)
+  const env = { ...process.env, ...(process.env.HTTPS_PROXY || process.env.https_proxy ? { NODE_USE_ENV_PROXY: '1', NODE_NO_WARNINGS: '1' } : {}) };
+  spawn(process.execPath, [__filename, '--upload', j.transcript_path, j.session_id, j.cwd || '', j.hook_event_name || ''],
+    { detached: true, stdio: 'ignore', env, windowsHide: true }).unref();
+}
+
+// ---------- uploader: send what was written since last time ----------
+function lock(sid) {
+  fs.mkdirSync(STATE, { recursive: true });
+  const f = path.join(STATE, sid + '.lock');
+  try { fs.writeFileSync(f, String(process.pid), { flag: 'wx' }); return () => { try { fs.unlinkSync(f); } catch {} }; }
+  catch { if (Date.now() - (statSafe(f)?.mtimeMs || 0) > 30e3) { try { fs.unlinkSync(f); } catch {} return lock(sid); } return null; }
+}
+// the complete lines of `file` written after `from` (and where to start next time)
+function newLines(file, from) {
+  const st = statSafe(file); if (!st) return { records: [], next: from };
+  if (st.size < from) from = 0;                                   // the file was rewritten
+  let start = from, text = readSlice(file, start, st.size);
+  if (from === 0 && st.size > FIRST_BYTES) { start = st.size - FIRST_BYTES; text = readSlice(file, start, st.size); const nl = text.indexOf('\n'); start += Buffer.byteLength(text.slice(0, nl + 1)); text = text.slice(nl + 1); }
+  const nl = text.lastIndexOf('\n'); if (nl === -1) return { records: [], next: start };
+  return { records: T.parseLines(text.slice(0, nl)), next: start + Buffer.byteLength(text.slice(0, nl + 1)) };
+}
+
+async function upload(transcript, sid, cwd, hookName) {
+  const conf = config(); if (!conf) return;
+  await new Promise(r => setTimeout(r, 300));                     // let Claude Code finish writing the line
+  let unlock = lock(sid);
+  for (let i = 0; !unlock && i < (hookName === 'Stop' ? 20 : 0); i++) { await new Promise(r => setTimeout(r, 200)); unlock = lock(sid); }
+  if (!unlock) return;                                            // another upload is running and will pick this up
+  try {
+    const sf = path.join(STATE, sid + '.json');
+    const st = readJSON(sf, { offsets: {}, linked: {}, spawns: {}, title: null, cwd: null });
+    const msgs = [];
+    const push = (records, agent) => {
+      const events = [];
+      for (const r of records) {
+        if (r.sessionId && r.sessionId !== sid) continue;
+        if (r.cwd && !st.cwd) st.cwd = r.cwd;
+        if (r.type === 'agent-name' && r.agentName) st.title = r.agentName;
+        else if (r.type === 'ai-title' && r.aiTitle) st.title = st.title || r.aiTitle;
+        else if (r.type === 'summary' && r.summary) st.title = st.title || r.summary;
+        else if (r.type === 'last-prompt' && r.lastPrompt) st.title = st.title || r.lastPrompt.slice(0, 40);
+        const who = r.isSidechain ? (r.agentId || 'sidechain') : agent;
+        for (const e of T.recordToEvents(r, who)) {
+          if (e.kind === 'spawn' && who === 'main') st.spawns[e.id] = (r.message.content.find(c => c.id === e.id)?.input?.prompt || '').slice(0, 200);
+          e.session = sid; events.push(e);
+        }
+      }
+      for (let i = 0; i < events.length; i += 40) msgs.push({ type: 'events', session: sid, events: events.slice(i, i + 40) });
+    };
+    const main = newLines(transcript, st.offsets[transcript] || 0);
+    push(main.records, 'main'); const next = { [transcript]: main.next };
+    try { const t = JSON.parse(fs.readFileSync(path.join(transcript.replace(/\.jsonl$/, ''), 'custom-title.json'), 'utf8')).customTitle; if (t) st.title = t; } catch {}
+
+    // subagents: <session>/subagents/agent-*.jsonl (older versions: agent-*.jsonl beside the transcript)
+    const dirs = [path.join(transcript.replace(/\.jsonl$/, ''), 'subagents'), path.dirname(transcript)];
+    for (const d of dirs) for (const f of lsSafe(d)) {
+      if (!f.startsWith('agent-') || !f.endsWith('.jsonl')) continue;
+      const file = path.join(d, f);
+      if (st.linked[file] === false) continue;
+      if (!st.linked[file]) {
+        const s = statSafe(file); if (!s) continue;
+        const first = T.parseLines(readSlice(file, 0, Math.min(s.size, 32 * 1024))).find(r => r.type === 'user');
+        if (!first) continue;
+        if (first.sessionId && first.sessionId !== sid) { st.linked[file] = false; continue; }
+        const meta = readJSON(file.replace(/\.jsonl$/, '.meta.json'), {});
+        const prompt = T.textOf(first.message?.content).slice(0, 200);
+        let toolId = meta.toolUseId || null;
+        if (!toolId) for (const [id, p] of Object.entries(st.spawns)) if (p && prompt && (p.startsWith(prompt.slice(0, 80)) || prompt.startsWith(p.slice(0, 80)))) { toolId = id; break; }
+        msgs.push({ type: 'link', session: sid, agent: first.agentId || f.slice(6, -6), toolId, agentType: meta.agentType, description: meta.description });
+        st.linked[file] = true;
+      }
+      const r = newLines(file, st.offsets[file] || 0);
+      push(r.records, T.parseLines(readSlice(file, 0, Math.min(statSafe(file).size, 32 * 1024))).find(x => x.agentId)?.agentId || f.slice(6, -6));
+      next[file] = r.next;
+    }
+    const project = path.basename(path.dirname(transcript));
+    const name = path.basename((st.cwd || cwd || project).replace(/[\\/]+$/, ''));
+    const source = process.env.CLAUDE_CODE_REMOTE === 'true' ? 'cloud' : 'pc';
+    for (let i = 0; i < msgs.length || i === 0; i += 200) {
+      await rpc(conf, { p_token: conf.token, p_session: sid, p_project: project, p_project_name: name, p_title: st.title, p_source: source, p_msgs: msgs.slice(i, i + 200) });
+    }
+    Object.assign(st.offsets, next);
+    fs.writeFileSync(sf + '.tmp', JSON.stringify(st)); fs.renameSync(sf + '.tmp', sf);
+  } catch (e) { logErr(`${sid.slice(0, 8)} ${e.message || e}`); }
+  finally { unlock(); }
+}
+async function rpc(conf, body) {
+  const r = await fetch(conf.url + '/rest/v1/rpc/ingest', { method: 'POST', signal: AbortSignal.timeout(10e3),
+    headers: { apikey: conf.key, Authorization: 'Bearer ' + conf.key, 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+  if (!r.ok) throw new Error(`ingest ${r.status}: ${(await r.text()).slice(0, 200)}`);
+  return r.json();
+}
+
+// ---------- install / uninstall ----------
+function editSettings(file, command, add) {
+  const s = readJSON(file, {});
+  s.hooks ||= {};
+  for (const ev of HOOK_EVENTS) {
+    const list = (s.hooks[ev] || []).map(g => ({ ...g, hooks: (g.hooks || []).filter(h => !String(h.command || '').includes(MARK)) })).filter(g => g.hooks.length);
+    if (add) list.push({ ...(/ToolUse/.test(ev) ? { matcher: '*' } : {}), hooks: [{ type: 'command', command, timeout: 10 }] });
+    if (list.length) s.hooks[ev] = list; else delete s.hooks[ev];
+  }
+  if (!Object.keys(s.hooks).length) delete s.hooks;
+  fs.mkdirSync(path.dirname(file), { recursive: true });
+  fs.writeFileSync(file, JSON.stringify(s, null, 2) + '\n');
+}
+// one self-contained file: the shared parser inlined above this script, so it runs from any repository
+function bundle() {
+  const lib = fs.readFileSync(path.join(__dirname, '..', 'lib', 'transcript.js'), 'utf8').replace(/module\.exports[^\n]*\n?/, '');
+  const me = fs.readFileSync(__filename, 'utf8').replace(/^#![^\n]*\n/, '');
+  return `#!/usr/bin/env node\n// Generated by habitower/claude-office/tools/tower-hook.js (install --repo). Edit that file, not this one.\n${lib}\n${me}`;
+}
+function install(args, add) {
+  const opt = k => { const i = args.indexOf('--' + k); return i >= 0 ? args[i + 1] : null; };
+  if (args.includes('--user')) {
+    const dst = path.join(HOME, 'hooks', MARK + '.js');
+    if (add) {
+      const c = { ...readJSON(CONF_FILE, {}), ...Object.fromEntries(['url', 'key', 'token'].filter(opt).map(k => [k, opt(k)])) };
+      if (!c.url || !c.key || !c.token) throw new Error('needs --url, --key and --token (copy them from ☁️ 계정 → Claude 연결 in the app)');
+      fs.mkdirSync(path.dirname(dst), { recursive: true });
+      fs.writeFileSync(dst, bundle());
+      fs.writeFileSync(CONF_FILE, JSON.stringify(c, null, 2)); try { fs.chmodSync(CONF_FILE, 0o600); } catch {}
+    } else { try { fs.unlinkSync(dst); } catch {} }
+    editSettings(path.join(HOME, 'settings.json'), `node "${dst}"`, add);
+    console.log(add ? `Installed for every session on this computer.\n  hook: ${dst}\n  keys: ${CONF_FILE}` : 'Removed from ~/.claude/settings.json.');
+    return;
+  }
+  const repo = opt('repo'); if (!repo) throw new Error('say --user or --repo <dir>');
+  const dst = path.join(repo, '.claude', 'hooks', MARK + '.js');
+  if (add) { fs.mkdirSync(path.dirname(dst), { recursive: true }); fs.writeFileSync(dst, bundle()); } else { try { fs.unlinkSync(dst); } catch {} }
+  editSettings(path.join(repo, '.claude', 'settings.json'), `node "$CLAUDE_PROJECT_DIR/.claude/hooks/${MARK}.js"`, add);
+  console.log(add ? `Installed in ${repo}/.claude. Commit both files, then set HABITOWER_URL, HABITOWER_KEY and HABITOWER_TOKEN\nin the cloud environment's variables (and allow the project's supabase.co host in its network access).`
+    : `Removed from ${repo}/.claude.`);
+}
+async function test() {
+  const conf = config();
+  if (!conf) { console.log('No keys: set HABITOWER_URL, HABITOWER_KEY, HABITOWER_TOKEN or run install --user with them.'); process.exitCode = 1; return; }
+  const sid = 'test-' + Date.now().toString(36);
+  try {
+    const n = await rpc(conf, { p_token: conf.token, p_session: sid, p_project: 'habitower-test', p_project_name: '연결 테스트', p_title: '연결 테스트', p_source: process.env.CLAUDE_CODE_REMOTE === 'true' ? 'cloud' : 'pc',
+      p_msgs: [{ type: 'events', session: sid, events: [{ kind: 'say', text: '연결됐어요! 이 컴퓨터의 Claude가 온라인 사무실에 나타나요.', end: true, ts: Date.now(), agent: 'main', session: sid }] }] });
+    console.log(`OK: ${n} event sent. Open the app: a "연결 테스트" floor appears.`);
+  } catch (e) { console.log('Failed:', e.cause?.code || e.message); process.exitCode = 1; }
+}
+
+const [cmd, ...rest] = process.argv.slice(2);
+(async () => {
+  try {
+    if (cmd === '--upload') await upload(...rest);
+    else if (cmd === 'install') install(rest, true);
+    else if (cmd === 'uninstall') install(rest, false);
+    else if (cmd === 'test') await test();
+    else await hook();
+  } catch (e) { if (cmd === '--upload' || !cmd) logErr(e.message || e); else { console.error(e.message || e); process.exitCode = 1; } }
+})();
