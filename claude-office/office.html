@@ -455,7 +455,9 @@ h2 small{font-size:10.5px;font-weight:500;letter-spacing:.06em;color:var(--faint
 .qcat span{font-size:var(--fs-group);font-weight:700;letter-spacing:-.02em;line-height:1.2}
 .qcat small{font-size:var(--fs-meta);color:var(--faint);font-variant-numeric:tabular-nums}
 .qcat button{margin-left:auto;width:28px;height:24px;border-radius:7px;border:1px solid var(--line);background:none;color:var(--dim);cursor:pointer;font-size:11.5px}
-.qcat button+button{margin-left:0}.qcat button:hover{color:var(--ink);background:var(--raise)}
+.qcat button+button{margin-left:0}
+.qgroup button{width:28px;height:24px;border-radius:7px;border:1px solid var(--line);background:none;color:var(--dim);cursor:pointer;font-size:11.5px}
+.qgroup span+button{margin-left:8px}.qgroup button:hover{color:var(--ink);background:var(--raise)}.qcat button:hover{color:var(--ink);background:var(--raise)}
 .quest b{font-size:var(--fs-item);font-weight:500;letter-spacing:-.015em}
 .quest small,.prow .ph small,.pmeta,.skill small,.item small{font-size:var(--fs-meta)}
 .qsubs{font-size:12px}
@@ -1706,6 +1708,7 @@ function clearLife() {
 function buildLife(B) {
   clearLife();
   for (const k of Object.keys(SKILLS)) delete SKILLS[k];
+  for (const k of Object.keys(SKILL_ZONE)) delete SKILL_ZONE[k];
   AREAS.length = 0;
   for (const a of B.areas || []) { AREAS.push(a); for (const c of a.categories || []) if (c.id && c.id !== 'work') SKILLS[c.id] = { ...c, area: a.id, subs: c.subs || [] }; }
   SKILLS.work = WORK;                                // Claude's turns in the office, always last
@@ -1806,6 +1809,7 @@ function withPacks(base, packs = []) {
       c.subs = (c.subs || []).filter(x => !hide.has(`sub:${c.id}/${x.id}`)).map(x => (ed[`sub:${c.id}/${x.id}`] ? { ...x, ...ed[`sub:${c.id}/${x.id}`] } : x));
     }
   }
+  B.floors = B.floors.filter(f => !hide.has('floor:' + f.id)).map(f => (ed['floor:' + f.id] ? { ...f, ...ed['floor:' + f.id] } : f));
   for (const p of B.packs) p.goals = p.goals.filter(g => !hide.has('goal:' + g.id)).map(g => (ed['goal:' + g.id] ? { ...g, ...ed['goal:' + g.id] } : g));
   return B;
 }
@@ -3023,7 +3027,7 @@ function renderFloors() {
       el.className = 'floor life' + (isCur ? ' cur' : '') + (f.active ? ' on' : '');
       el.innerHTML = `<div class="frow"><div class="fnum">${f.badge}</div><div class="fmeta"><div class="fname"></div><div class="fsub">${f.place ? esc(f.sub) : `${f.zones.map(k => catOf(k).icon).join(' ') || '🏗️'} · ${f.active ? '퀘스트 진행 중' : f.open ? `남은 퀘스트 ${f.open}개` : '오늘 퀘스트 완료 ✓'}`}</div></div><span class="dot${f.active ? ' on' : ''}"></span></div>`;
       el.querySelector('.fname').textContent = f.name;
-      el.onclick = () => { if (f.id !== cur.floor) { setFollow(false); rideTo(f.id, 'all'); } };
+      el.onclick = () => { if (f.id !== cur.floor) { pauseFollow(); rideTo(f.id, 'all'); } };
       floorsEl.appendChild(el);
       continue;
     }
@@ -3031,7 +3035,7 @@ function renderFloors() {
     el.title = f.cwd || f.id;
     el.innerHTML = `<div class="frow"><div class="fnum">${f.floor}F</div><div class="fmeta"><div class="fname"></div><div class="fsub">세션 ${f.sessions.length}개 · ${f.active ? '지금 활동 중' : ago(Date.now() - f.lastMtime) + ' 전'}</div></div><span class="dot${f.active ? ' on' : ''}"></span></div>`;
     el.querySelector('.fname').textContent = f.name;
-    el.onclick = () => { if (f.id !== cur.floor) { setFollow(false); rideTo(f.id, 'all'); } };
+    el.onclick = () => { if (f.id !== cur.floor) { pauseFollow(); rideTo(f.id, 'all'); } };
     if (isCur) {
       const shops = document.createElement('div'); shops.className = 'shops';
       const fol = document.createElement('div'); fol.className = 'shop follow' + (cur.session === 'all' || cur.session === 'auto' ? ' cur' : '');
@@ -3047,7 +3051,7 @@ function renderFloors() {
         sh.innerHTML = `<span class="dot${s.active ? ' on' : ''}"></span><span class="t"></span><span class="ago">${s.active ? '지금' : ago(Date.now() - s.mtime) + ' 전'}</span>`;
         sh.querySelector('.t').textContent = (here ? (streamMode === 'all' ? '✳ ' : '📌 ') : '') + s.title;
         sh.title = `${s.title}\n${s.id}`;
-        sh.onclick = ev => { ev.stopPropagation(); setFollow(false); enterFloor(f.id, s.id); };
+        sh.onclick = ev => { ev.stopPropagation(); pauseFollow(); enterFloor(f.id, s.id); };
         shops.appendChild(sh);
       }
       el.appendChild(shops);
@@ -3172,7 +3176,11 @@ function arriveByLift() {
   if (!crew.length) for (const cl of claudes.values()) if (!cl.hidden) { cl.bubble('say', '어서 오세요! 👋', 2500); break; }
 }
 let followAll = true;
-try { followAll = localStorage.getItem('claudeTower.follow') !== 'off'; } catch {}
+try {
+  // older versions switched following off for good whenever you visited a floor yourself: turn it back on once
+  if (!localStorage.getItem('claudeTower.follow2')) { localStorage.setItem('claudeTower.follow', 'on'); localStorage.setItem('claudeTower.follow2', '1'); }
+  followAll = localStorage.getItem('claudeTower.follow') !== 'off';
+} catch {}
 const followEl = document.getElementById('followAll');
 function setFollow(v) {
   followAll = v; followEl.classList.toggle('on', v);
@@ -3181,9 +3189,14 @@ function setFollow(v) {
 }
 followEl.onclick = () => setFollow(!followAll);
 followEl.classList.toggle('on', followAll);
+// going somewhere yourself (a life floor, your room, a quest) pauses following for a few minutes; it does not switch it off.
+// After that, the next time Claude Code works in a project you ride back to the office and work next to Claude.
+const FOLLOW_PAUSE = 3 * 60e3;
+let followPausedUntil = 0;
+const pauseFollow = () => { followPausedUntil = Date.now() + FOLLOW_PAUSE; };
 function maybeFollow() {
   // ride to whichever project you are using Claude Code in right now
-  if (!followAll || riding || !cur.floor || focusRun || Date.now() - lastRide < 8000) return;
+  if (!followAll || riding || !cur.floor || focusRun || Date.now() - lastRide < 8000 || Date.now() < followPausedUntil) return;
   const here = floors.find(f => f.id === cur.floor);
   const best = floors.filter(f => f.active).sort((a, b) => b.lastMtime - a.lastMtime)[0];
   if (!best || best.id === cur.floor || (here && best.lastMtime < here.lastMtime + 4000)) return;
@@ -3573,7 +3586,7 @@ function goToSkill(cat) {
   const z = SKILL_ZONE[cat];
   if (!z) return;
   if (cur.floor === z.floor) { lifeWalk(me, cat); return; }
-  setFollow(false);
+  pauseFollow();
   rideTo(z.floor, 'all');
 }
 function completeQuest(id) {
@@ -4072,7 +4085,7 @@ qpanel.addEventListener('click', ev => {
 });
 // ---------- 오늘 / 전체: floor > category > quest, and in 전체 everything can be edited in place ----------
 // editing state (only one form open at a time keeps the list calm)
-let editQuest = null, addSubFor = null, editCat = null, quickCat = null, newCatOpen = false;
+let editQuest = null, addSubFor = null, editCat = null, quickCat = null, newCatOpen = false, editFloor = null;
 const REPEAT_OPTS = [['daily', '매일'], ['weekly', '매주'], ['monthly', '매월'], ['once', '한 번']];
 const catOptions = sel => AREAS.map(a => `<optgroup label="${esc(`${a.icon || ''} ${a.ko}`)}">${(a.categories || []).filter(c => SKILLS[c.id]).map(c => `<option value="${esc(c.id)}"${c.id === sel ? ' selected' : ''}>${c.icon} ${esc(c.ko)}</option>`).join('')}</optgroup>`).join('');
 const subOptionsSel = (k, sel) => `<option value="">— 하위 없음</option>` + catOf(k).subs.map(x => `<option value="${esc(x.id)}"${x.id === sel ? ' selected' : ''}>${x.icon || '•'} ${esc(x.ko)}</option>`).join('');
@@ -4119,9 +4132,11 @@ function newCatForm() {
 function questListHTML(today) {
   let body = '';
   const list = game.quests.filter(q => !today || (onToday(q) && (!isDone(q) || (q.done || []).includes(dayKey()))));
-  const group = (title, l) => `<div class="qgroup"><b>${esc(title)}</b><span>${l.filter(q => !isDone(q)).length || '✓'}</span></div>`;
+  const group = (title, l, src) => (!today && src && editFloor === src)
+    ? `<form class="qadd qedit" data-form="floor" data-id="${esc(src)}"><div class="qedit-h">✏️ 층 이름</div><div class="qrow"><input name="name" value="${esc(title)}" maxlength="24" required aria-label="층 이름"><button>저장</button><button type="button" class="ghost" data-a="cancel">취소</button></div></form>`
+    : `<div class="qgroup"><b>${esc(title)}</b><span>${l.filter(q => !isDone(q)).length || '✓'}</span>${!today && src ? `<button data-c="editfloor" data-id="${esc(src)}" title="층 이름 바꾸기">✏️</button><button data-c="delfloor" data-id="${esc(src)}" title="층과 그 안의 카테고리 지우기 (되돌리기 가능)">🗑</button>` : ''}</div>`;
   const catHead = (c, l) => `<div class="qcat"><span>${catOf(c).icon} ${esc(catOf(c).ko)}</span><small>${l.length}</small>${today ? '' :
-    `<button data-c="edit" data-id="${esc(c)}" title="카테고리 고치기">✏️</button><button data-c="addq" data-id="${esc(c)}" title="이 카테고리에 퀘스트 추가">＋</button>`}</div>`;
+    `<button data-c="edit" data-id="${esc(c)}" title="카테고리 고치기">✏️</button><button data-c="addq" data-id="${esc(c)}" title="이 카테고리에 퀘스트 추가">＋</button>${SKILLS[c] ? `<button data-c="delcat" data-id="${esc(c)}" title="카테고리와 그 퀘스트 지우기 (되돌리기 가능)">🗑</button>` : ''}`}</div>`;
   const quick = c => `<form class="qadd qinline" data-form="quick" data-id="${esc(c)}"><input name="t" maxlength="60" required placeholder="${esc(catOf(c).ko)} 퀘스트 (예: 10분만)" autofocus>
     <input name="m" type="number" min="1" max="600" value="15" aria-label="분" class="num"><select name="r">${optHTML(REPEAT_OPTS, 'daily')}</select><button>추가</button><button type="button" class="ghost" data-a="cancel">취소</button></form>`;
   const byCat = (zones, l) => {
@@ -4140,10 +4155,10 @@ function questListHTML(today) {
     if (booked.length) body += group('📅 오늘 일정', booked) + booked.map(q => questRow(q, bookingsOf(q)[dayKey()])).join('');
     rest = list.filter(q => !booked.includes(q));
   }
-  const floorsL = LIFE.map(def => [def.name, def.zones, rest.filter(q => def.zones.includes(q.cat))]);
+  const floorsL = LIFE.map(def => [def.name, def.zones, rest.filter(q => def.zones.includes(q.cat)), def.src]);
   const roomless = Object.keys(SKILLS).filter(k => k !== 'work' && !SKILL_ZONE[k]);
-  floorsL.push(['❔ 기타 (방이 없는 카테고리)', roomless, rest.filter(q => !SKILL_ZONE[q.cat])]);
-  body += floorsL.filter(([, z, l]) => l.length || (!today && z.length)).map(([name, zones, l]) => group(name, l) + byCat(zones, l)).join('');
+  floorsL.push(['❔ 기타 (방이 없는 카테고리)', roomless, rest.filter(q => !SKILL_ZONE[q.cat]), null]);
+  body += floorsL.filter(([, z, l]) => l.length || (!today && z.length)).map(([name, zones, l, src]) => group(name, l, src) + byCat(zones, l)).join('');
   if (today && !list.length) body += !game.quests.length && !(BUILDING.packs || []).some(p => p.id !== 'user')
     ? '<div class="empty">아직 퀘스트가 없어요. <button class="lnk" data-tab="courses">📦 코스</button>에서 시작해 보세요.</div>'
     : '<div class="empty">오늘 할 퀘스트를 다 했어요! 🎉</div>';
@@ -4185,7 +4200,15 @@ qpanel.addEventListener('click', ev => {
     checkpoint(`＋ 하위 '${v}' 추가`); addUserSub(id, v); saveUser();
   } else if (c === 'delcat') {
     const n = game.quests.filter(q => q.cat === id).length;
-    checkpoint(`🗑 '${catOf(id).ko}' 카테고리 지우기${n ? ` (퀘스트 ${n}개는 기타로)` : ''}`); userHide('cat:' + id); editCat = null; saveUser();
+    checkpoint(`🗑 '${catOf(id).ko}' 카테고리${n ? `와 퀘스트 ${n}개` : ''} 지우기`);
+    game.quests = game.quests.filter(q => q.cat !== id); saveGame();
+    userHide('cat:' + id); editCat = null; saveUser();
+  } else if (c === 'editfloor') { editFloor = editFloor === id ? null : id; }
+  else if (c === 'delfloor') {
+    const f = LIFE.find(d => d.src === id), cats = LIFE.filter(d => d.src === id).flatMap(d => d.zones), n = game.quests.filter(q => cats.includes(q.cat)).length;
+    checkpoint(`🗑 '${f?.name || id}' 층${cats.length ? `, 카테고리 ${cats.length}개` : ''}${n ? `, 퀘스트 ${n}개` : ''} 지우기`);
+    game.quests = game.quests.filter(q => !cats.includes(q.cat)); saveGame();
+    for (const k of cats) userHide('cat:' + k); userHide('floor:' + id); saveUser();
   } else return;
   renderQuestPanel();
 });
@@ -4193,6 +4216,10 @@ qpanel.addEventListener('submit', ev => {
   const f = ev.target, kind = f.dataset?.form; if (!kind) return;
   ev.preventDefault();
   const v = n => (f.elements[n]?.value ?? '').trim();
+  if (kind === 'floor') {
+    if (!v('name')) return;
+    checkpoint(`✏️ 층 이름 → ${v('name')}`); userEdit('floor:' + f.dataset.id, { name: v('name') }); editFloor = null; saveUser(); return renderQuestPanel();
+  }
   if (kind === 'addsub') {
     const q = questById(f.dataset.id); if (!q || !v('t')) return;
     checkpoint(`＋ '${q.title}' 하위 작업`); q.subtasks = [...(q.subtasks || []), { title: v('t').slice(0, 60), done: null }];
@@ -4286,7 +4313,7 @@ qpanel.addEventListener('click', ev => {
   else if (b.dataset.a === 'del') removeQuest(id);
   else if (b.dataset.a === 'addst') { addSubFor = addSubFor === id ? null : id; editQuest = null; renderQuestPanel(); }
   else if (b.dataset.a === 'edit') { editQuest = editQuest === id ? null : id; addSubFor = null; renderQuestPanel(); }
-  else if (b.dataset.a === 'cancel') { editQuest = addSubFor = editCat = quickCat = null; newCatOpen = false; editGoal = null; newGoalOpen = false; renderQuestPanel(); }
+  else if (b.dataset.a === 'cancel') { editQuest = addSubFor = editCat = quickCat = editFloor = null; newCatOpen = false; editGoal = null; newGoalOpen = false; renderQuestPanel(); }
 });
 qpanel.addEventListener('submit', ev => {
   ev.preventDefault();
@@ -4539,7 +4566,7 @@ qpanel.addEventListener('click', ev => {
   else if (a === 'outfit') { const [k, v] = id.split(':'); if (buy(id, OUTFIT_LOCKS[id], `${OUTFIT_KO[k]} ${optLabel(k, v)}`.trim())) wear(k, v); }
   else if (a === 'wear') { const [k, v] = id.split(':'); wear(k, v); }
   else if (a === 'see') { qpanel.classList.remove('open'); goToSkill(id); return; }
-  else if (a === 'gohome') { qpanel.classList.remove('open'); setFollow(false); if (cur.floor !== HOME) rideTo(HOME, 'all'); return; }
+  else if (a === 'gohome') { qpanel.classList.remove('open'); pauseFollow(); if (cur.floor !== HOME) rideTo(HOME, 'all'); return; }
   else if (a === 'home') {
     const sl = BUILDING.home.slots.find(x => x.id === id), cur0 = (game.home || {})[id] || 0, nx = sl?.tiers[cur0 + 1];
     if (nx && buy(`home:${id}:${cur0 + 1}`, nx.price || 0, nx.ko)) {
