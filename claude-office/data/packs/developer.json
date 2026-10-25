@@ -1,0 +1,378 @@
+{
+  "pack": {
+    "id": "developer",
+    "version": 1,
+    "icon": "💻",
+    "ko": "개발자",
+    "en": "SOFTWARE ENGINEER",
+    "desc": "매일 한 문제, 한 커밋. 주니어에서 시니어, 그리고 테크 리드까지."
+  },
+  "areas": [
+    {
+      "id": "dev",
+      "ko": "개발",
+      "en": "ENGINEERING",
+      "icon": "💻",
+      "categories": [
+        {
+          "id": "dev_cs",
+          "ko": "CS·알고리즘",
+          "en": "CS & ALGORITHMS",
+          "icon": "🧠",
+          "verb": "CS·알고리즘 하는 중",
+          "pose": "type",
+          "subs": [
+            {
+              "id": "algo",
+              "ko": "알고리즘",
+              "en": "ALGORITHMS",
+              "icon": "🧩",
+              "verb": "알고리즘 하는 중",
+              "pose": "type"
+            },
+            {
+              "id": "basics",
+              "ko": "CS 기초",
+              "en": "CS BASICS",
+              "icon": "📚",
+              "verb": "CS 기초 하는 중",
+              "pose": "read"
+            },
+            {
+              "id": "read",
+              "ko": "기술 읽기",
+              "en": "READING",
+              "icon": "📰",
+              "verb": "기술 읽기 하는 중",
+              "pose": "read"
+            }
+          ]
+        },
+        {
+          "id": "dev_build",
+          "ko": "만들기",
+          "en": "BUILDING",
+          "icon": "🛠️",
+          "verb": "만들기 하는 중",
+          "pose": "type",
+          "subs": [
+            {
+              "id": "project",
+              "ko": "사이드 프로젝트",
+              "en": "SIDE PROJECT",
+              "icon": "🚀",
+              "verb": "사이드 프로젝트 하는 중",
+              "pose": "type"
+            },
+            {
+              "id": "oss",
+              "ko": "오픈소스",
+              "en": "OPEN SOURCE",
+              "icon": "🌍",
+              "verb": "오픈소스 하는 중",
+              "pose": "type"
+            }
+          ]
+        },
+        {
+          "id": "dev_career",
+          "ko": "커리어",
+          "en": "CAREER",
+          "icon": "📈",
+          "verb": "커리어 하는 중",
+          "pose": "write",
+          "subs": [
+            {
+              "id": "write",
+              "ko": "기술 블로그",
+              "en": "BLOG",
+              "icon": "✍️",
+              "verb": "기술 블로그 하는 중",
+              "pose": "write"
+            },
+            {
+              "id": "network",
+              "ko": "네트워킹",
+              "en": "NETWORKING",
+              "icon": "🤝",
+              "verb": "네트워킹 하는 중",
+              "pose": "type"
+            },
+            {
+              "id": "resume",
+              "ko": "이력서",
+              "en": "RESUME",
+              "icon": "📄",
+              "verb": "이력서 하는 중",
+              "pose": "write"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "floors": [
+    {
+      "id": "life:dev",
+      "name": "💻 개발자 라운지",
+      "en": "DEV LOUNGE",
+      "rooms": [
+        {
+          "template": "learning",
+          "cat": "dev_cs"
+        },
+        {
+          "template": "video",
+          "cat": "dev_build"
+        },
+        {
+          "template": "hustle",
+          "cat": "dev_career"
+        }
+      ]
+    }
+  ],
+  "paths": [
+    {
+      "id": "developer",
+      "icon": "💻",
+      "ko": "개발자",
+      "en": "SOFTWARE ENGINEER",
+      "desc": "주니어에서 테크 리드까지.",
+      "categories": [
+        "dev_cs",
+        "dev_build",
+        "dev_career"
+      ],
+      "stages": [
+        {
+          "ko": "주니어",
+          "en": "JUNIOR",
+          "title": "주니어",
+          "needXP": 0,
+          "unlocks": [
+            {
+              "icon": "💻",
+              "ko": "개발자 배지"
+            }
+          ]
+        },
+        {
+          "ko": "미드레벨",
+          "en": "MID-LEVEL",
+          "title": "미드레벨",
+          "needXP": 1500,
+          "milestone": {
+            "streak": 14
+          },
+          "perk": {
+            "xp": 0.05
+          },
+          "unlocks": [
+            {
+              "icon": "⌨️",
+              "ko": "기계식 키보드",
+              "planned": true
+            }
+          ]
+        },
+        {
+          "ko": "시니어",
+          "en": "SENIOR",
+          "title": "시니어",
+          "needXP": 6000,
+          "milestone": {
+            "focused": 40
+          },
+          "perk": {
+            "xp": 0.1
+          },
+          "unlocks": [
+            {
+              "icon": "🖥️",
+              "ko": "듀얼 모니터",
+              "planned": true
+            }
+          ]
+        },
+        {
+          "ko": "테크 리드",
+          "en": "TECH LEAD",
+          "title": "테크 리드",
+          "needXP": 20000,
+          "milestone": {
+            "streak": 60
+          },
+          "perk": {
+            "xp": 0.15
+          },
+          "unlocks": [
+            {
+              "icon": "🏢",
+              "ko": "스타트업 사무실 지도",
+              "planned": true
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "goals": [
+    {
+      "id": "dev_solved",
+      "icon": "🧩",
+      "ko": "푼 알고리즘 문제",
+      "kind": "number",
+      "unit": "개",
+      "milestones": [
+        {
+          "at": 50,
+          "ko": "50"
+        },
+        {
+          "at": 200,
+          "ko": "200"
+        },
+        {
+          "at": 500,
+          "ko": "500"
+        }
+      ]
+    },
+    {
+      "id": "dev_road",
+      "icon": "🚀",
+      "ko": "포트폴리오",
+      "kind": "checklist",
+      "items": [
+        {
+          "id": "d1",
+          "ko": "미니 프로젝트 배포",
+          "tier": "만들기"
+        },
+        {
+          "id": "d2",
+          "ko": "사용자 10명",
+          "tier": "만들기"
+        },
+        {
+          "id": "d3",
+          "ko": "오픈소스 PR 머지",
+          "tier": "만들기"
+        },
+        {
+          "id": "d4",
+          "ko": "기술 블로그 10편",
+          "tier": "알리기"
+        },
+        {
+          "id": "d5",
+          "ko": "밋업 발표 1회",
+          "tier": "알리기"
+        }
+      ]
+    }
+  ],
+  "seed": [
+    {
+      "title": "알고리즘 1문제",
+      "cat": "dev_cs",
+      "minutes": 25,
+      "repeat": "daily",
+      "sub": "algo",
+      "days": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "cue": "아침 커피 후 노트북 열면",
+      "easy": "문제 읽기만"
+    },
+    {
+      "title": "사이드 프로젝트 커밋 1개",
+      "cat": "dev_build",
+      "minutes": 30,
+      "repeat": "daily",
+      "sub": "project",
+      "cue": "저녁 식사 후",
+      "easy": "README 한 줄 고치기"
+    },
+    {
+      "title": "기술 블로그·문서 1편 읽고 3줄 요약",
+      "cat": "dev_cs",
+      "minutes": 15,
+      "repeat": "daily",
+      "sub": "read",
+      "cue": "점심 먹은 직후",
+      "easy": "제목만 저장"
+    },
+    {
+      "title": "CS 기초 1주제 (네트워크 · OS · DB)",
+      "cat": "dev_cs",
+      "minutes": 30,
+      "repeat": "weekly",
+      "sub": "basics",
+      "cue": "토요일 오전",
+      "easy": "개념 1개"
+    },
+    {
+      "title": "오픈소스 이슈 1개 살펴보기 · 기여",
+      "cat": "dev_build",
+      "minutes": 45,
+      "repeat": "weekly",
+      "sub": "oss",
+      "cue": "일요일 오후",
+      "easy": "good first issue 1개 저장"
+    },
+    {
+      "title": "배운 것 블로그 글 1편",
+      "cat": "dev_career",
+      "minutes": 40,
+      "repeat": "weekly",
+      "sub": "write",
+      "cue": "일요일 저녁",
+      "easy": "제목 + 목차"
+    },
+    {
+      "title": "개발자 밋업 · 스터디 1회",
+      "cat": "dev_career",
+      "minutes": 60,
+      "repeat": "monthly",
+      "sub": "network",
+      "times": 2,
+      "cue": "월초 일정 확인",
+      "easy": "밋업 1개 찜"
+    },
+    {
+      "title": "이력서 · 포트폴리오 업데이트",
+      "cat": "dev_career",
+      "minutes": 30,
+      "repeat": "monthly",
+      "sub": "resume",
+      "times": 1,
+      "cue": "월말 회고 때",
+      "easy": "프로젝트 한 줄 추가"
+    },
+    {
+      "title": "GitHub 프로필 README 만들기",
+      "cat": "dev_career",
+      "minutes": 45,
+      "repeat": "once",
+      "sub": "resume"
+    },
+    {
+      "title": "배포까지 끝낸 미니 프로젝트 1개",
+      "cat": "dev_build",
+      "minutes": 240,
+      "repeat": "once",
+      "sub": "project"
+    }
+  ],
+  "weeklyHours": {
+    "dev_cs": 4.5,
+    "dev_build": 4.0,
+    "dev_career": 1.0
+  }
+}

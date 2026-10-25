@@ -1,0 +1,405 @@
+{
+  "pack": {
+    "id": "wealthy-retiree",
+    "version": 1,
+    "icon": "🏝️",
+    "ko": "부자 은퇴 (파이어족)",
+    "en": "EARLY RETIREE",
+    "desc": "저축률을 올리고, 꾸준히 투자하고, 은퇴 후의 삶까지 설계해요."
+  },
+  "areas": [
+    {
+      "id": "fire",
+      "ko": "경제적 자유",
+      "en": "FINANCIAL FREEDOM",
+      "icon": "🏝️",
+      "categories": [
+        {
+          "id": "fire_money",
+          "ko": "돈 관리",
+          "en": "MONEY",
+          "icon": "💵",
+          "verb": "돈 관리 하는 중",
+          "pose": "write",
+          "subs": [
+            {
+              "id": "budget",
+              "ko": "가계부",
+              "en": "BUDGET",
+              "icon": "📒",
+              "verb": "가계부 하는 중",
+              "pose": "write"
+            },
+            {
+              "id": "cut",
+              "ko": "지출 줄이기",
+              "en": "CUTTING",
+              "icon": "✂️",
+              "verb": "지출 줄이기 하는 중",
+              "pose": "write"
+            },
+            {
+              "id": "plan",
+              "ko": "재무 계획",
+              "en": "PLANNING",
+              "icon": "🗺️",
+              "verb": "재무 계획 하는 중",
+              "pose": "write"
+            }
+          ]
+        },
+        {
+          "id": "fire_invest",
+          "ko": "투자",
+          "en": "INVESTING",
+          "icon": "📈",
+          "verb": "투자 하는 중",
+          "pose": "read",
+          "subs": [
+            {
+              "id": "study",
+              "ko": "공부",
+              "en": "STUDY",
+              "icon": "📚",
+              "verb": "공부 하는 중",
+              "pose": "read"
+            },
+            {
+              "id": "review",
+              "ko": "점검",
+              "en": "REVIEW",
+              "icon": "🔍",
+              "verb": "점검 하는 중",
+              "pose": "read"
+            },
+            {
+              "id": "cashflow",
+              "ko": "현금흐름",
+              "en": "CASH FLOW",
+              "icon": "💸",
+              "verb": "현금흐름 하는 중",
+              "pose": "write"
+            }
+          ]
+        },
+        {
+          "id": "fire_side",
+          "ko": "부수입",
+          "en": "SIDE INCOME",
+          "icon": "🪙",
+          "verb": "부수입 하는 중",
+          "pose": "type",
+          "subs": [
+            {
+              "id": "side",
+              "ko": "부업",
+              "en": "SIDE GIGS",
+              "icon": "🪙",
+              "verb": "부업 하는 중",
+              "pose": "type"
+            }
+          ]
+        },
+        {
+          "id": "fire_life",
+          "ko": "은퇴 후 삶",
+          "en": "LIFE AFTER",
+          "icon": "🌴",
+          "verb": "은퇴 후 삶 하는 중",
+          "pose": "meditate",
+          "subs": [
+            {
+              "id": "vision",
+              "ko": "비전",
+              "en": "VISION",
+              "icon": "🌅",
+              "verb": "비전 하는 중",
+              "pose": "write"
+            },
+            {
+              "id": "health",
+              "ko": "건강",
+              "en": "HEALTH",
+              "icon": "🚶",
+              "verb": "건강 하는 중",
+              "pose": "meditate"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "floors": [
+    {
+      "id": "life:fire",
+      "name": "🏝️ 파이어 라운지",
+      "en": "FIRE LOUNGE",
+      "rooms": [
+        {
+          "template": "learning",
+          "cat": "fire_money",
+          "tint": "#c8b48a"
+        },
+        {
+          "template": "video",
+          "cat": "fire_invest",
+          "tint": "#2c3a33"
+        },
+        {
+          "template": "hustle",
+          "cat": "fire_side"
+        },
+        {
+          "template": "growth",
+          "cat": "fire_life"
+        }
+      ]
+    }
+  ],
+  "paths": [
+    {
+      "id": "wealthy-retiree",
+      "icon": "🏝️",
+      "ko": "부자 은퇴",
+      "en": "EARLY RETIREE",
+      "desc": "저축하는 사람에서 돈이 일하는 사람으로.",
+      "categories": [
+        "fire_money",
+        "fire_invest",
+        "fire_side"
+      ],
+      "stages": [
+        {
+          "ko": "저축가",
+          "en": "SAVER",
+          "title": "저축가",
+          "needXP": 0,
+          "unlocks": [
+            {
+              "icon": "🐷",
+              "ko": "돼지 저금통"
+            }
+          ]
+        },
+        {
+          "ko": "투자자",
+          "en": "INVESTOR",
+          "title": "투자자",
+          "needXP": 1500,
+          "milestone": {
+            "streak": 14
+          },
+          "perk": {
+            "xp": 0.05
+          },
+          "unlocks": [
+            {
+              "icon": "📈",
+              "ko": "트레이딩 모니터",
+              "planned": true
+            }
+          ]
+        },
+        {
+          "ko": "자산가",
+          "en": "WEALTH BUILDER",
+          "title": "자산가",
+          "needXP": 6000,
+          "milestone": {
+            "focused": 40
+          },
+          "perk": {
+            "xp": 0.1
+          },
+          "unlocks": [
+            {
+              "icon": "🏦",
+              "ko": "금고 방",
+              "planned": true
+            }
+          ]
+        },
+        {
+          "ko": "자유인",
+          "en": "FREE",
+          "title": "자유인",
+          "needXP": 20000,
+          "milestone": {
+            "streak": 60
+          },
+          "perk": {
+            "xp": 0.15
+          },
+          "unlocks": [
+            {
+              "icon": "🏝️",
+              "ko": "해변 별장 지도",
+              "planned": true
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "goals": [
+    {
+      "id": "fire_networth",
+      "icon": "💰",
+      "ko": "순자산",
+      "kind": "number",
+      "unit": "만원",
+      "milestones": [
+        {
+          "at": 10000,
+          "ko": "1억"
+        },
+        {
+          "at": 50000,
+          "ko": "5억"
+        },
+        {
+          "at": 100000,
+          "ko": "10억"
+        },
+        {
+          "at": 200000,
+          "ko": "20억"
+        }
+      ]
+    },
+    {
+      "id": "fire_rate",
+      "icon": "🐷",
+      "ko": "저축률",
+      "kind": "number",
+      "unit": "%",
+      "milestones": [
+        {
+          "at": 30,
+          "ko": "30%"
+        },
+        {
+          "at": 50,
+          "ko": "50%"
+        },
+        {
+          "at": 70,
+          "ko": "70%"
+        }
+      ]
+    }
+  ],
+  "seed": [
+    {
+      "title": "지출 기록 2분",
+      "cat": "fire_money",
+      "minutes": 2,
+      "repeat": "daily",
+      "sub": "budget",
+      "cue": "저녁 먹고 핸드폰 들었을 때",
+      "easy": "오늘 쓴 금액 하나"
+    },
+    {
+      "title": "투자 공부 1개 (책 10쪽 · 리포트 1편)",
+      "cat": "fire_invest",
+      "minutes": 15,
+      "repeat": "daily",
+      "sub": "study",
+      "cue": "아침 커피 마시며",
+      "easy": "1쪽"
+    },
+    {
+      "title": "포트폴리오 점검 · 리밸런싱 필요?",
+      "cat": "fire_invest",
+      "minutes": 15,
+      "repeat": "weekly",
+      "sub": "review",
+      "cue": "일요일 아침 커피 후",
+      "easy": "총액만 확인"
+    },
+    {
+      "title": "월 가계 결산 · 저축률 계산",
+      "cat": "fire_money",
+      "minutes": 30,
+      "repeat": "monthly",
+      "sub": "budget",
+      "times": 1,
+      "cue": "월급날 다음 날",
+      "easy": "총수입 · 총지출만"
+    },
+    {
+      "title": "고정비 1개 줄이기 (구독 · 통신 · 보험)",
+      "cat": "fire_money",
+      "minutes": 20,
+      "repeat": "monthly",
+      "sub": "cut",
+      "times": 1,
+      "cue": "월 결산 직후",
+      "easy": "구독 목록 열어보기"
+    },
+    {
+      "title": "부수입 아이디어 1개 실행",
+      "cat": "fire_side",
+      "minutes": 30,
+      "repeat": "weekly",
+      "sub": "side",
+      "cue": "토요일 오전",
+      "easy": "아이디어 메모 1줄"
+    },
+    {
+      "title": "배당 · 현금흐름 표 업데이트",
+      "cat": "fire_invest",
+      "minutes": 20,
+      "repeat": "monthly",
+      "sub": "cashflow",
+      "times": 1,
+      "cue": "배당 들어온 날",
+      "easy": "입금 1건 기록"
+    },
+    {
+      "title": "은퇴 후 하루 일과 상상해서 적기",
+      "cat": "fire_life",
+      "minutes": 10,
+      "repeat": "weekly",
+      "sub": "vision",
+      "cue": "일요일 밤",
+      "easy": "한 줄"
+    },
+    {
+      "title": "건강 루틴: 걷기 30분",
+      "cat": "fire_life",
+      "minutes": 30,
+      "repeat": "daily",
+      "sub": "health",
+      "cue": "점심 먹은 직후",
+      "easy": "5분 산책"
+    },
+    {
+      "title": "FIRE 숫자 계산 (연 지출 × 25)",
+      "cat": "fire_money",
+      "minutes": 30,
+      "repeat": "once",
+      "sub": "plan"
+    },
+    {
+      "title": "목표 자산배분 정하기",
+      "cat": "fire_invest",
+      "minutes": 45,
+      "repeat": "once",
+      "sub": "review"
+    },
+    {
+      "title": "비상금 6개월치 따로 두기",
+      "cat": "fire_money",
+      "minutes": 20,
+      "repeat": "once",
+      "sub": "plan"
+    }
+  ],
+  "weeklyHours": {
+    "fire_money": 0.5,
+    "fire_invest": 2.0,
+    "fire_side": 0.5,
+    "fire_life": 3.5
+  }
+}

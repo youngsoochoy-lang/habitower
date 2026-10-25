@@ -1,0 +1,459 @@
+{
+  "pack": {
+    "id": "kpop-idol",
+    "version": 1,
+    "icon": "🎤",
+    "ko": "K-pop 아이돌",
+    "en": "K-POP IDOL",
+    "desc": "노래, 춤, 체력, 무대 매너를 매일 조금씩. 연습생에서 데뷔, 월드 투어까지."
+  },
+  "areas": [
+    {
+      "id": "idol",
+      "ko": "아이돌 트레이닝",
+      "en": "IDOL TRAINING",
+      "icon": "🎤",
+      "categories": [
+        {
+          "id": "idol_vocal",
+          "ko": "보컬",
+          "en": "VOCAL",
+          "icon": "🎙️",
+          "verb": "보컬 하는 중",
+          "pose": "read",
+          "subs": [
+            {
+              "id": "warmup",
+              "ko": "발성",
+              "en": "WARM-UP",
+              "icon": "🎶",
+              "verb": "발성 하는 중",
+              "pose": "read"
+            },
+            {
+              "id": "song",
+              "ko": "곡 연습",
+              "en": "SONGS",
+              "icon": "🎵",
+              "verb": "곡 연습 하는 중",
+              "pose": "read"
+            },
+            {
+              "id": "lesson",
+              "ko": "레슨",
+              "en": "LESSONS",
+              "icon": "🎓",
+              "verb": "레슨 하는 중",
+              "pose": "read"
+            }
+          ]
+        },
+        {
+          "id": "idol_dance",
+          "ko": "댄스",
+          "en": "DANCE",
+          "icon": "💃",
+          "verb": "댄스 하는 중",
+          "pose": "dance",
+          "subs": [
+            {
+              "id": "basics",
+              "ko": "기본기",
+              "en": "BASICS",
+              "icon": "🕺",
+              "verb": "기본기 하는 중",
+              "pose": "dance"
+            },
+            {
+              "id": "choreo",
+              "ko": "안무",
+              "en": "CHOREO",
+              "icon": "💃",
+              "verb": "안무 하는 중",
+              "pose": "dance"
+            },
+            {
+              "id": "cover",
+              "ko": "커버 영상",
+              "en": "COVERS",
+              "icon": "📹",
+              "verb": "커버 영상 하는 중",
+              "pose": "type"
+            }
+          ]
+        },
+        {
+          "id": "idol_body",
+          "ko": "체력·유연성",
+          "en": "FITNESS",
+          "icon": "🤸",
+          "verb": "체력·유연성 하는 중",
+          "pose": "pilates",
+          "subs": [
+            {
+              "id": "flex",
+              "ko": "유연성",
+              "en": "FLEXIBILITY",
+              "icon": "🤸",
+              "verb": "유연성 하는 중",
+              "pose": "pilates"
+            },
+            {
+              "id": "cardio",
+              "ko": "체력",
+              "en": "CARDIO",
+              "icon": "🏃",
+              "verb": "체력 하는 중",
+              "pose": "lift"
+            }
+          ]
+        },
+        {
+          "id": "idol_stage",
+          "ko": "무대·데뷔 준비",
+          "en": "STAGE",
+          "icon": "🌟",
+          "verb": "무대·데뷔 준비 하는 중",
+          "pose": "type",
+          "subs": [
+            {
+              "id": "camera",
+              "ko": "카메라 연습",
+              "en": "CAMERA",
+              "icon": "📸",
+              "verb": "카메라 연습 하는 중",
+              "pose": "type"
+            },
+            {
+              "id": "lang",
+              "ko": "외국어",
+              "en": "LANGUAGES",
+              "icon": "🗣️",
+              "verb": "외국어 하는 중",
+              "pose": "read"
+            },
+            {
+              "id": "audition",
+              "ko": "오디션",
+              "en": "AUDITIONS",
+              "icon": "📝",
+              "verb": "오디션 하는 중",
+              "pose": "write"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "floors": [
+    {
+      "id": "life:idol",
+      "name": "🎤 연습생 센터",
+      "en": "TRAINEE CENTER",
+      "rooms": [
+        {
+          "template": "piano",
+          "cat": "idol_vocal",
+          "tint": "#3a2a4a"
+        },
+        {
+          "template": "ballet",
+          "cat": "idol_dance",
+          "tint": "#d6b8e0"
+        },
+        {
+          "template": "gym",
+          "cat": "idol_body"
+        },
+        {
+          "template": "video",
+          "cat": "idol_stage",
+          "tint": "#4a2a3a"
+        }
+      ]
+    }
+  ],
+  "paths": [
+    {
+      "id": "kpop-idol",
+      "icon": "🎤",
+      "ko": "K-pop 아이돌",
+      "en": "K-POP IDOL",
+      "desc": "연습생에서 데뷔, 월드 투어까지.",
+      "categories": [
+        "idol_vocal",
+        "idol_dance",
+        "idol_body",
+        "idol_stage"
+      ],
+      "stages": [
+        {
+          "ko": "연습생",
+          "en": "TRAINEE",
+          "title": "연습생",
+          "needXP": 0,
+          "unlocks": [
+            {
+              "icon": "🎤",
+              "ko": "연습생 명찰"
+            }
+          ]
+        },
+        {
+          "ko": "데뷔조",
+          "en": "DEBUT TEAM",
+          "title": "데뷔조",
+          "needXP": 1500,
+          "milestone": {
+            "streak": 14
+          },
+          "perk": {
+            "xp": 0.05
+          },
+          "unlocks": [
+            {
+              "icon": "🎧",
+              "ko": "인이어",
+              "planned": true
+            }
+          ]
+        },
+        {
+          "ko": "루키",
+          "en": "ROOKIE",
+          "title": "루키",
+          "needXP": 6000,
+          "milestone": {
+            "focused": 40
+          },
+          "perk": {
+            "xp": 0.1
+          },
+          "unlocks": [
+            {
+              "icon": "🏆",
+              "ko": "음악방송 1위 트로피",
+              "planned": true
+            }
+          ]
+        },
+        {
+          "ko": "월드 스타",
+          "en": "WORLD STAR",
+          "title": "월드 스타",
+          "needXP": 20000,
+          "milestone": {
+            "streak": 60
+          },
+          "perk": {
+            "xp": 0.15
+          },
+          "unlocks": [
+            {
+              "icon": "🌏",
+              "ko": "월드 투어 지도",
+              "planned": true
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "goals": [
+    {
+      "id": "idol_road",
+      "icon": "🌟",
+      "ko": "데뷔까지",
+      "kind": "checklist",
+      "items": [
+        {
+          "id": "i1",
+          "ko": "매일 발성 30일 연속",
+          "tier": "기초"
+        },
+        {
+          "id": "i2",
+          "ko": "안무 1곡 완곡",
+          "tier": "기초"
+        },
+        {
+          "id": "i3",
+          "ko": "커버 영상 5편",
+          "tier": "기초"
+        },
+        {
+          "id": "i4",
+          "ko": "프로필 · 자기소개 영상 완성",
+          "tier": "오디션"
+        },
+        {
+          "id": "i5",
+          "ko": "오디션 5곳 지원",
+          "tier": "오디션"
+        },
+        {
+          "id": "i6",
+          "ko": "1차 합격",
+          "tier": "오디션"
+        },
+        {
+          "id": "i7",
+          "ko": "기획사 연습생 계약",
+          "tier": "연습생"
+        },
+        {
+          "id": "i8",
+          "ko": "월말 평가 통과",
+          "tier": "연습생"
+        },
+        {
+          "id": "i9",
+          "ko": "데뷔조 합류",
+          "tier": "연습생"
+        }
+      ]
+    },
+    {
+      "id": "idol_covers",
+      "icon": "📹",
+      "ko": "커버 영상 조회수",
+      "kind": "number",
+      "unit": "회",
+      "milestones": [
+        {
+          "at": 1000,
+          "ko": "1천"
+        },
+        {
+          "at": 10000,
+          "ko": "1만"
+        },
+        {
+          "at": 100000,
+          "ko": "10만"
+        }
+      ]
+    }
+  ],
+  "seed": [
+    {
+      "title": "보컬 발성 워밍업 (립트릴 · 허밍)",
+      "cat": "idol_vocal",
+      "minutes": 10,
+      "repeat": "daily",
+      "sub": "warmup",
+      "cue": "아침 양치 끝나면",
+      "easy": "허밍 1분"
+    },
+    {
+      "title": "곡 1절 녹음해서 들어보기",
+      "cat": "idol_vocal",
+      "minutes": 20,
+      "repeat": "daily",
+      "sub": "song",
+      "cue": "저녁 식사 후",
+      "easy": "후렴만"
+    },
+    {
+      "title": "음정·호흡 레슨 (트레이너)",
+      "cat": "idol_vocal",
+      "minutes": 60,
+      "repeat": "weekly",
+      "sub": "lesson",
+      "times": 2,
+      "cue": "레슨 전날 질문 1개 적기",
+      "easy": "발성 연습 5분"
+    },
+    {
+      "title": "안무 8카운트 따라 하기 (거울 앞)",
+      "cat": "idol_dance",
+      "minutes": 20,
+      "repeat": "daily",
+      "sub": "choreo",
+      "cue": "샤워 전 거울 앞에서",
+      "easy": "4카운트"
+    },
+    {
+      "title": "기본기: 아이솔레이션 · 리듬 타기",
+      "cat": "idol_dance",
+      "minutes": 15,
+      "repeat": "daily",
+      "sub": "basics",
+      "cue": "안무 연습 직전",
+      "easy": "목 아이솔 1분"
+    },
+    {
+      "title": "커버 영상 1편 촬영",
+      "cat": "idol_dance",
+      "minutes": 45,
+      "repeat": "weekly",
+      "sub": "cover",
+      "cue": "토요일 오후",
+      "easy": "후렴 15초만",
+      "subtasks": [
+        "곡 고르기",
+        "전신 촬영",
+        "다시 보고 고칠 점 3개"
+      ]
+    },
+    {
+      "title": "유연성 스트레칭",
+      "cat": "idol_body",
+      "minutes": 10,
+      "repeat": "daily",
+      "sub": "flex",
+      "cue": "잠들기 전",
+      "easy": "다리 찢기 1분"
+    },
+    {
+      "title": "체력: 줄넘기 · 인터벌",
+      "cat": "idol_body",
+      "minutes": 20,
+      "repeat": "weekly",
+      "sub": "cardio",
+      "times": 3,
+      "cue": "월 · 수 · 금 아침",
+      "easy": "줄넘기 100개"
+    },
+    {
+      "title": "카메라 앞 표정·엔딩 요정 연습",
+      "cat": "idol_stage",
+      "minutes": 5,
+      "repeat": "daily",
+      "sub": "camera",
+      "cue": "셀카 찍기 전",
+      "easy": "표정 3개"
+    },
+    {
+      "title": "외국어 인사·자기소개 1문장 (영어 · 일본어)",
+      "cat": "idol_stage",
+      "minutes": 10,
+      "repeat": "daily",
+      "sub": "lang",
+      "cue": "출근·등교길",
+      "easy": "단어 3개"
+    },
+    {
+      "title": "오디션 공고 확인 · 지원",
+      "cat": "idol_stage",
+      "minutes": 20,
+      "repeat": "weekly",
+      "sub": "audition",
+      "cue": "일요일 저녁",
+      "easy": "공고 1개 저장"
+    },
+    {
+      "title": "프로필 사진 · 자기소개 영상 만들기",
+      "cat": "idol_stage",
+      "minutes": 90,
+      "repeat": "once",
+      "sub": "audition"
+    }
+  ],
+  "weeklyHours": {
+    "idol_vocal": 5.5,
+    "idol_dance": 5.0,
+    "idol_body": 2.0,
+    "idol_stage": 2.0
+  }
+}

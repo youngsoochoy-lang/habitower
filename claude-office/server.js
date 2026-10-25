@@ -367,12 +367,13 @@ const PACK_DIRS = [path.join(DATA_DIR, 'packs'), path.join(DATA_DIR, 'private')]
 function readPacks() {
   const files = [];
   for (const dir of PACK_DIRS) { try { for (const f of fs.readdirSync(dir).filter(f => f.endsWith('.json')).sort()) files.push(path.join(dir, f)); } catch {} }
+  const src = p => (p.startsWith(PACK_DIRS[1]) ? 'private' : 'shared');
   const packs = [], errors = [];
   let mtime = 0;
   for (const p of files) {
     const f = path.relative(DATA_DIR, p);
     mtime = Math.max(mtime, statSafe(p)?.mtimeMs || 0);
-    try { const d = JSON.parse(fs.readFileSync(p, 'utf8')); if (d?.pack?.id) packs.push(d); else errors.push(`${f}: missing pack.id`); }
+    try { const d = JSON.parse(fs.readFileSync(p, 'utf8')); if (d?.pack?.id) packs.push({ ...d, _src: src(p) }); else errors.push(`${f}: missing pack.id`); }
     catch { errors.push(`${f}: not valid JSON`); }
   }
   return { packs, errors, mtime };
@@ -397,7 +398,7 @@ function jsonStore(file, check, extra) {
       let data; try { data = JSON.parse(body); } catch { return send(400, { error: 'bad json' }); }
       const bad = check(data);
       if (bad) return send(400, { error: bad });
-      fs.mkdirSync(DATA_DIR, { recursive: true });
+      fs.mkdirSync(path.dirname(file), { recursive: true });
       fs.writeFileSync(file + '.tmp', JSON.stringify(data, null, 2));
       fs.renameSync(file + '.tmp', file);
       send(200, { ok: true, mtime: statSafe(file).mtimeMs });
@@ -405,6 +406,10 @@ function jsonStore(file, check, extra) {
   };
 }
 const quests = jsonStore(QUESTS_FILE, d => (d && Array.isArray(d.quests) ? null : 'expected { quests: [...] }'));
+// your own edits on top of the defaults and packs (renames, deletions, new categories and goals, which courses are on):
+// data/private/user.json, written by the page, git-ignored like the rest of data/private
+const USER_FILE = path.join(DATA_DIR, 'private', 'user.json');
+const userStore = jsonStore(USER_FILE, d => (d?.pack?.id === 'user' ? null : 'expected { pack: { id: "user" } }'));
 const buildingStore = jsonStore(BUILDING_FILE, d => (d && Array.isArray(d.areas) && Array.isArray(d.floors) ? null : 'expected { areas: [...], floors: [...] }'), readPacks);
 
 // ---------- http ----------
@@ -424,6 +429,7 @@ const server = http.createServer((req, res) => {
   }
   if (url.pathname === '/api/quests') return quests(req, res);
   if (url.pathname === '/api/building') return buildingStore(req, res);
+  if (url.pathname === '/api/userpack') return userStore(req, res);
   if (url.pathname === '/api/stream' && url.searchParams.get('session') === 'all') return startAllStream(req, res, url.searchParams.get('floor') || '');
   if (url.pathname === '/api/stream') return startStream(req, res, url.searchParams.get('floor') || '', url.searchParams.get('session'));
   res.writeHead(404); res.end('not found');

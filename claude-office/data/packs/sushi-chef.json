@@ -1,0 +1,416 @@
+{
+  "pack": {
+    "id": "sushi-chef",
+    "version": 1,
+    "icon": "🍣",
+    "ko": "스시 셰프",
+    "en": "SUSHI CHEF",
+    "desc": "칼질, 샤리, 생선 공부를 매일. 견습생에서 내 이름을 건 오마카세까지."
+  },
+  "areas": [
+    {
+      "id": "sushi",
+      "ko": "스시 수련",
+      "en": "SUSHI TRAINING",
+      "icon": "🍣",
+      "categories": [
+        {
+          "id": "sushi_knife",
+          "ko": "칼·손질",
+          "en": "KNIFE & FISH",
+          "icon": "🔪",
+          "verb": "칼·손질 하는 중",
+          "pose": "cook",
+          "subs": [
+            {
+              "id": "knife",
+              "ko": "칼질",
+              "en": "KNIFE",
+              "icon": "🔪",
+              "verb": "칼질 하는 중",
+              "pose": "cook"
+            },
+            {
+              "id": "fish",
+              "ko": "생선 손질",
+              "en": "FISH",
+              "icon": "🐟",
+              "verb": "생선 손질 하는 중",
+              "pose": "cook"
+            }
+          ]
+        },
+        {
+          "id": "sushi_rice",
+          "ko": "샤리·니기리",
+          "en": "RICE & NIGIRI",
+          "icon": "🍚",
+          "verb": "샤리·니기리 하는 중",
+          "pose": "cook",
+          "subs": [
+            {
+              "id": "rice",
+              "ko": "샤리",
+              "en": "RICE",
+              "icon": "🍚",
+              "verb": "샤리 하는 중",
+              "pose": "cook"
+            },
+            {
+              "id": "nigiri",
+              "ko": "니기리",
+              "en": "NIGIRI",
+              "icon": "🍣",
+              "verb": "니기리 하는 중",
+              "pose": "cook"
+            }
+          ]
+        },
+        {
+          "id": "sushi_know",
+          "ko": "식재료·일본어",
+          "en": "KNOWLEDGE",
+          "icon": "📖",
+          "verb": "식재료·일본어 하는 중",
+          "pose": "read",
+          "subs": [
+            {
+              "id": "fish",
+              "ko": "제철 생선",
+              "en": "SEASONAL FISH",
+              "icon": "🐟",
+              "verb": "제철 생선 하는 중",
+              "pose": "read"
+            },
+            {
+              "id": "lang",
+              "ko": "일본어",
+              "en": "JAPANESE",
+              "icon": "🗾",
+              "verb": "일본어 하는 중",
+              "pose": "read"
+            },
+            {
+              "id": "tasting",
+              "ko": "시식 노트",
+              "en": "TASTING",
+              "icon": "🍶",
+              "verb": "시식 노트 하는 중",
+              "pose": "write"
+            }
+          ]
+        },
+        {
+          "id": "sushi_biz",
+          "ko": "가게 운영",
+          "en": "RESTAURANT",
+          "icon": "🏮",
+          "verb": "가게 운영 하는 중",
+          "pose": "write",
+          "subs": [
+            {
+              "id": "cost",
+              "ko": "위생·원가",
+              "en": "COSTS",
+              "icon": "🧾",
+              "verb": "위생·원가 하는 중",
+              "pose": "write"
+            },
+            {
+              "id": "cert",
+              "ko": "자격증",
+              "en": "CERTIFICATES",
+              "icon": "📜",
+              "verb": "자격증 하는 중",
+              "pose": "read"
+            },
+            {
+              "id": "career",
+              "ko": "커리어",
+              "en": "CAREER",
+              "icon": "👘",
+              "verb": "커리어 하는 중",
+              "pose": "write"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "floors": [
+    {
+      "id": "life:sushi",
+      "name": "🍣 스시 카운터",
+      "en": "SUSHI COUNTER",
+      "rooms": [
+        {
+          "template": "chores",
+          "cat": "sushi_knife",
+          "tint": "#e6dccb"
+        },
+        {
+          "template": "chores",
+          "cat": "sushi_rice",
+          "tint": "#d8cbb2"
+        },
+        {
+          "template": "learning",
+          "cat": "sushi_know"
+        },
+        {
+          "template": "hustle",
+          "cat": "sushi_biz",
+          "tint": "#5a3a2a"
+        }
+      ]
+    }
+  ],
+  "paths": [
+    {
+      "id": "sushi-chef",
+      "icon": "🍣",
+      "ko": "스시 셰프",
+      "en": "SUSHI CHEF",
+      "desc": "견습생에서 내 이름을 건 오마카세까지.",
+      "categories": [
+        "sushi_knife",
+        "sushi_rice",
+        "sushi_know",
+        "sushi_biz"
+      ],
+      "stages": [
+        {
+          "ko": "견습생",
+          "en": "APPRENTICE",
+          "title": "견습생",
+          "needXP": 0,
+          "unlocks": [
+            {
+              "icon": "🍣",
+              "ko": "견습생 머리띠"
+            }
+          ]
+        },
+        {
+          "ko": "니기리 담당",
+          "en": "NIGIRI COOK",
+          "title": "니기리 담당",
+          "needXP": 1500,
+          "milestone": {
+            "streak": 14
+          },
+          "perk": {
+            "xp": 0.05
+          },
+          "unlocks": [
+            {
+              "icon": "🔪",
+              "ko": "야나기바 칼",
+              "planned": true
+            }
+          ]
+        },
+        {
+          "ko": "이타마에",
+          "en": "ITAMAE",
+          "title": "이타마에",
+          "needXP": 6000,
+          "milestone": {
+            "focused": 40
+          },
+          "perk": {
+            "xp": 0.1
+          },
+          "unlocks": [
+            {
+              "icon": "🏮",
+              "ko": "카운터 자리",
+              "planned": true
+            }
+          ]
+        },
+        {
+          "ko": "오너 셰프",
+          "en": "OWNER CHEF",
+          "title": "오너 셰프",
+          "needXP": 20000,
+          "milestone": {
+            "streak": 60
+          },
+          "perk": {
+            "xp": 0.15
+          },
+          "unlocks": [
+            {
+              "icon": "🎌",
+              "ko": "내 오마카세 가게",
+              "planned": true
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "goals": [
+    {
+      "id": "sushi_road",
+      "icon": "🎌",
+      "ko": "셰프의 길",
+      "kind": "checklist",
+      "items": [
+        {
+          "id": "s1",
+          "ko": "샤리 무게 오차 ±2g",
+          "tier": "손"
+        },
+        {
+          "id": "s2",
+          "ko": "오이 돌려깎기 1m",
+          "tier": "손"
+        },
+        {
+          "id": "s3",
+          "ko": "광어 3장 뜨기 10분 안에",
+          "tier": "손"
+        },
+        {
+          "id": "s4",
+          "ko": "조리기능사 합격",
+          "tier": "자격"
+        },
+        {
+          "id": "s5",
+          "ko": "일식 주방 보조 3개월",
+          "tier": "자격"
+        },
+        {
+          "id": "s6",
+          "ko": "가족 오마카세 1회",
+          "tier": "무대"
+        },
+        {
+          "id": "s7",
+          "ko": "팝업 오마카세 1회",
+          "tier": "무대"
+        },
+        {
+          "id": "s8",
+          "ko": "내 가게 오픈",
+          "tier": "무대"
+        }
+      ]
+    }
+  ],
+  "seed": [
+    {
+      "title": "칼 갈기 · 칼질 연습 (오이 돌려깎기)",
+      "cat": "sushi_knife",
+      "minutes": 15,
+      "repeat": "daily",
+      "sub": "knife",
+      "cue": "저녁 준비 시작할 때",
+      "easy": "칼 닦고 정리만"
+    },
+    {
+      "title": "밥 짓기 · 초대리 배합 1회",
+      "cat": "sushi_rice",
+      "minutes": 20,
+      "repeat": "daily",
+      "sub": "rice",
+      "days": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "cue": "퇴근하고 손 씻자마자",
+      "easy": "쌀 씻기만"
+    },
+    {
+      "title": "샤리 쥐기 20개 (무게 일정하게)",
+      "cat": "sushi_rice",
+      "minutes": 15,
+      "repeat": "daily",
+      "sub": "nigiri",
+      "cue": "밥 지은 직후",
+      "easy": "5개"
+    },
+    {
+      "title": "생선 손질 1마리 (3장 뜨기)",
+      "cat": "sushi_knife",
+      "minutes": 45,
+      "repeat": "weekly",
+      "sub": "fish",
+      "times": 2,
+      "cue": "토요일 아침 시장 다녀와서",
+      "easy": "손질 영상 1편 보기"
+    },
+    {
+      "title": "니기리 10종 연습 (참치 · 연어 · 광어 …)",
+      "cat": "sushi_rice",
+      "minutes": 40,
+      "repeat": "weekly",
+      "sub": "nigiri",
+      "cue": "일요일 점심",
+      "easy": "3종만"
+    },
+    {
+      "title": "생선·제철 공부 1종 (산지 · 맛 · 손질법)",
+      "cat": "sushi_know",
+      "minutes": 10,
+      "repeat": "daily",
+      "sub": "fish",
+      "cue": "아침 커피 마시며",
+      "easy": "이름만 외우기"
+    },
+    {
+      "title": "일본어 주방 용어 5개",
+      "cat": "sushi_know",
+      "minutes": 10,
+      "repeat": "daily",
+      "sub": "lang",
+      "cue": "출근길",
+      "easy": "1개"
+    },
+    {
+      "title": "오마카세 · 스시야 1곳 방문 노트",
+      "cat": "sushi_know",
+      "minutes": 90,
+      "repeat": "monthly",
+      "sub": "tasting",
+      "times": 1,
+      "cue": "월급날 주말",
+      "easy": "가고 싶은 곳 1곳 저장"
+    },
+    {
+      "title": "위생 · 원가 노트 정리",
+      "cat": "sushi_biz",
+      "minutes": 20,
+      "repeat": "weekly",
+      "sub": "cost",
+      "cue": "금요일 저녁",
+      "easy": "오늘 쓴 재료값만"
+    },
+    {
+      "title": "조리기능사 · 일식 자격증 일정 확인",
+      "cat": "sushi_biz",
+      "minutes": 30,
+      "repeat": "once",
+      "sub": "cert"
+    },
+    {
+      "title": "스시야 · 일식당 주방 보조 지원",
+      "cat": "sushi_biz",
+      "minutes": 60,
+      "repeat": "once",
+      "sub": "career"
+    }
+  ],
+  "weeklyHours": {
+    "sushi_knife": 3.0,
+    "sushi_rice": 4.0,
+    "sushi_know": 2.5,
+    "sushi_biz": 0.5
+  }
+}

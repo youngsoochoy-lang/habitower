@@ -1,0 +1,375 @@
+{
+  "pack": {
+    "id": "marathoner",
+    "version": 1,
+    "icon": "🏃",
+    "ko": "마라토너",
+    "en": "MARATHONER",
+    "desc": "5km에서 풀코스까지. 달리기, 회복, 기록을 작게 꾸준히."
+  },
+  "areas": [
+    {
+      "id": "run",
+      "ko": "러닝",
+      "en": "RUNNING",
+      "icon": "🏃",
+      "categories": [
+        {
+          "id": "run_train",
+          "ko": "훈련",
+          "en": "TRAINING",
+          "icon": "🏃",
+          "verb": "훈련 하는 중",
+          "pose": "lift",
+          "subs": [
+            {
+              "id": "easy",
+              "ko": "이지런",
+              "en": "EASY RUN",
+              "icon": "🏃",
+              "verb": "이지런 하는 중",
+              "pose": "lift"
+            },
+            {
+              "id": "long",
+              "ko": "장거리",
+              "en": "LONG RUN",
+              "icon": "🛣️",
+              "verb": "장거리 하는 중",
+              "pose": "lift"
+            },
+            {
+              "id": "speed",
+              "ko": "스피드",
+              "en": "SPEED",
+              "icon": "⚡",
+              "verb": "스피드 하는 중",
+              "pose": "lift"
+            }
+          ]
+        },
+        {
+          "id": "run_care",
+          "ko": "회복·보강",
+          "en": "RECOVERY",
+          "icon": "🧘",
+          "verb": "회복·보강 하는 중",
+          "pose": "pilates",
+          "subs": [
+            {
+              "id": "stretch",
+              "ko": "스트레칭",
+              "en": "STRETCHING",
+              "icon": "🧘",
+              "verb": "스트레칭 하는 중",
+              "pose": "pilates"
+            },
+            {
+              "id": "strength",
+              "ko": "보강 운동",
+              "en": "STRENGTH",
+              "icon": "💪",
+              "verb": "보강 운동 하는 중",
+              "pose": "lift"
+            },
+            {
+              "id": "sleep",
+              "ko": "수면",
+              "en": "SLEEP",
+              "icon": "😴",
+              "verb": "수면 하는 중",
+              "pose": "meditate"
+            }
+          ]
+        },
+        {
+          "id": "run_log",
+          "ko": "기록·대회",
+          "en": "LOG & RACES",
+          "icon": "📓",
+          "verb": "기록·대회 하는 중",
+          "pose": "write",
+          "subs": [
+            {
+              "id": "log",
+              "ko": "기록",
+              "en": "LOG",
+              "icon": "📓",
+              "verb": "기록 하는 중",
+              "pose": "write"
+            },
+            {
+              "id": "race",
+              "ko": "대회",
+              "en": "RACES",
+              "icon": "🏅",
+              "verb": "대회 하는 중",
+              "pose": "write"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "floors": [
+    {
+      "id": "life:run",
+      "name": "🏃 러닝 클럽",
+      "en": "RUN CLUB",
+      "rooms": [
+        {
+          "template": "gym",
+          "cat": "run_train"
+        },
+        {
+          "template": "pilates",
+          "cat": "run_care"
+        },
+        {
+          "template": "learning",
+          "cat": "run_log",
+          "tint": "#a8c4a0"
+        }
+      ]
+    }
+  ],
+  "paths": [
+    {
+      "id": "marathoner",
+      "icon": "🏃",
+      "ko": "마라토너",
+      "en": "MARATHONER",
+      "desc": "5km에서 풀코스까지.",
+      "categories": [
+        "run_train",
+        "run_care",
+        "run_log"
+      ],
+      "stages": [
+        {
+          "ko": "런린이",
+          "en": "BEGINNER",
+          "title": "런린이",
+          "needXP": 0,
+          "unlocks": [
+            {
+              "icon": "👟",
+              "ko": "러닝화"
+            }
+          ]
+        },
+        {
+          "ko": "10K 러너",
+          "en": "10K RUNNER",
+          "title": "10K 러너",
+          "needXP": 1500,
+          "milestone": {
+            "streak": 14
+          },
+          "perk": {
+            "xp": 0.05
+          },
+          "unlocks": [
+            {
+              "icon": "⌚",
+              "ko": "러닝 워치",
+              "planned": true
+            }
+          ]
+        },
+        {
+          "ko": "하프 마라토너",
+          "en": "HALF MARATHONER",
+          "title": "하프 마라토너",
+          "needXP": 6000,
+          "milestone": {
+            "focused": 40
+          },
+          "perk": {
+            "xp": 0.1
+          },
+          "unlocks": [
+            {
+              "icon": "🏅",
+              "ko": "완주 메달",
+              "planned": true
+            }
+          ]
+        },
+        {
+          "ko": "풀코스 완주자",
+          "en": "MARATHONER",
+          "title": "풀코스 완주자",
+          "needXP": 20000,
+          "milestone": {
+            "streak": 60
+          },
+          "perk": {
+            "xp": 0.15
+          },
+          "unlocks": [
+            {
+              "icon": "🏆",
+              "ko": "보스턴 지도",
+              "planned": true
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "goals": [
+    {
+      "id": "run_race",
+      "icon": "🏅",
+      "ko": "대회 완주",
+      "kind": "checklist",
+      "items": [
+        {
+          "id": "r1",
+          "ko": "5km 완주",
+          "tier": "거리"
+        },
+        {
+          "id": "r2",
+          "ko": "10km 완주",
+          "tier": "거리"
+        },
+        {
+          "id": "r3",
+          "ko": "하프 완주",
+          "tier": "거리"
+        },
+        {
+          "id": "r4",
+          "ko": "풀코스 완주",
+          "tier": "거리"
+        },
+        {
+          "id": "r5",
+          "ko": "10km 60분 안",
+          "tier": "기록"
+        },
+        {
+          "id": "r6",
+          "ko": "하프 2시간 안",
+          "tier": "기록"
+        },
+        {
+          "id": "r7",
+          "ko": "풀코스 4시간 30분 안",
+          "tier": "기록"
+        }
+      ]
+    },
+    {
+      "id": "run_km",
+      "icon": "🛣️",
+      "ko": "올해 누적 거리",
+      "kind": "number",
+      "unit": "km",
+      "milestones": [
+        {
+          "at": 100,
+          "ko": "100km"
+        },
+        {
+          "at": 500,
+          "ko": "500km"
+        },
+        {
+          "at": 1000,
+          "ko": "1000km"
+        }
+      ]
+    }
+  ],
+  "seed": [
+    {
+      "title": "러닝 (가볍게 · 대화 가능한 속도)",
+      "cat": "run_train",
+      "minutes": 30,
+      "repeat": "weekly",
+      "sub": "easy",
+      "times": 3,
+      "cue": "출근 전 운동화 현관에 두기",
+      "easy": "10분만 달리기"
+    },
+    {
+      "title": "장거리 러닝 (매주 1km씩 늘리기)",
+      "cat": "run_train",
+      "minutes": 75,
+      "repeat": "weekly",
+      "sub": "long",
+      "cue": "토요일 아침",
+      "easy": "평소 코스 1바퀴"
+    },
+    {
+      "title": "인터벌 · 템포런",
+      "cat": "run_train",
+      "minutes": 40,
+      "repeat": "weekly",
+      "sub": "speed",
+      "cue": "수요일 퇴근 후",
+      "easy": "질주 3번"
+    },
+    {
+      "title": "폼롤러 · 스트레칭 10분",
+      "cat": "run_care",
+      "minutes": 10,
+      "repeat": "daily",
+      "sub": "stretch",
+      "cue": "샤워하고 나와서",
+      "easy": "종아리만 2분"
+    },
+    {
+      "title": "코어 · 하체 보강 운동",
+      "cat": "run_care",
+      "minutes": 20,
+      "repeat": "weekly",
+      "sub": "strength",
+      "times": 2,
+      "cue": "월 · 목 저녁",
+      "easy": "플랭크 1분"
+    },
+    {
+      "title": "수면 7시간 (11시 전에 폰 내려놓기)",
+      "cat": "run_care",
+      "minutes": 2,
+      "repeat": "daily",
+      "sub": "sleep",
+      "cue": "밤 10시 50분 알람"
+    },
+    {
+      "title": "러닝 기록 · 컨디션 1줄",
+      "cat": "run_log",
+      "minutes": 3,
+      "repeat": "daily",
+      "sub": "log",
+      "cue": "러닝 끝나고 신발 벗자마자",
+      "easy": "거리만"
+    },
+    {
+      "title": "대회 일정 확인 · 신청",
+      "cat": "run_log",
+      "minutes": 20,
+      "repeat": "monthly",
+      "sub": "race",
+      "times": 1,
+      "cue": "월초",
+      "easy": "관심 대회 1개 저장"
+    },
+    {
+      "title": "러닝화 · 페이스 존 정하기",
+      "cat": "run_log",
+      "minutes": 30,
+      "repeat": "once",
+      "sub": "race"
+    }
+  ],
+  "weeklyHours": {
+    "run_train": 3.5,
+    "run_care": 2.0,
+    "run_log": 0.5
+  }
+}

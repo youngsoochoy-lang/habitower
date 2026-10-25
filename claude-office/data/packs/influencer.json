@@ -1,0 +1,384 @@
+{
+  "pack": {
+    "id": "influencer",
+    "version": 1,
+    "icon": "📱",
+    "ko": "인플루언서",
+    "en": "INFLUENCER",
+    "desc": "꾸준히 만들고 소통해서 팔로워 10만, 그리고 협찬으로 수익까지."
+  },
+  "areas": [
+    {
+      "id": "inf",
+      "ko": "인플루언서",
+      "en": "INFLUENCER",
+      "icon": "📱",
+      "categories": [
+        {
+          "id": "inf_content",
+          "ko": "콘텐츠 제작",
+          "en": "CONTENT",
+          "icon": "🎥",
+          "verb": "콘텐츠 제작 하는 중",
+          "pose": "type",
+          "subs": [
+            {
+              "id": "idea",
+              "ko": "기획",
+              "en": "IDEAS",
+              "icon": "💡",
+              "verb": "기획 하는 중",
+              "pose": "write"
+            },
+            {
+              "id": "shoot",
+              "ko": "촬영",
+              "en": "SHOOTING",
+              "icon": "📸",
+              "verb": "촬영 하는 중",
+              "pose": "type"
+            },
+            {
+              "id": "edit",
+              "ko": "편집",
+              "en": "EDITING",
+              "icon": "✂️",
+              "verb": "편집 하는 중",
+              "pose": "type"
+            }
+          ]
+        },
+        {
+          "id": "inf_comm",
+          "ko": "커뮤니티",
+          "en": "COMMUNITY",
+          "icon": "💬",
+          "verb": "커뮤니티 하는 중",
+          "pose": "type",
+          "subs": [
+            {
+              "id": "reply",
+              "ko": "댓글·DM",
+              "en": "REPLIES",
+              "icon": "💬",
+              "verb": "댓글·DM 하는 중",
+              "pose": "type"
+            },
+            {
+              "id": "network",
+              "ko": "교류",
+              "en": "NETWORKING",
+              "icon": "🤝",
+              "verb": "교류 하는 중",
+              "pose": "type"
+            },
+            {
+              "id": "live",
+              "ko": "라이브",
+              "en": "LIVE",
+              "icon": "🔴",
+              "verb": "라이브 하는 중",
+              "pose": "type"
+            }
+          ]
+        },
+        {
+          "id": "inf_biz",
+          "ko": "브랜딩·수익",
+          "en": "BRAND & DEALS",
+          "icon": "💼",
+          "verb": "브랜딩·수익 하는 중",
+          "pose": "write",
+          "subs": [
+            {
+              "id": "analytics",
+              "ko": "분석",
+              "en": "ANALYTICS",
+              "icon": "📊",
+              "verb": "분석 하는 중",
+              "pose": "read"
+            },
+            {
+              "id": "deal",
+              "ko": "협찬·제휴",
+              "en": "DEALS",
+              "icon": "🤝",
+              "verb": "협찬·제휴 하는 중",
+              "pose": "write"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "floors": [
+    {
+      "id": "life:inf",
+      "name": "📱 인플루언서 스튜디오",
+      "en": "INFLUENCER STUDIO",
+      "rooms": [
+        {
+          "template": "video",
+          "cat": "inf_content"
+        },
+        {
+          "template": "growth",
+          "cat": "inf_comm",
+          "tint": "#e8c4cf"
+        },
+        {
+          "template": "hustle",
+          "cat": "inf_biz"
+        }
+      ]
+    }
+  ],
+  "paths": [
+    {
+      "id": "influencer",
+      "icon": "📱",
+      "ko": "인플루언서",
+      "en": "INFLUENCER",
+      "desc": "만들고, 소통하고, 브랜드가 되는 길.",
+      "categories": [
+        "inf_content",
+        "inf_comm",
+        "inf_biz"
+      ],
+      "stages": [
+        {
+          "ko": "새싹 크리에이터",
+          "en": "SPROUT",
+          "title": "새싹 크리에이터",
+          "needXP": 0,
+          "unlocks": [
+            {
+              "icon": "📱",
+              "ko": "인플루언서 배지"
+            }
+          ]
+        },
+        {
+          "ko": "마이크로 인플루언서",
+          "en": "MICRO",
+          "title": "마이크로 인플루언서",
+          "needXP": 1500,
+          "milestone": {
+            "streak": 14
+          },
+          "perk": {
+            "xp": 0.05
+          },
+          "unlocks": [
+            {
+              "icon": "💍",
+              "ko": "링라이트",
+              "planned": true
+            }
+          ]
+        },
+        {
+          "ko": "인플루언서",
+          "en": "INFLUENCER",
+          "title": "인플루언서",
+          "needXP": 6000,
+          "milestone": {
+            "focused": 40
+          },
+          "perk": {
+            "xp": 0.1
+          },
+          "unlocks": [
+            {
+              "icon": "📸",
+              "ko": "포토존 방",
+              "planned": true
+            }
+          ]
+        },
+        {
+          "ko": "셀럽",
+          "en": "CELEB",
+          "title": "셀럽",
+          "needXP": 20000,
+          "milestone": {
+            "streak": 60
+          },
+          "perk": {
+            "xp": 0.15
+          },
+          "unlocks": [
+            {
+              "icon": "🌟",
+              "ko": "레드카펫 지도",
+              "planned": true
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "goals": [
+    {
+      "id": "inf_followers",
+      "icon": "📈",
+      "ko": "팔로워",
+      "kind": "number",
+      "unit": "명",
+      "milestones": [
+        {
+          "at": 1000,
+          "ko": "1천"
+        },
+        {
+          "at": 10000,
+          "ko": "1만 · 협찬 시작"
+        },
+        {
+          "at": 50000,
+          "ko": "5만"
+        },
+        {
+          "at": 100000,
+          "ko": "10만"
+        }
+      ]
+    },
+    {
+      "id": "inf_income",
+      "icon": "💰",
+      "ko": "월 협찬 수익",
+      "kind": "number",
+      "unit": "만원",
+      "milestones": [
+        {
+          "at": 10,
+          "ko": "첫 협찬"
+        },
+        {
+          "at": 100,
+          "ko": "월 100만"
+        },
+        {
+          "at": 500,
+          "ko": "월 500만"
+        }
+      ]
+    }
+  ],
+  "seed": [
+    {
+      "title": "오늘의 콘텐츠 아이디어 3줄 메모",
+      "cat": "inf_content",
+      "minutes": 3,
+      "repeat": "daily",
+      "sub": "idea",
+      "cue": "아침 커피 첫 모금 후",
+      "easy": "제목 한 줄"
+    },
+    {
+      "title": "세로 영상 1컷 찍기 (일상 · 제품 · 장소)",
+      "cat": "inf_content",
+      "minutes": 5,
+      "repeat": "daily",
+      "sub": "shoot",
+      "cue": "점심 먹으러 나갈 때",
+      "easy": "사진 1장"
+    },
+    {
+      "title": "릴스·쇼츠 1편 편집 & 업로드",
+      "cat": "inf_content",
+      "minutes": 30,
+      "repeat": "weekly",
+      "sub": "edit",
+      "times": 3,
+      "cue": "화요일 저녁 식사 후",
+      "easy": "훅 문장만 쓰기",
+      "subtasks": [
+        "첫 1초 훅",
+        "컷 편집 · 자막",
+        "트렌드 음원",
+        "업로드 + 고정 댓글"
+      ]
+    },
+    {
+      "title": "캐러셀 1개 (정보형 7장)",
+      "cat": "inf_content",
+      "minutes": 40,
+      "repeat": "weekly",
+      "sub": "edit",
+      "cue": "토요일 오전",
+      "easy": "표지 1장"
+    },
+    {
+      "title": "댓글·DM 10개 답하기",
+      "cat": "inf_comm",
+      "minutes": 10,
+      "repeat": "daily",
+      "sub": "reply",
+      "cue": "퇴근길 지하철에서",
+      "easy": "댓글 1개"
+    },
+    {
+      "title": "같은 분야 계정 5곳에 진심 댓글",
+      "cat": "inf_comm",
+      "minutes": 10,
+      "repeat": "daily",
+      "sub": "network",
+      "cue": "점심 먹은 직후",
+      "easy": "1곳"
+    },
+    {
+      "title": "라이브 또는 Q&A 스토리 1회",
+      "cat": "inf_comm",
+      "minutes": 30,
+      "repeat": "weekly",
+      "sub": "live",
+      "cue": "일요일 저녁",
+      "easy": "질문 스티커만 올리기"
+    },
+    {
+      "title": "주간 분석: 도달 · 저장 · 팔로우 전환 → 1가지 바꾸기",
+      "cat": "inf_biz",
+      "minutes": 15,
+      "repeat": "weekly",
+      "sub": "analytics",
+      "cue": "일요일 저녁 설거지 후"
+    },
+    {
+      "title": "협찬·제휴 제안 1곳 보내기",
+      "cat": "inf_biz",
+      "minutes": 20,
+      "repeat": "weekly",
+      "sub": "deal",
+      "cue": "수요일 점심 후",
+      "easy": "브랜드 1곳 저장"
+    },
+    {
+      "title": "미디어킷 만들기 (팔로워 · 타깃 · 단가)",
+      "cat": "inf_biz",
+      "minutes": 90,
+      "repeat": "once",
+      "sub": "deal"
+    },
+    {
+      "title": "내 계정 콘셉트 한 문장 정하기",
+      "cat": "inf_content",
+      "minutes": 30,
+      "repeat": "once",
+      "sub": "idea"
+    },
+    {
+      "title": "롤모델 계정 10곳 분석 (훅 · 길이 · 업로드 주기)",
+      "cat": "inf_biz",
+      "minutes": 60,
+      "repeat": "once",
+      "sub": "analytics"
+    }
+  ],
+  "weeklyHours": {
+    "inf_content": 3.0,
+    "inf_comm": 3.0,
+    "inf_biz": 0.5
+  }
+}
