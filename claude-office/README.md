@@ -19,6 +19,10 @@ The sky follows your computer's clock. It blends through dawn (🌌 새벽, 🌅
 - **Updates:** the sky repaints every minute.
 - **Preview:** the clock chip at the bottom right shows the current phase. Click it to cycle through other times of day, and keep clicking to get back to live time.
 
+### No sessions on this computer: the demo office
+
+The tower reads Claude Code sessions on this computer (`~/.claude/projects`). When there are none (you only use cloud sessions, or you're looking at the web preview), the office still stands as **🏢 Claude 사무실 (데모)**: a scripted session plays through the same event handler on a loop (reading, searching, an Explore agent, editing, a failed check and a fix, reporting back), so you can see how it works.
+
 ### Moving between projects
 
 Each project is a storey of the tower. The floors below yours show as lit facades with floor signs, and the floors above are ghosted glass.
@@ -34,6 +38,7 @@ The characters are pixel-art office workers, built in 3D from little blocks with
 - **Hair:** bob, pigtails, ponytail, bun, short, spiky or messy style.
 - **Outfits:** a tee, a dress, a knit or a hoodie.
 - **Accessories:** headbands, ribbons, a cap, a beanie, a fedora, a halo and glasses.
+- **3D characters:** Claude is the Mage, Explore agents the hooded Rogue, Plan agents the Knight (visor up), other agents the Barbarian, and you the Rogue. All share one skeleton, so only `kaykit-rogue.glb` carries the clips; the others were stripped with `tools/strip-glb-animations.js` (3.6 MB → 0.3 MB each).
 - **Your figure is a rigged 3D character:** a skinned model with a skeleton (KayKit Adventurers by Kay Lousberg, CC0, `assets/characters/`), animated by an `AnimationMixer` that picks the clip for each pose and cross-fades between them: Idle, Walking, Sit_Chair (desk, sofa), Sit_Floor (cushion), Lie_Down → Lie_Idle (bed), Cheer (dance), Interact (cooking, typing), Use_Item (snacks), with a phone in the right hand when scrolling. If the model can't load you get the block figure, and **🎨 나 꾸미기 → 몸** switches between 🧍 3D 캐릭터 and 🧱 블록.
 - **Your look:** click **🎨 나 꾸미기** to change your own character (the hair and outfit options apply to the block figure). Your choice is saved in your browser.
 - **Killing time:** when nothing is happening for 20 seconds on a life floor, in your 옥탑방 or on the island, your character finds something to do: 😴 a nap (sits on the bed edge or sofa, then lies back, z Z z), 📺 TV from the floor cushion or lounge sofa, 📱 doom-scrolling (in bed, phone held up), 🎮 gaming, 🍜 a snack from the fridge or water cooler, 🍳 cooking ramyeon at the hob, 🖥️ web-surfing at the desk, 💃 dancing, 🙆 stretching or ☁️ staring out of the window, with a funny line now and then. The 옥탑방 has the basics from day one: a kitchen corner (fridge, sink, hob), a wardrobe, a folding chair, cushions, a rug, a laundry basket. Pick one under 🎨 나 꾸미기 → 심심할 때, or leave it on 🎲 랜덤 to change every few minutes. Starting a quest gets you up straight away.
