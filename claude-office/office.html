@@ -1655,6 +1655,7 @@ function buildLife(B) {
   if (lifeBuilt) randSeed = after;
   lifeBuilt = true;
 }
+const loungeTV = mat('#2a3a5a', { e: '#5a8ad8', ei: 0.7 });
 function buildLifeFloor(def) {
   const start = world.children.length, lights0 = interiorLights.length;
   for (let i = 0; i < 3; i++) {
@@ -1678,6 +1679,8 @@ function buildLifeFloor(def) {
   plant(33.2, 9.4, 1.2, true); plant(25.8, 0.8, 1.0, true); plant(33.2, 15.4, 1.3, true); plant(33.2, 23.2, 1.1, true); plant(13.0, 23.2, 1.0, true);
   box(3.2, 0.42, 0.9, '#5d4636', 20.4, 0, 21.4, { round: 0.14 }); box(3.2, 0.5, 0.22, '#5d4636', 20.4, 0.42, 21.8, { round: 0.1 }); sofaDressing(20.4, 21.4, 3.2, '#5d4636');
   box(1.6, 0.36, 0.8, '#2a1f19', 20.4, 0, 19.9); lamp(23.6, 21.9);
+  // a TV for the lounge sofa, for killing time
+  box(2.0, 0.45, 0.45, '#3a2c24', 20.4, 0, 18.3, { round: 0.05 }); box(1.6, 0.92, 0.07, '#121214', 20.4, 0.5, 18.35); box(1.46, 0.8, 0.02, loungeTV, 20.4, 0.56, 18.4, { cast: false });
   floorTag(29.5, 5.6, 'QUEST BOARD · 퀘스트');
   floorTag(20.5, 17.0, `${def.en}`, 8);
   roomLight(29.5, 4, '#ffd6a6', 8, 12); roomLight(20, 19, '#ffcf95', 7, 12);
@@ -2358,6 +2361,13 @@ class Char {
     else if (pose === 'piano') { aL = -1.15 + Math.sin(t * 7) * 0.12; aR = -1.15 + Math.cos(t * 9) * 0.12; zL = 0.3; zR = -0.3; headX = 0.12; headZ = Math.sin(t * 1.4) * 0.14; }
     else if (pose === 'sweep') { const k = Math.sin(t * 4); aL = -1.0 + k * 0.12; aR = -1.0 - k * 0.12; zL = 0.25 + k * 0.15; zR = -0.25 + k * 0.15; headX = 0.3; }
     else if (pose === 'meditate') { aL = -0.45; aR = -0.45; zL = -0.5; zR = 0.5; headX = 0.06; }
+    // killing time (idle activities)
+    else if (pose === 'lie') { aL = aR = 0; zL = -0.12; zR = 0.12; headX = -0.1; }
+    else if (pose === 'game') { aL = -1.25 + Math.sin(t * 21) * 0.05; aR = -1.25 + Math.cos(t * 17) * 0.05; zL = 0.38; zR = -0.38; headX = 0.18; headZ = Math.sin(t * 2.3) * 0.08; }
+    else if (pose === 'eat') { const k = Math.max(0, Math.sin(t * 2.6)); aR = -1.2 - k * 1.3; zR = -0.25 - k * 0.15; aL = -0.9; zL = 0.3; headX = 0.08 - k * 0.1; }
+    else if (pose === 'dance') { const k = Math.sin(t * 6); aL = -2.5 + k * 0.6; aR = -2.5 - k * 0.6; zL = -0.45; zR = 0.45; headZ = k * 0.18; }
+    else if (pose === 'stretch') { const k = Math.sin(t * 1.3); aL = aR = -3.0; zL = -0.1 + k * 0.2; zR = 0.1 + k * 0.2; headZ = k * 0.2; headX = -0.15; }
+    else if (pose === 'gaze') { aL = aR = -0.15; zL = 0.25; zR = -0.25; headX = -0.25; headZ = Math.sin(t * 0.7) * 0.1; }
     const ease = (o, k, v) => { o[k] += (v - o[k]) * 0.3; };
     ease(this.armL.rotation, 'x', aL); ease(this.armR.rotation, 'x', aR); ease(this.armL.rotation, 'z', zL); ease(this.armR.rotation, 'z', zR);
     ease(this.head.rotation, 'x', headX); ease(this.head.rotation, 'z', headZ);
@@ -2365,12 +2375,18 @@ class Char {
       if (pose === 'ballet') { g.rotation.y = this.face + t * 1.4; this.legR.rotation.x = -0.25 + Math.sin(t * 1.4) * 0.35; this.body.position.y = 0.03; }
       else if (pose === 'pilates') { const k = Math.sin(t * 2); this.legL.rotation.x = this.legR.rotation.x = -1.45 + 0.3 * k; this.body.position.y = -0.22 + 0.02 * k; }
       else if (pose === 'lift') this.body.position.y = -Math.abs(Math.sin(t * 1.5)) * 0.08;
+      else if (pose === 'dance') { const k = Math.sin(t * 6); g.rotation.y = this.face + Math.sin(t * 3) * 0.7; this.body.position.y = Math.abs(k) * 0.06; this.legL.rotation.x = k * 0.35; this.legR.rotation.x = -k * 0.35; }
+      else if (pose === 'lie') { this.body.position.y = 0; this.legL.rotation.x = this.legR.rotation.x = 0; }
     }
+    // lying down tips the whole figure onto its back (head toward -z before turning to face)
+    g.rotation.order = 'YXZ';
+    const tilt = !walking && pose === 'lie' ? -Math.PI / 2 : 0;
+    g.rotation.x += (tilt - g.rotation.x) * 0.2;
     this.book.visible = pose === 'read';
     this.handset.visible = pose === 'phone';
     this.heart.visible = this.heartUntil > now;
     if (this.heart.visible) { this.heart.position.set(0, this.heartY + Math.sin(t * 4) * 0.05, 0); this.heart.rotation.y = t * 2; }
-    const blink = (t + this.x * 0.37) % 4 < 0.12 || pose === 'sleep';
+    const blink = (t + this.x * 0.37) % 4 < 0.12 || pose === 'sleep' || pose === 'lie';
     for (const e of this.eyes) e.scale.y = blink ? 0.1 : 1;
     const sweat = this.sweatUntil > now;
     this.drops.forEach((dr, i) => { dr.visible = sweat; const k = (t * 1.6 + i * 0.5) % 1; dr.position.set(i ? -0.24 : 0.25, 0.38 - k * 0.28, 0.14); });
@@ -2766,6 +2782,7 @@ function frame(ts) {
     l.L.position.x = l.x - 0.325 - l.open * 0.6; l.R.position.x = l.x + 0.325 + l.open * 0.6;
   }
   globe.rotation.y += dt * 0.4;
+  loungeTV.emissive.setHSL((t * 0.04) % 1, 0.45, 0.45); loungeTV.emissiveIntensity = 0.6 + (Math.sin(t * 7.3) * Math.sin(t * 3.1) > 0.6 ? 0.35 : 0);
   for (const sp of spinners) sp.rotation.y += dt * 0.7;
   updateScreens(t); updateLeds(t);
   if (camTween) {
@@ -2788,7 +2805,7 @@ function placeOverlay() {
     c.el.style.top = ((1 - tmp.y) / 2 * h).toFixed(1) + 'px';
     c.el.style.zIndex = String(2000 - Math.round(tmp.z * 1000));
     let b = c.bubbleData?.type === 'tool' ? null : c.bubbleData;
-    if (!b && c.kind === 'claude' && c.pose === 'sleep') b = { type: 'zzz', text: 'z Z z' };
+    if (!b && ((c.kind === 'claude' && c.pose === 'sleep') || (c === me && c.pose === 'lie' && !c.path.length))) b = { type: 'zzz', text: 'z Z z' };
     if (!b) { const th = thoughtOf(c); if (th) b = { type: th.thinking ? 'cloud thinking' : 'cloud', text: th.main, sub: th.sub }; }
     if (!b) { c.bub.style.display = 'none'; continue; }
     c.bub.style.display = '';
@@ -2824,6 +2841,7 @@ function statusOf(c) {
   if (c.state === 'reporting') return ['보고 중', 'report'];
   if (c.state === 'leaving') return ['퇴근 중', 'walk'];
   if (c.pose === 'sleep') return ['휴식 중', ''];
+  if (c === me && me.spot?.idle && !me.path.length) { const a = IDLE_ACTS[me.spot.idle]; return [`${a.icon} ${a.ko} 중`, '']; }
   if (c.sweatUntil > now) return ['식은땀', 'error'];
   if (c.thinkUntil > now) return ['고민 중', 'think'];
   if (c.bubbleData?.type === 'ask') return ['질문 중', 'ask'];
@@ -3075,10 +3093,12 @@ function renderPop() {
   pop.innerHTML = row('헤어', 'hairStyle', OPTIONS.hairStyle) + row('머리색', 'hair', OPTIONS.hair, 1) + row('피부', 'skin', OPTIONS.skin, 1)
     + row('옷', 'top', OPTIONS.top) + row('옷 색', 'shirt', OPTIONS.shirt, 1) + row('하의', 'pants', OPTIONS.pants, 1) + row('신발', 'shoes', OPTIONS.shoes, 1)
     + row('소품', 'acc', OPTIONS.acc) + row('소품 색', 'accColor', OPTIONS.accColor, 1)
+    + `<div class="row"><label>심심할 때</label><div class="opts">${[['random', '🎲 랜덤'], ...Object.entries(IDLE_ACTS).map(([k, a]) => [k, `${a.icon} ${a.ko}`])].map(([k, l]) => `<button class="${idlePref === k ? 'sel' : ''}" data-idle="${k}">${l}</button>`).join('')}</div></div>`
     + `<div class="row"><div class="opts"><button class="${myLook.print === 'heart' ? 'sel' : ''}" data-k="print" data-v="${myLook.print === 'heart' ? 'none' : 'heart'}">♥ 하트 프린트</button><button class="${myLook.glasses ? 'sel' : ''}" data-k="glasses" data-v="${!myLook.glasses}">👓 안경</button><button data-k="reset" data-v="1">기본값으로</button></div></div>`;
 }
 pop.onclick = ev => {
   const b = ev.target.closest('button'); if (!b) return;
+  if (b.dataset.idle) { setIdlePref(b.dataset.idle); renderPop(); return; }
   const k = b.dataset.k, v = b.dataset.v;
   if (k !== 'reset' && gameReady && isLocked(k, v) && !buyOutfit(k, v)) return;
   if (k === 'reset') myLook = { ...ME_DEFAULT }; else myLook = { ...myLook, [k]: k === 'glasses' ? v === 'true' : v };
@@ -3087,6 +3107,104 @@ pop.onclick = ev => {
   me?.rebuild(myLook); renderPop();
 };
 document.getElementById('customBtn').onclick = () => { pop.classList.toggle('open'); renderPop(); };
+
+// ======================================================================
+//  Killing time: when nothing is happening on a life floor, in the 옥탑방 or on the island, you don't just stand
+//  there. You nap on the sofa or bed, watch TV, doom-scroll, game, snack, dance, stretch or stare out of the window.
+//  Pick one under 🎨 나 꾸미기 → 심심할 때, or leave it on 🎲 랜덤 to change every few minutes.
+// ======================================================================
+const IDLE_ACTS = {
+  nap:      { icon: '😴', ko: '낮잠',       lines: [] },
+  tv:       { icon: '📺', ko: 'TV 보기',    lines: ['다음 화 자동 재생 중…', '이 드라마 시즌 7까지 있대', '광고 스킵 버튼 어디 갔어 😤', '딱 한 편만 더 보고 잘게', '주인공 왜 저래 진짜'] },
+  scroll:   { icon: '📱', ko: '둠스크롤링', lines: ['한 개만 더 보고 잘게…', '알고리즘이 날 너무 잘 알아', '벌써 새벽 2시?', '고양이 영상 ×37', '남의 여행 사진 구경 중 ✈️', '이걸 왜 보고 있지…'] },
+  game:     { icon: '🎮', ko: '게임',       lines: ['한 판만 더!', '보스전이다 🔥', '아 랙 걸렸어!!', '랭크 올라가는 중 📈', '저장 안 했는데…'] },
+  snack:    { icon: '🍜', ko: '간식',       lines: ['라면은 밤에 먹어야 제맛 🍜', '과자 한 봉지 순삭', '물 마시기도 퀘스트지 💧', '다이어트는 내일부터', '냉장고 또 열어 봄'] },
+  dance:    { icon: '💃', ko: '춤추기',     lines: ['🎵 아무도 안 보니까', 'K-pop 안무 연습 중', '골반 운동도 운동이야', '🎶 둠칫둠칫'] },
+  stretch:  { icon: '🙆', ko: '스트레칭',   lines: ['으아아 시원하다', '거북목 탈출 중 🐢', '어깨가 돌덩이야', '뚜둑 소리 났어'] },
+  daydream: { icon: '☁️', ko: '멍때리기',   lines: ['☁️ 저 구름 고양이 닮았다', '…내가 뭐 하려고 했더라', '로또 되면 뭐 하지', '오늘 저녁 뭐 먹지', '퇴근하고 싶다 (집인데)'] },
+};
+const IDLE_AFTER = 20e3, IDLE_ROTATE = [120e3, 240e3], IDLE_LINE = [8e3, 15e3];
+let idlePref = 'random';
+try { idlePref = localStorage.getItem('claudeTower.idle') || 'random'; } catch {}
+if (idlePref !== 'random' && !IDLE_ACTS[idlePref]) idlePref = 'random';
+let idleAct = null, idleSince = Date.now(), idleNext = 0, idleLineAt = 0;
+for (const e of ['pointerdown', 'keydown', 'wheel']) addEventListener(e, () => { idleSince = Date.now(); }, { passive: true });
+// where each activity happens. via: points walked through from where you stand (life floors leave from the lobby)
+const bedTop = () => ((game.home || {}).bed || 0) >= 1 ? 0.61 : 0.24;
+function idleSpots(where) {
+  if (where === 'floor') return {
+    nap:      { x: 30.15, z: 7.8, y: 0.55, face: Math.PI / 2, pose: 'lie', via: [[29.5, 6.6]] },
+    scroll:   { x: 29.5, z: 7.7, face: Math.PI, seated: 1, pose: 'phone', via: [[29.5, 6.6]] },
+    tv:       { x: 20.9, z: 21.25, face: Math.PI, seated: 1, pose: 'sit', via: [[LIFE_C, 11], [22.4, 15.6], [20.9, 20.3]] },
+    game:     { x: 19.9, z: 21.25, face: Math.PI, seated: 1, pose: 'game', via: [[LIFE_C, 11], [22.4, 15.6], [19.9, 20.3]] },
+    snack:    { x: 33.3, z: 1.75, face: Math.PI, pose: 'eat', via: [[31.6, 2.6]] },
+    dance:    { x: 27.4, z: 5.0, face: -Math.PI * 0.8, pose: 'dance', via: [] },
+    stretch:  { x: 31.6, z: 5.2, face: Math.PI, pose: 'stretch', via: [] },
+    daydream: { x: 33.7, z: 6.0, face: Math.PI / 2, pose: 'gaze', via: [] },
+  };
+  if (where === 'home') return {
+    nap:      { x: 12.9, z: 12.15, y: bedTop() + 0.14, face: 0, pose: 'lie', via: [[14.4, 12.6]] },
+    scroll:   { x: 13.65, z: 11.7, y: bedTop() - 0.42, face: Math.PI / 2, seated: 1, pose: 'phone', via: [[14.4, 12.2]] },
+    tv:       { x: 17.7, z: 11.6, y: -0.3, face: Math.PI / 2, seated: 1, pose: 'sit', via: [] },
+    game:     { x: 17.7, z: 12.4, y: -0.3, face: Math.PI / 2, seated: 1, pose: 'game', via: [] },
+    snack:    { x: 16.8, z: 10.25, face: Math.PI, pose: 'eat', via: [] },
+    dance:    { x: 15.4, z: 13.6, face: 0.6, pose: 'dance', via: [] },
+    stretch:  { x: 18.6, z: 14.2, face: 0, pose: 'stretch', via: [] },
+    daydream: { x: 23.7, z: 12.2, face: Math.PI / 2, pose: 'gaze', via: [] },
+  };
+  if (where === 'island') {
+    const o = PLACE_SPOTS[ISLAND];
+    return { scroll: { x: o.x, z: o.z, face: o.face, pose: 'phone', via: [] }, dance: { x: o.x, z: o.z, face: o.face, pose: 'dance', via: [] },
+             stretch: { x: o.x, z: o.z, face: o.face, pose: 'stretch', via: [] }, daydream: { x: o.x, z: o.z, face: o.face, pose: 'gaze', via: [] },
+             snack: { x: o.x, z: o.z, face: o.face, pose: 'eat', via: [] } };
+  }
+  return {};
+}
+function idleWhere() {
+  if (!me || me.hidden || focusRun) return null;
+  if (cur.floor === HOME) return 'home';
+  if (cur.floor === ISLAND) return 'island';
+  if (onLife() && !isPlace(cur.floor)) return 'floor';
+  return null;
+}
+const restSpot = where => (where === 'floor' ? LOBBY_SPOT : PLACE_SPOTS[cur.floor]);
+function startIdle(where, act) {
+  const spots = idleSpots(where), keys = Object.keys(spots);
+  if (!keys.length) return;
+  if (!act) act = idlePref !== 'random' && spots[idlePref] ? idlePref : keys.filter(k => k !== idleAct)[Math.floor(Math.random() * Math.max(1, keys.length - 1))] || keys[0];
+  const sp = spots[act]; if (!sp) return;
+  // leave the current activity the way you came, through the rest spot, then walk the new one's way in
+  const was = idleAct && me.spot?.idle ? idleSpots(where)[idleAct] : null, rest = restSpot(where);
+  const back = was ? [...was.via].reverse().concat([[rest.x, rest.z]]) : [];
+  me.cancel();
+  me.spot = { x: sp.x, z: sp.z, y: sp.y || 0, pose: sp.pose, face: sp.face, seated: sp.seated || 0, room: me.room, idle: act, node: { x: sp.x, z: sp.z } };
+  me.seated = 0;
+  me.path = [...back, ...sp.via, [sp.x, sp.z]].map(([x, z]) => ({ x, z }));
+  if (where === 'floor') me.lifeAt = 'lobby';
+  me.onArrive = () => { idleLineAt = Date.now() + 1500; };
+  idleAct = act; idleNext = Date.now() + IDLE_ROTATE[0] + Math.random() * (IDLE_ROTATE[1] - IDLE_ROTATE[0]);
+}
+function setIdlePref(k) {
+  idlePref = k; try { localStorage.setItem('claudeTower.idle', k); } catch {}
+  const where = idleWhere();
+  if (where && (idleAct || me?.spot === restSpot(where))) startIdle(where, k === 'random' ? null : k);
+}
+setInterval(() => {
+  const where = idleWhere();
+  if (!where) { idleAct = null; return; }
+  if (me.path.length) return;
+  if (idleAct && me.spot?.idle !== idleAct) idleAct = null;                 // something else moved you
+  if (!idleAct) {
+    if (me.spot === restSpot(where) && Date.now() - idleSince > IDLE_AFTER) startIdle(where);
+    return;
+  }
+  const lines = IDLE_ACTS[idleAct].lines;
+  if (lines.length && Date.now() > idleLineAt) {
+    me.bubble('me', lines[Math.floor(Math.random() * lines.length)], 4200);
+    idleLineAt = Date.now() + IDLE_LINE[0] + Math.random() * (IDLE_LINE[1] - IDLE_LINE[0]);
+  }
+  if (idlePref === 'random' && Date.now() > idleNext) startIdle(where);
+}, 1000);
 
 function connect() {
   es?.close();

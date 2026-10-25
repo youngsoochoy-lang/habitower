@@ -35,6 +35,7 @@ The characters are pixel-art office workers, built in 3D from little blocks with
 - **Outfits:** a tee, a dress, a knit or a hoodie.
 - **Accessories:** headbands, ribbons, a cap, a beanie, a fedora, a halo and glasses.
 - **Your look:** click **🎨 나 꾸미기** to change your own character. Your choice is saved in your browser.
+- **Killing time:** when nothing is happening for 20 seconds on a life floor, in your 옥탑방 or on the island, your character finds something to do: 😴 a nap on the lobby sofa or your bed (z Z z), 📺 TV on the lounge sofa, 📱 doom-scrolling, 🎮 gaming, 🍜 a snack by the water cooler, 💃 dancing, 🙆 stretching or ☁️ staring out of the window, with a funny line now and then. Pick one under 🎨 나 꾸미기 → 심심할 때, or leave it on 🎲 랜덤 to change every few minutes. Starting a quest gets you up straight away.
 - **Claude** wears a coral tee with a pixel ✳ and an orange ✳ hair clip. When several sessions run on one floor, each Claude gets a different hair colour and accessory.
 - **Explore agents** wear a green hoodie and cap.
 - **Plan agents** have messy gray hair, glasses and a purple tee.

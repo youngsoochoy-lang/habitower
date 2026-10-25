@@ -34,6 +34,7 @@ A gamified habit app: your to-dos are quests that earn XP and coins. Your life h
 ## Where we left off (2026-10-24)
 
 - Course packs and goals: `data/private/personal.json` (v2) is the user's pilot pack (career, creator, English, investing, piano, ballet, gym; the goals themselves are in the file). Quests follow Atomic Habits: tiny steps with a `cue` and a two-minute `easy` version. New 🎯 목표 tab for real-world goals and weekly hours; 📅 일정 tab for weekday routines (`days`, `[]` = paused), N-times-a-week or -month quests (`times` with `repeat: weekly|monthly`) and per-week booking, with select-all chips. 전체/오늘 lists group by floor (heading) > category (label).
+- Killing time: an idle "나" naps, watches the lounge TV, doom-scrolls, games, snacks, dances, stretches or daydreams (`IDLE_ACTS`, `idleSpots()` in office.html; choice in 나 꾸미기, saved in localStorage `claudeTower.idle`). New poses: lie, game, eat, dance, stretch, gaze.
 - Packs add to the defaults; they never replace them. Next for packs: a "choose a course" screen with curated packs (influencer, K-pop idol, sushi chef, wealthy retiree…), then an MCP server so the user's own agents can write packs.
 
 ## Earlier (2026-10-23)
