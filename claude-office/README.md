@@ -165,7 +165,7 @@ The server serves it at `GET /api/building` and saves it with `PUT /api/building
 | `paths[]` | `id`, `icon`, `ko`, `en`, `desc`, `categories` (category ids, or `"*"` for all), `balanced`, `stages[]`. |
 | `stages[]` | `ko`, `en`, `title` (shown under your name), `needXP` (XP in the path's categories), `milestone` (`streak`: best run of days in a row; `focused`: full timers finished; `quests`: quests finished; `balance`: the smallest area share over the window), `perk.xp` (bonus XP on the path's quests), `unlocks[]` (`icon`, `ko`, `planned`). |
 | `areas[]` | Groups of categories (`id`, `ko`, `en`, `icon`, `categories[]`). They group the editor and the quest form; they do not decide floors. |
-| `categories[]` | `id` (unique; `work` is reserved for ✳ 업무, the XP Claude's turns earn), `ko`, `en` (written on the room floor), `icon`, `verb`, `pose`, `subs[]`. |
+| `categories[]` | `id` (unique; `work` is reserved for ✳ 업무, the XP Claude's turns earn), `ko`, `en` (written on the room floor), `icon`, `verb`, `pose`, `subs[]`, and optionally `place`: `"office"` for work you do at your desk in the Claude office instead of an island studio (no room is built for it; starting its quest rides to the project floor you are on, or the one you used last, and sits you at 내 자리). Set it per category in the ✏️ category form (하는 곳) or the 🏗️ floor picker. |
 | `subs[]` | Subcategories: `id`, `ko`, `en`, `icon`, `verb`, `pose`. A quest with a `sub` uses its icon, verb and pose. |
 | `pose` | One of `sweep`, `read`, `meditate`, `ballet`, `pilates`, `lift`, `piano`, `type`, `write`. |
 | `floors[]` | `id` (`life:` is added if missing), `name` (floor guide and sign), `en` (lobby floor text), `rooms[]`. |

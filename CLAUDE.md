@@ -38,7 +38,12 @@ A gamified habit app: your to-dos are quests that earn XP and coins. Your life h
 - **Never test on the real `data/quests.json`** (the user's XP and coins). Start a second server: `PORT=7779 TOWER_DATA=<a temp copy of data/> node claude-office/server.js`, and delete it afterwards.
 - Verify changes in the browser: no console errors, and a screenshot. Remove any test hooks afterwards.
 
-## Where we left off (2026-10-25)
+## Where we left off (2026-10-26)
+
+- Categories can live in the office: `place: "office"` (`inOffice()`, `officeFloor()` in office.html). No island room; their quests send you to your desk (`ME_SEAT`) on a project floor; the lists group them under 🏢 사무실 · 내 자리; set in the ✏️ category form (하는 곳) or the 🏗️ floor picker. The private pack uses it for its work categories.
+- On Windows, run the private repo's `tools/make-pack.py` with `PYTHONUTF8=1` (the default code page cannot read the JSON).
+
+## Earlier (2026-10-25)
 
 - **Online version** (user's choice: Supabase, Google/Kakao/Naver/Facebook/email sign-in, GitHub Pages, PC server kept): `cloud.js`, `supabase/schema.sql`, `tools/tower-hook.js`, PWA files, `ONLINE.md`. Tested with a mock supabase-js in Playwright and the schema on local Postgres; never yet against a real project. Waiting on the user: create the Supabase project and fill `cloud-config.js`, switch on providers, enable Pages, allow `<ref>.supabase.co` in the cloud environment's network access. The user wants to publish it to the public eventually (see ONLINE.md → before you open it to everyone).
 

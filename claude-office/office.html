@@ -1686,6 +1686,8 @@ function placeRoom(r, i) {
 }
 // config floors -> storeys: three rooms each (rooms[i] stands in zone i % 3; null leaves that zone empty);
 // a floor that lists more rooms carries on in extra storeys above
+// a category with place: "office" has no studio on the island: its quests happen at your desk in the Claude office
+const inOffice = k => SKILLS[k]?.place === 'office';
 function layoutFloors(B) {
   const placed = new Set(), out = [];
   const add = (f, rooms) => {
@@ -1695,14 +1697,14 @@ function layoutFloors(B) {
       out.push({ id: base + (n ? '~' + (n + 1) : ''), src: f.id, name: n ? `${f.name} ${n + 1}` : f.name, en: n ? `${f.en || ''} ${n + 1}` : f.en || '', rooms: part, zones: part.filter(Boolean).map(r => r.cat) });
     }
   };
-  const valid = r => r && SKILLS[r.cat] && r.cat !== 'work' && !placed.has(r.cat) && placed.add(r.cat);
+  const valid = r => r && SKILLS[r.cat] && r.cat !== 'work' && !inOffice(r.cat) && !placed.has(r.cat) && placed.add(r.cat);
   for (const f of B.floors || []) {
     const rooms = (f.rooms || []).map(r => (valid(r) ? r : null));
     while (rooms.length && !rooms[rooms.length - 1]) rooms.pop();
     add(f, rooms);
   }
   // a category no floor lists still gets a plain room, on a storey of its own
-  const loose = Object.keys(SKILLS).filter(k => k !== 'work' && !placed.has(k)).map(cat => ({ template: 'blank', cat }));
+  const loose = Object.keys(SKILLS).filter(k => k !== 'work' && !inOffice(k) && !placed.has(k)).map(cat => ({ template: 'blank', cat }));
   if (loose.length) add({ id: 'life:more', name: '🧩 더 많은 방', en: 'MORE ROOMS' }, loose);
   return out;
 }
@@ -2884,7 +2886,7 @@ function doingPhrase(name, label) {
 function thoughtOf(c) {
   if (c === me) {
     const q = focusRun && questById(focusRun.id);
-    if (!q || me.room !== 'life:' + q.cat || me.path.length) return null;
+    if (!q || me.room !== (inOffice(q.cat) ? ME_SEAT.room : 'life:' + q.cat) || me.path.length) return null;
     const left = focusRun.start + q.minutes * 60e3 - Date.now();
     return { main: `${qIcon(q)} ${q.title}`, sub: left > 0 ? `⏱ ${mmss(left)} 남음 · ${qVerb(q)}` : '✅ 시간 완료! 아래 완료 버튼을 눌러요' };
   }
@@ -3729,7 +3731,18 @@ function startQuest(id) {
   goToSkill(q.cat);
   renderGame();
 }
+// the office floor for office categories: the project floor you are on, else the one Claude Code was used on last
+function officeFloor() {
+  const here = floors.find(f => f.id === cur.floor);
+  if (here && !here.life) return here.id;
+  return floors.filter(f => !f.life).sort((a, b) => b.lastMtime - a.lastMtime)[0]?.id || null;
+}
 function goToSkill(cat) {
+  if (inOffice(cat)) {
+    const fl = officeFloor(); if (!fl) return;
+    if (cur.floor === fl) { me?.goTo(ME_SEAT); return; }
+    pauseFollow(); rideTo(fl, 'all'); return;
+  }
   const z = SKILL_ZONE[cat];
   if (!z) return;
   if (cur.floor === z.floor) { lifeWalk(me, cat); return; }
@@ -4241,7 +4254,7 @@ function questRow(q, at, all) {
   if (all && editQuest === q.id) return questForm(q);
   return `<div class="quest${done ? ' done' : ''}${run ? ' run' : ''}"><span class="qi">${qIcon(q)}</span>
     <div class="qt"><b>${esc(q.title)}</b><small>${at ? `🕖 ${esc(at)} · ` : ''}${esc(qKind(q))} · ${q.minutes}분 · ${esc(repeatLabel(q))} · +${questXP(q)} XP${st.length ? ` · ☑ ${ticked}/${st.length}` : ''}</small>${done ? '' : habitHint(q)}</div>
-    ${done ? '<span class="qok">✔</span>' : `<button data-a="${run ? 'go' : 'start'}" data-id="${q.id}" title="${run ? '그 방으로 가기' : '집중 타이머를 켜고 그 방으로 이동'}"${SKILL_ZONE[q.cat] ? '' : ' disabled'}>${run ? '🛗' : '▶'}</button><button data-a="done" data-id="${q.id}" title="바로 완료">✓</button>`}
+    ${done ? '<span class="qok">✔</span>' : `<button data-a="${run ? 'go' : 'start'}" data-id="${q.id}" title="${run ? (inOffice(q.cat) ? '내 자리로 가기' : '그 방으로 가기') : inOffice(q.cat) ? '집중 타이머를 켜고 사무실 내 자리로' : '집중 타이머를 켜고 그 방으로 이동'}"${SKILL_ZONE[q.cat] || inOffice(q.cat) ? '' : ' disabled'}>${run ? '🛗' : '▶'}</button><button data-a="done" data-id="${q.id}" title="바로 완료">✓</button>`}
     ${all ? `<button data-a="edit" data-id="${q.id}" title="퀘스트 고치기">✏️</button><button data-a="addst" data-id="${q.id}" title="하위 작업 추가">＋</button><button class="x" data-a="del" data-id="${q.id}" title="삭제 (되돌리기 가능)">🗑</button>` : ''}</div>` +
     (st.length ? `<div class="qsubs">${st.map((x, i) => `<label><input type="checkbox" data-st="${q.id}" data-i="${i}"${periodDone(q.repeat, x.done) ? ' checked' : ''}${done ? ' disabled' : ''}><span>${esc(x.title)}</span></label>`).join('')}</div>` : '') +
     (all && addSubFor === q.id ? `<form class="qadd qinline" data-form="addsub" data-id="${q.id}"><input name="t" maxlength="60" placeholder="하위 작업 (Enter로 추가)" required autofocus><button>추가</button><button type="button" class="ghost" data-a="cancel">취소</button></form>` : '');
@@ -4264,6 +4277,7 @@ function catForm(c) {
   return `<form class="qadd qedit" data-form="cat" data-id="${esc(c.id)}"><div class="qedit-h">✏️ 카테고리 고치기</div>
     <div class="qrow"><input name="icon" value="${esc(c.icon || '')}" maxlength="4" class="ic" aria-label="아이콘"><input name="ko" value="${esc(c.ko)}" maxlength="20" required aria-label="이름"><input name="en" value="${esc(c.en || '')}" maxlength="20" placeholder="ENGLISH" aria-label="영어 이름"></div>
     <div class="qrow"><select name="pose" aria-label="방에서 하는 동작">${optHTML(POSE_OPTS, c.pose)}</select><label class="fld">주 목표 <input name="hours" type="number" min="0" max="80" step="0.5" value="${hours}">시간</label></div>
+    <div class="qrow"><select name="place" aria-label="하는 곳">${optHTML([['life', '🏝️ 라이프 아일랜드 · 내 스튜디오'], ['office', '🏢 사무실 · Claude 옆 내 자리']], c.place === 'office' ? 'office' : 'life')}</select></div>
     <div class="qedit-h sub">하위 카테고리</div>
     ${(c.subs || []).map(x => `<div class="qrow"><input name="si_${esc(x.id)}" value="${esc(x.icon || '')}" maxlength="4" class="ic" aria-label="아이콘"><input name="sk_${esc(x.id)}" value="${esc(x.ko)}" maxlength="20" required aria-label="하위 이름"><button type="button" class="x" data-c="delsub" data-id="${esc(c.id)}" data-sub="${esc(x.id)}" title="하위 카테고리 지우기">🗑</button></div>`).join('') || '<small class="none">아직 없어요</small>'}
     <div class="qrow"><input name="newsub" maxlength="20" placeholder="새 하위 카테고리 이름"><button type="button" data-c="addsub" data-id="${esc(c.id)}">＋ 추가</button></div>
@@ -4303,8 +4317,9 @@ function questListHTML(today) {
     rest = list.filter(q => !booked.includes(q));
   }
   const floorsL = LIFE.map(def => [def.name, def.zones, rest.filter(q => def.zones.includes(q.cat)), def.src]);
-  const roomless = Object.keys(SKILLS).filter(k => k !== 'work' && !SKILL_ZONE[k]);
-  floorsL.push(['❔ 기타 (방이 없는 카테고리)', roomless, rest.filter(q => !SKILL_ZONE[q.cat]), null]);
+  const officeCats = Object.keys(SKILLS).filter(inOffice), roomless = Object.keys(SKILLS).filter(k => k !== 'work' && !SKILL_ZONE[k] && !inOffice(k));
+  floorsL.push(['🏢 사무실 · 내 자리', officeCats, rest.filter(q => inOffice(q.cat)), null]);
+  floorsL.push(['❔ 기타 (방이 없는 카테고리)', roomless, rest.filter(q => !SKILL_ZONE[q.cat] && !inOffice(q.cat)), null]);
   body += floorsL.filter(([, z, l]) => l.length || (!today && z.length)).map(([name, zones, l, src]) => group(name, l, src) + byCat(zones, l)).join('');
   if (today && !list.length) body += !game.quests.length && !(BUILDING.packs || []).some(p => p.id !== 'user')
     ? '<div class="empty">아직 퀘스트가 없어요. <button class="lnk" data-tab="courses">📦 코스</button>에서 시작해 보세요.</div>'
@@ -4393,7 +4408,7 @@ qpanel.addEventListener('submit', ev => {
     if (!v('ko')) { banner('카테고리 이름을 넣어 주세요'); return; }
     checkpoint(`✏️ '${c.ko}' 카테고리 고치기`);
     const verb = !c.verb || c.verb === `${c.ko} 하는 중` ? `${v('ko')} 하는 중` : c.verb;
-    userEdit('cat:' + id, { icon: v('icon') || c.icon, ko: v('ko'), en: v('en') || v('ko'), pose: v('pose'), verb });
+    userEdit('cat:' + id, { icon: v('icon') || c.icon, ko: v('ko'), en: v('en') || v('ko'), pose: v('pose'), verb, place: v('place') === 'office' ? 'office' : 'life' });
     for (const x of c.subs || []) {
       const ko = v('sk_' + x.id), icon = v('si_' + x.id);
       if ((ko && ko !== x.ko) || (icon && icon !== x.icon)) userEdit(`sub:${id}/${x.id}`, { ko: ko || x.ko, icon: icon || x.icon, verb: `${ko || x.ko} 하는 중` });
@@ -4484,7 +4499,7 @@ function renderFocus() {
   if (focusRun && !q && gameReady) { focusRun = null; saveFocus(); }
   focusEl.classList.toggle('on', !!q);
   if (!q) { if (me && me.kind === 'me') me.current = ''; return; }
-  const left = focusRun.start + q.minutes * 60e3 - Date.now(), here = cur.floor === SKILL_ZONE[q.cat]?.floor;
+  const left = focusRun.start + q.minutes * 60e3 - Date.now(), here = inOffice(q.cat) ? !onLife() && me?.room === ME_SEAT.room : cur.floor === SKILL_ZONE[q.cat]?.floor;
   if (left <= 0 && !focusRun.rang) { focusRun.rang = true; saveFocus(); banner(`⏰ ${q.title} — 시간 다 됐어요!`); me?.bubble('me', '⏰ 다 했다! 완료 누르기', 5000); }
   const html = `<span class="fi">${qIcon(q)}</span><div class="ft"><b>${esc(q.title)}</b><small>${left > 0 ? `⏱ ${mmss(left)} 남음` : '✅ 시간 완료! 완주 보너스 +50%'} · ${esc(qVerb(q))}</small><div class="fbar"><i style="width:${Math.min(100, (1 - left / (q.minutes * 60e3)) * 100).toFixed(1)}%"></i></div></div>
     ${here ? '' : '<button data-f="go" title="그 방으로 가기">🛗</button>'}<button data-f="done" class="ok">✓ 완료</button><button data-f="quit" title="그만두기">✕</button>`;
@@ -4787,7 +4802,7 @@ function placeNewRoom(c, a) {
   putRoom(fl, { template: 'blank', cat: c.id });
 }
 function editorHTML() {
-  const floorOpts = edB().floors.filter(f => !f._pack).map(f => [f.id, f.name]).concat([['__new', '＋ 새 층']]);
+  const floorOpts = edB().floors.filter(f => !f._pack).map(f => [f.id, f.name]).concat([['__new', '＋ 새 층'], ['__office', '🏢 사무실 · 내 자리']]);
   const inp = (e, id, f, v, extra = '') => `<input data-e="${e}" data-id="${esc(id)}" data-f="${f}" value="${esc(v || '')}" ${extra}>`;
   // what a course pack added is shown but locked: it lives in data/packs/, and saving would drop edits to it
   const lock = o => (o?._pack ? ` inert data-pack title="📦 '${esc(o._pack === 'user' ? '내 편집' : o._pack)}'에서 왔어요 · 전체 탭에서 고칠 수 있어요"` : '');
@@ -4800,7 +4815,7 @@ function editorHTML() {
       h += `<div class="bcat"${lock(c)}>
         <div class="brow">${inp('cat', c.id, 'icon', c.icon, 'class="ic" maxlength="4" title="아이콘"')}${inp('cat', c.id, 'ko', c.ko, 'maxlength="20" title="이름"')}${inp('cat', c.id, 'en', c.en, 'maxlength="20" placeholder="ENGLISH" title="영어 이름 (방 바닥 글씨)"')}<button data-b="delCat" data-id="${esc(c.id)}" title="카테고리와 방 지우기">🗑</button></div>
         <div class="brow">${inp('cat', c.id, 'verb', c.verb, 'maxlength="30" placeholder="○○ 하는 중" title="퀘스트 하는 동안 보이는 문구"')}</div>
-        <div class="brow"><select data-e="cat" data-id="${esc(c.id)}" data-f="pose" title="방에서 하는 동작">${optHTML(POSE_OPTS, c.pose)}</select><select data-e="room" data-id="${esc(c.id)}" data-f="template" title="방 템플릿">${optHTML(TPL_OPTS, t)}</select><select data-e="room" data-id="${esc(c.id)}" data-f="floor" title="층">${optHTML(floorOpts, f?.id)}</select><input type="color" data-e="room" data-id="${esc(c.id)}" data-f="tint" value="${esc(r?.tint || TEMPLATE_INFO[t].tint)}" title="바닥 색"></div>`;
+        <div class="brow"><select data-e="cat" data-id="${esc(c.id)}" data-f="pose" title="방에서 하는 동작">${optHTML(POSE_OPTS, c.pose)}</select><select data-e="room" data-id="${esc(c.id)}" data-f="template" title="방 템플릿">${optHTML(TPL_OPTS, t)}</select><select data-e="room" data-id="${esc(c.id)}" data-f="floor" title="층">${optHTML(floorOpts, c.place === 'office' ? '__office' : f?.id)}</select><input type="color" data-e="room" data-id="${esc(c.id)}" data-f="tint" value="${esc(r?.tint || TEMPLATE_INFO[t].tint)}" title="바닥 색"></div>`;
       for (const x of c.subs || []) h += `<div class="brow bsub"${lock(x)}><span>${x._pack ? '📦' : '↳'}</span><input data-e="sub" data-id="${esc(c.id)}" data-sub="${esc(x.id)}" data-f="icon" value="${esc(x.icon || '')}" class="ic" maxlength="4"><input data-e="sub" data-id="${esc(c.id)}" data-sub="${esc(x.id)}" data-f="ko" value="${esc(x.ko)}" maxlength="20" title="하위 카테고리 이름"><select data-e="sub" data-id="${esc(c.id)}" data-sub="${esc(x.id)}" data-f="pose" title="동작">${optHTML(POSE_OPTS, x.pose || c.pose)}</select><button data-b="delSub" data-id="${esc(c.id)}" data-sub="${esc(x.id)}" title="하위 카테고리 지우기">🗑</button></div>`;
       h += `${c._pack ? '' : `<button class="badd sub" data-b="addSub" data-id="${esc(c.id)}">＋ 하위 카테고리</button>`}</div>`;
     }
@@ -4827,8 +4842,13 @@ qpanel.addEventListener('change', ev => {
     const x = cfgCat(id).c?.subs?.find(y => y.id === el.dataset.sub); if (!x || (!v && f === 'ko')) return renderQuestPanel();
     if (f === 'ko') { if (!x.verb || x.verb === `${x.ko} 하는 중`) x.verb = `${v} 하는 중`; if (!x.en || x.en === x.ko) x.en = v; }
     x[f] = v;
+  } else if (kind === 'room' && f === 'floor' && v === '__office') {     // to the office: no studio for it any more
+    const { c } = cfgCat(id), { f: fl, r } = cfgRoom(id);
+    if (c) c.place = 'office';
+    if (r) takeRoom(fl, r);
   } else if (kind === 'room') {
     let { f: fl, r } = cfgRoom(id);
+    delete cfgCat(id).c?.place;
     if (!r) { r = { template: 'blank', cat: id }; fl = null; }
     if (f === 'template') { r.template = v; delete r.tint; }
     else if (f === 'tint') r.tint = v;
