@@ -1605,6 +1605,85 @@ const ROOM_TEMPLATES = {
     lifeSpot(k, 4, 15.1, 'type', 0, 1);
     trophyShelf(k, 4.4, 12.1);
   },
+  lab(zn, k, cat) {                             // an AI lab: workstations with code on two screens, a server rack, a whiteboard of a network
+    zfloor(zn, '#3a4150', 0.7);
+    for (let x = 1; x < 12; x += 1.5) box(0.02, 0.035, 10, '#343a48', x, 0.005, 5, { cast: false });
+    const code = canvasTex(256, 150, (c, w, h) => {
+      c.fillStyle = '#12151d'; c.fillRect(0, 0, w, h);
+      const cols = ['#7fb8ff', '#c792ea', '#9fe0a8', '#f2c94c', '#e8e2d0'];
+      for (let r = 0; r < 11; r++) { let x = 8 + (r % 3) * 10; while (x < w - 20) { const cw = 12 + ((r * 31 + x * 7) % 40); c.fillStyle = cols[(r + x) % cols.length]; c.fillRect(x, 8 + r * 12, cw, 5); x += cw + 6; } }
+    });
+    const graph = canvasTex(320, 150, (c, w, h) => {
+      c.fillStyle = '#f4f2ec'; c.fillRect(0, 0, w, h);
+      const layers = [[60, 3], [140, 4], [220, 4], [280, 2]], pts = layers.map(([x, n]) => Array.from({ length: n }, (_, i) => [x, h / (n + 1) * (i + 1)]));
+      c.strokeStyle = '#9aa7c0'; c.lineWidth = 1.5;
+      for (let l = 0; l < pts.length - 1; l++) for (const a of pts[l]) for (const b of pts[l + 1]) { c.beginPath(); c.moveTo(...a); c.lineTo(...b); c.stroke(); }
+      for (const [l, layer] of pts.entries()) for (const [x, y] of layer) { c.fillStyle = ['#5a7fd8', '#e8a33a', '#e8a33a', '#3fae8a'][l]; c.beginPath(); c.arc(x, y, 9, 0, 7); c.fill(); }
+      c.fillStyle = '#2a241e'; c.font = 'bold 22px "Segoe UI"'; c.fillText('AI', 12, 28);
+    });
+    box(3.4, 1.7, 0.06, '#d8dce4', 3.0, 0.9, 0.2); screen(3.2, 1.5, graph, 3.0, 1.75, 0.24);
+    for (const x of [4.6, 8.6]) {
+      desk(x, 3.2, 2.6, 1.0, '#2a2d38'); chair(x, 4.25, PI, '#26303a');
+      for (const dx of [-0.55, 0.55]) { box(0.05, 0.28, 0.05, '#333', x + dx, 0.74, 2.95); screen(0.95, 0.55, code, x + dx, 1.3, 2.88, dx < 0 ? 0.15 : -0.15); box(1.0, 0.6, 0.03, '#111', x + dx, 1.0, 2.86, { ry: dx < 0 ? 0.15 : -0.15 }); }
+      box(0.45, 0.02, 0.15, '#2a2a30', x, 0.74, 3.45);
+    }
+    box(0.9, 2.1, 1.0, '#1b1d24', 11.1, 0, 1.2);
+    for (let r = 0; r < 7; r++) for (let i = 0; i < 3; i++) box(0.12, 0.04, 0.02, mat(['#4fe08a', '#5aa9ff', '#4fe08a'][i], { e: ['#4fe08a', '#5aa9ff', '#4fe08a'][i], ei: 1.4 }), 10.85 + i * 0.25, 0.25 + r * 0.26, 1.71, { cast: false });
+    shelf(0.35, 6.4, 3.0, 1.6, PI / 2);
+    box(0.34, 0.34, 0.3, '#d8dce4', 0.45, 1.65, 7.4, { round: 0.05 }); box(0.26, 0.22, 0.22, '#d8dce4', 0.45, 1.99, 7.4, { round: 0.05 });   // a little robot on the shelf
+    for (const dz of [-0.06, 0.06]) box(0.02, 0.04, 0.04, mat('#5aa9ff', { e: '#5aa9ff', ei: 1.6 }), 0.61, 2.09, 7.4 + dz, { cast: false });
+    box(1.1, 0.5, 1.0, '#5a7fd8', 9.6, 0, 7.6, { round: 0.25 });                                        // beanbag
+    plant(11.2, 9.2, 1.0, true); lamp(1.4, 9.0);
+    roomLight(6, 4.5, '#d8e4ff', 9);
+    lifeSpot(k, 4.6, 4.25, cat.pose && cat.pose !== 'sweep' ? cat.pose : 'type', PI, 1);
+    trophyShelf(k, 7.6, 0.25);
+  },
+  atelier(zn, k, cat) {                         // an atelier: easels and canvases, a paint table, paintings on the wall
+    zfloor(zn, '#d8c3a0', 0.75);
+    for (let i = 0; i < 14; i++) cyl(0.1 + vhash(i, 3) * 0.12, 0.1 + vhash(i, 3) * 0.12, 0.005, ['#e0505a', '#5a7fd8', '#e8a33a', '#3fae8a', '#a06ad8'][i % 5], 1 + vhash(i, 1) * 10, 0.01, 1 + vhash(i, 2) * 8, { seg: 10 });
+    const art = seed => canvasTex(160, 120, (c, w, h) => {
+      c.fillStyle = ['#f4ead8', '#e8eef4', '#f2e6ec'][seed % 3]; c.fillRect(0, 0, w, h);
+      for (let i = 0; i < 7; i++) { c.fillStyle = ['#e0505a', '#5a7fd8', '#e8a33a', '#3fae8a', '#a06ad8', '#2a241e'][(i + seed) % 6]; c.globalAlpha = 0.85; c.beginPath(); c.ellipse(20 + vhash(i, seed) * 120, 15 + vhash(seed, i) * 90, 10 + vhash(i + 9, seed) * 30, 8 + vhash(seed + 4, i) * 22, vhash(i, i) * 3, 0, 7); c.fill(); }
+      c.globalAlpha = 1;
+    });
+    const easel = (x, z, seed, big) => {
+      for (const [dx, dz] of [[-0.3, 0.15], [0.3, 0.15], [0, -0.3]]) vmesh(TRUNK, '#9a6a44', x + dx * 0.6, 0.75, z + dz * 0.6, 0.03, 1.5, 0.03, world, [dz * 0.35, 0, -dx * 0.35]);
+      box(big ? 1.3 : 0.9, 0.04, 0.1, '#9a6a44', x, 0.75, z + 0.05);
+      const w = big ? 1.2 : 0.8, h = big ? 0.9 : 0.6;
+      box(w + 0.06, h + 0.06, 0.04, '#f3ead8', x, 0.8, z + 0.06); screen(w, h, art(seed), x, 0.8 + (h + 0.06) / 2, z + 0.085);
+    };
+    easel(5.6, 4.3, 1, true); easel(2.6, 3.0, 2, false); easel(8.6, 6.4, 3, false);
+    cyl(0.22, 0.2, 0.5, '#7a5a40', 5.6, 0, 5.35);                                                       // stool
+    desk(9.4, 3.0, 1.9, 0.9, '#c9a46a');
+    for (let i = 0; i < 6; i++) cyl(0.07, 0.07, 0.14, ['#e0505a', '#5a7fd8', '#e8a33a', '#3fae8a', '#a06ad8', '#ffffff'][i], 8.7 + i * 0.25, 0.74, 2.85);
+    cyl(0.09, 0.08, 0.2, '#c8754e', 10.1, 0.74, 3.2); for (let i = 0; i < 4; i++) box(0.02, 0.28, 0.02, '#6b4a32', 10.06 + i * 0.03, 0.9, 3.2, { cast: false });
+    for (const [x, seed, w, h] of [[6.2, 4, 1.3, 0.9], [8.0, 5, 0.9, 1.1], [9.6, 6, 1.0, 0.7]]) { box(w + 0.1, h + 0.1, 0.04, '#2a241e', x, 1.3, 0.12); screen(w, h, art(seed), x, 1.35 + h / 2, 0.15); }
+    for (let i = 0; i < 4; i++) box(0.05, 0.7, 0.9, '#f3ead8', 0.3 + i * 0.12, 0, 7.6 + i * 0.05);   // canvases leaning by the wall
+    plant(11.2, 9.2, 1.1, true); plant(0.8, 9.2, 0.9); lamp(11.3, 4.6);
+    roomLight(6, 5, '#fff1dc', 10);
+    lifeSpot(k, 5.6, 5.3, cat.pose && cat.pose !== 'sweep' ? cat.pose : 'write', PI);
+    trophyShelf(k, 2.6, 0.25);
+  },
+  kitchen(zn, k, cat) {                         // a kitchen: a counter with a stove and sink, an island with ingredients, a dining table
+    zfloor(zn, '#e8e1d5', 0.6);
+    for (let x = 0; x < 12; x++) for (let z = 0; z < 10; z++) if ((x + z) % 2) box(1, 0.012, 1, '#cfc6b6', x + 0.5, 0.03, z + 0.5, { cast: false });
+    box(7.4, 0.9, 0.7, '#f1ede4', 5.2, 0, 0.55, { round: 0.03 }); box(7.5, 0.05, 0.76, '#3b3f46', 5.2, 0.9, 0.55, { r: 0.3 });
+    for (let i = 0; i < 4; i++) box(0.8, 0.6, 0.35, '#f1ede4', 2.6 + i * 1.7, 1.7, 0.25, { round: 0.03 });   // wall cabinets
+    for (const [dx, dz] of [[-0.25, -0.15], [0.25, -0.15], [-0.25, 0.15], [0.25, 0.15]]) cyl(0.12, 0.12, 0.02, '#1b1b20', 3.0 + dx, 0.95, 0.55 + dz);
+    cyl(0.18, 0.16, 0.22, '#b8bcc4', 2.75, 0.97, 0.4, { m: 0.8, r: 0.25 }); cyl(0.2, 0.2, 0.05, '#2a2a30', 3.25, 0.97, 0.7);
+    box(1.0, 0.5, 0.45, '#b8bcc4', 3.0, 2.0, 0.3, { m: 0.6 });                                          // range hood
+    box(0.9, 0.06, 0.5, '#b8bcc4', 6.0, 0.93, 0.55, { m: 0.8 }); cyl(0.02, 0.02, 0.3, METAL, 6.0, 0.95, 0.3, { m: 0.9 });
+    box(1.0, 2.0, 0.8, '#e9eaee', 10.4, 0, 0.6, { round: 0.05, m: 0.25, r: 0.35 }); box(0.04, 0.5, 0.04, METAL, 10.0, 1.1, 1.01, { m: 0.9 });
+    box(3.2, 0.9, 1.2, '#7a5a40', 5.6, 0, 4.4, { round: 0.03 }); box(3.3, 0.06, 1.3, '#e9e4da', 5.6, 0.9, 4.4);
+    box(0.6, 0.03, 0.4, '#c49a6c', 5.4, 0.96, 4.5);
+    for (const [x, z, c, r] of [[4.7, 4.2, '#e0453a', 0.09], [4.9, 4.5, '#ff9f43', 0.08], [6.3, 4.2, '#5fae4a', 0.11], [6.6, 4.6, '#f3ead8', 0.1]]) vmesh(BLOB, c, x, 1.0, z, r);
+    cyl(0.22, 0.14, 0.14, '#ffffff', 6.1, 0.96, 4.6);
+    desk(9.4, 7.4, 1.8, 1.0, OAK); chair(9.4, 6.5, 0, '#c9a46a'); chair(9.4, 8.3, PI, '#c9a46a'); cyl(0.12, 0.1, 0.18, '#7bc47f', 9.4, 0.74, 7.4);
+    plant(0.8, 9.2, 1.0, true); plant(11.2, 4.4, 0.8);
+    roomLight(5.5, 4, '#fff1d6', 10);
+    lifeSpot(k, 5.6, 5.3, cat.pose || 'sweep', PI);
+    trophyShelf(k, 8.6, 0.25);
+  },
   blank(zn, k, cat) {                           // a plain room for any new category: rug, a desk or a mat, a sign
     zfloor(zn, '#cdbfa8', 0.7);
     box(5.6, 0.02, 4.2, '#e9dcc4', 6, 0.03, 4.8, { cast: false, r: 1 });
@@ -1643,8 +1722,28 @@ const TEMPLATE_INFO = {
   piano:    { home: 0, ko: '🎹 피아노 룸',      tint: '#4e3426' },
   video:    { home: 1, ko: '🎬 편집실',         tint: '#272935' },
   hustle:   { home: 2, ko: '💰 부업 HQ',        tint: '#4a4f6e' },
+  lab:      { home: 0, ko: '🤖 AI 랩',          tint: '#3a4150' },
+  atelier:  { home: 0, ko: '🎨 아틀리에',       tint: '#d8c3a0' },
+  kitchen:  { home: 0, ko: '🍳 키친',           tint: '#e8e1d5' },
   blank:    { home: 0, ko: '⬜ 빈 방',          tint: '#cdbfa8' },
 };
+// A new subject gets a room that fits its name: the first concept whose keyword appears in it (Korean or English).
+// Order matters: the more specific concepts come first ("AI 스터디" is a lab, not a library).
+const CONCEPTS = [
+  { tpl: 'lab', icon: '🤖', pose: 'type', keys: ['ai', '인공지능', '머신러닝', '딥러닝', 'llm', '코딩', '프로그래밍', '개발', '데이터', '파이썬', 'python', 'code', 'coding', 'data', '알고리즘', '컴퓨터', '클로드', 'claude', 'gpt'] },
+  { tpl: 'kitchen', icon: '🍳', pose: 'sweep', keys: ['요리', '베이킹', '제과', '제빵', '주방', '레시피', '식단', '밀프렙', 'cook', 'baking', 'kitchen', 'recipe'] },
+  { tpl: 'atelier', icon: '🎨', pose: 'write', keys: ['그림', '드로잉', '미술', '디자인', '수채화', '유화', '일러스트', '캘리', '도예', '공예', 'art', 'draw', 'paint', 'design', 'sketch'] },
+  { tpl: 'piano', icon: '🎵', pose: 'piano', keys: ['피아노', '기타', '바이올린', '첼로', '노래', '보컬', '음악', '작곡', '드럼', '악기', 'piano', 'guitar', 'music', 'song'] },
+  { tpl: 'ballet', icon: '💃', pose: 'ballet', keys: ['발레', '춤', '댄스', '케이팝', 'kpop', 'dance', 'ballet'] },
+  { tpl: 'pilates', icon: '🧘', pose: 'pilates', keys: ['요가', '필라테스', '스트레칭', 'yoga', 'pilates', 'stretch'] },
+  { tpl: 'gym', icon: '🏋️', pose: 'lift', keys: ['헬스', '운동', '근력', '웨이트', '러닝', '달리기', '크로스핏', '복싱', '수영', '등산', 'gym', 'workout', 'run', 'fitness'] },
+  { tpl: 'video', icon: '🎬', pose: 'type', keys: ['영상', '유튜브', '편집', '촬영', '영화', '사진', '브이로그', '콘텐츠', '숏폼', 'video', 'youtube', 'film', 'photo'] },
+  { tpl: 'hustle', icon: '💰', pose: 'type', keys: ['부업', '창업', '사업', '쇼핑몰', '마케팅', '재테크', '투자', '주식', '세일즈', 'business', 'startup', 'invest', 'sales', 'marketing'] },
+  { tpl: 'growth', icon: '🌱', pose: 'meditate', keys: ['명상', '마음', '감사', '일기', '저널', '심리', '루틴', '자기계발', 'meditat', 'journal', 'mind'] },
+  { tpl: 'chores', icon: '🧹', pose: 'sweep', keys: ['집안일', '청소', '빨래', '정리', '살림', 'clean', 'laundry', 'chore'] },
+  { tpl: 'learning', icon: '📚', pose: 'read', keys: ['독서', '책', '공부', '스터디', '시험', '자격증', '영어', '언어', '외국어', '일본어', '중국어', '단어', '논문', '글쓰기', '작문', '블로그', 'read', 'study', 'book', 'language', 'english', 'writing'] },
+];
+const conceptFor = name => { const n = String(name || '').toLowerCase(); return CONCEPTS.find(c => c.keys.some(k => n.includes(k))) || { tpl: 'blank', icon: '⭐', pose: 'type' }; };
 const tplOf = r => (ROOM_TEMPLATES[r.template] ? r.template : 'blank');
 
 // A template drawn in zone a, carried to zone b: furniture keeps its size and slides with the room (turned round when
@@ -4283,19 +4382,30 @@ function catForm(c) {
     <div class="qrow"><input name="newsub" maxlength="20" placeholder="새 하위 카테고리 이름"><button type="button" data-c="addsub" data-id="${esc(c.id)}">＋ 추가</button></div>
     <div class="qrow"><button>저장</button><button type="button" class="ghost" data-a="cancel">닫기</button><button type="button" class="danger" data-c="delcat" data-id="${esc(c.id)}">카테고리 지우기</button></div></form>`;
 }
-function newCatForm() {
-  return `<form class="qadd qedit" data-form="newcat"><div class="qedit-h">＋ 새 카테고리</div>
-    <div class="qrow"><input name="icon" value="⭐" maxlength="4" class="ic" aria-label="아이콘"><input name="ko" maxlength="20" required placeholder="이름 (예: 요리)"></div>
-    <div class="qrow"><select name="area" aria-label="영역">${AREAS.map(a => `<option value="${esc(a.id)}">${a.icon || ''} ${esc(a.ko)}</option>`).join('')}<option value="__new">＋ 새 영역</option></select><input name="newarea" maxlength="20" placeholder="새 영역 이름 (새 영역일 때)"></div>
-    <div class="qrow"><select name="pose" aria-label="방에서 하는 동작">${optHTML(POSE_OPTS, 'type')}</select><select name="tpl" aria-label="방 모양">${optHTML(TPL_OPTS, 'blank')}</select></div>
+// floors you can put a new room on (the composed ones from building.json, packs and your layer), and the area a floor's rooms belong to
+const roomFloors = () => (BUILDING.floors || []).map(f => [f.id, f.name]);
+const floorArea = fid => { const f = (BUILDING.floors || []).find(x => x.id === fid); for (const r of f?.rooms || []) { if (r && SKILLS[r.cat]?.area) return SKILLS[r.cat].area; } return AREAS[0]?.id; };
+function newCatForm(floorId = null) {
+  const fl = floorId || (BUILDING.floors || []).find(f => (f.rooms || []).some(r => !r || !SKILLS[r.cat]) || (f.rooms || []).length < 3)?.id || '__new';
+  const name = (BUILDING.floors || []).find(f => f.id === floorId)?.name;
+  return `<form class="qadd qedit" data-form="newcat"><div class="qedit-h">＋ ${name ? `'${esc(name)}'에 ` : ''}새 카테고리 <small class="concept" aria-live="polite">이름을 쓰면 어울리는 방을 꾸며 드려요</small></div>
+    <div class="qrow"><input name="icon" value="" maxlength="4" class="ic" placeholder="자동" aria-label="아이콘"><input name="ko" maxlength="20" required placeholder="이름 (예: AI 스터디, 요리, 드로잉)" autofocus></div>
+    <div class="qrow"><select name="floor" aria-label="층">${optHTML([...roomFloors(), ['__new', '✨ 새 층 (내 공간)']], fl)}</select><select name="area" aria-label="영역">${optHTML(AREAS.map(a => [a.id, `${a.icon || ''} ${a.ko}`]).concat([['__new', '＋ 새 영역']]), floorArea(fl))}</select></div>
+    <div class="qrow"><select name="tpl" aria-label="방 모양">${optHTML([['auto', '✨ 이름에 맞춰 자동'], ...TPL_OPTS], 'auto')}</select><select name="pose" aria-label="방에서 하는 동작">${optHTML([['auto', '✨ 자동 동작'], ...POSE_OPTS], 'auto')}</select><input name="newarea" maxlength="20" placeholder="새 영역 이름"></div>
     <div class="qrow"><button>만들기</button><button type="button" class="ghost" data-a="cancel">취소</button></div></form>`;
 }
+// while you type a name, show which room it will get
+qpanel.addEventListener('input', ev => {
+  const f = ev.target.form; if (f?.dataset.form !== 'newcat' || ev.target.name !== 'ko') return;
+  const c = conceptFor(ev.target.value), out = f.querySelector('.concept');
+  if (out) out.textContent = ev.target.value.trim() ? `→ ${TEMPLATE_INFO[c.tpl].ko} 방으로 꾸며요` : '이름을 쓰면 어울리는 방을 꾸며 드려요';
+});
 function questListHTML(today) {
   let body = '';
   const list = game.quests.filter(q => !today || (onToday(q) && (!isDone(q) || (q.done || []).includes(dayKey()))));
   const group = (title, l, src) => (!today && src && editFloor === src)
     ? `<form class="qadd qedit" data-form="floor" data-id="${esc(src)}"><div class="qedit-h">✏️ 층 이름</div><div class="qrow"><input name="name" value="${esc(title)}" maxlength="24" required aria-label="층 이름"><button>저장</button><button type="button" class="ghost" data-a="cancel">취소</button></div></form>`
-    : `<div class="qgroup"><b>${esc(title)}</b><span>${l.filter(q => !isDone(q)).length || '✓'}</span>${!today && src ? `<button data-c="editfloor" data-id="${esc(src)}" title="층 이름 바꾸기">✏️</button><button data-c="delfloor" data-id="${esc(src)}" title="층과 그 안의 카테고리 지우기 (되돌리기 가능)">🗑</button>` : ''}</div>`;
+    : `<div class="qgroup"><b>${esc(title)}</b><span>${l.filter(q => !isDone(q)).length || '✓'}</span>${!today && src ? `<button data-c="addhere" data-id="${esc(src)}" title="이 층에 새 카테고리 (방이 생겨요)">＋</button><button data-c="editfloor" data-id="${esc(src)}" title="층 이름 바꾸기">✏️</button><button data-c="delfloor" data-id="${esc(src)}" title="층과 그 안의 카테고리 지우기 (되돌리기 가능)">🗑</button>` : ''}</div>`;
   const catHead = (c, l) => `<div class="qcat"><span>${catOf(c).icon} ${esc(catOf(c).ko)}</span><small>${l.length}</small>${today ? '' :
     `<button data-c="edit" data-id="${esc(c)}" title="카테고리 고치기">✏️</button><button data-c="addq" data-id="${esc(c)}" title="이 카테고리에 퀘스트 추가">＋</button>${SKILLS[c] ? `<button data-c="delcat" data-id="${esc(c)}" title="카테고리와 그 퀘스트 지우기 (되돌리기 가능)">🗑</button>` : ''}`}</div>`;
   const quick = c => `<form class="qadd qinline" data-form="quick" data-id="${esc(c)}"><input name="t" maxlength="60" required placeholder="${esc(catOf(c).ko)} 퀘스트 (예: 10분만)" autofocus>
@@ -4320,11 +4430,11 @@ function questListHTML(today) {
   const officeCats = Object.keys(SKILLS).filter(inOffice), roomless = Object.keys(SKILLS).filter(k => k !== 'work' && !SKILL_ZONE[k] && !inOffice(k));
   floorsL.push(['🏢 사무실 · 내 자리', officeCats, rest.filter(q => inOffice(q.cat)), null]);
   floorsL.push(['❔ 기타 (방이 없는 카테고리)', roomless, rest.filter(q => !SKILL_ZONE[q.cat] && !inOffice(q.cat)), null]);
-  body += floorsL.filter(([, z, l]) => l.length || (!today && z.length)).map(([name, zones, l, src]) => group(name, l, src) + byCat(zones, l)).join('');
+  body += floorsL.filter(([, z, l, src]) => l.length || (!today && (z.length || src))).map(([name, zones, l, src]) => group(name, l, src) + (!today && src && newCatOpen === src ? newCatForm(src) : '') + byCat(zones, l)).join('');
   if (today && !list.length) body += !game.quests.length && !(BUILDING.packs || []).some(p => p.id !== 'user')
     ? '<div class="empty">아직 퀘스트가 없어요. <button class="lnk" data-tab="courses">📦 코스</button>에서 시작해 보세요.</div>'
     : '<div class="empty">오늘 할 퀘스트를 다 했어요! 🎉</div>';
-  if (!today) body += newCatOpen ? newCatForm() : '<button class="badd" data-c="newcat">＋ 새 카테고리</button>';
+  if (!today) body += newCatOpen === true ? newCatForm() : '<button class="badd" data-c="newcat">＋ 새 카테고리</button>';
   const first = AREAS.flatMap(a => a.categories || []).find(c => SKILLS[c.id])?.id;
   body += `<form class="qadd" id="qadd"><input name="t" placeholder="새 퀘스트 (예: 스트레칭 10분)" maxlength="60" required>
     <div class="qrow"><select name="c">${catOptions(first)}</select><select name="s">${subOptions(first)}</select></div>
@@ -4356,6 +4466,7 @@ qpanel.addEventListener('click', ev => {
   if (c === 'edit') { editCat = editCat === id ? null : id; quickCat = null; }
   else if (c === 'addq') { quickCat = quickCat === id ? null : id; editCat = null; }
   else if (c === 'newcat') newCatOpen = true;
+  else if (c === 'addhere') newCatOpen = newCatOpen === id ? false : id;
   else if (c === 'delsub') { checkpoint(`🗑 하위 '${subOf(id, b.dataset.sub)?.ko || ''}' 지우기`); userHide(`sub:${id}/${b.dataset.sub}`); saveUser(); }
   else if (c === 'addsub') {
     const v = f?.elements.newsub.value.trim(); if (!v) { f?.elements.newsub.focus(); return; }
@@ -4380,7 +4491,7 @@ qpanel.addEventListener('submit', ev => {
   const v = n => (f.elements[n]?.value ?? '').trim();
   if (kind === 'floor') {
     if (!v('name')) return;
-    checkpoint(`✏️ 층 이름 → ${v('name')}`); userEdit('floor:' + f.dataset.id, { name: v('name') }); editFloor = null; saveUser(); return renderQuestPanel();
+    checkpoint(`✏️ 층 이름 → ${v('name')}`); userEdit('floor:' + f.dataset.id, { name: v('name'), en: v('name').replace(/^[^\p{L}\p{N}]+/u, '').trim() || v('name') }); editFloor = null; saveUser(); return renderQuestPanel();
   }
   if (kind === 'addsub') {
     const q = questById(f.dataset.id); if (!q || !v('t')) return;
@@ -4422,12 +4533,25 @@ qpanel.addEventListener('submit', ev => {
     let areaId = v('area');
     checkpoint(`＋ '${ko}' 카테고리 만들기`);
     if (areaId === '__new') { const na = { id: newId('a'), ko: v('newarea') || '내 영역', en: '', icon: '✨', categories: [] }; (USER.areas ||= []).push(na); areaId = na.id; }
-    const id = newId('c');
-    userAreaFor(areaId).categories.push({ id, ko, en: ko, icon: v('icon') || '⭐', verb: `${ko} 하는 중`, pose: v('pose') || 'type', subs: [] });
-    USER.floors ||= [];
-    let fl = USER.floors.find(x => x.id === 'life:mine'); if (!fl) { fl = { id: 'life:mine', name: '✨ 내 공간', en: 'MY SPACE', rooms: [] }; USER.floors.push(fl); }
-    fl.rooms.push({ template: v('tpl') || 'blank', cat: id });
-    newCatOpen = false; saveUser(); banner(`🏗️ ${v('icon') || '⭐'} ${ko} 방이 '✨ 내 공간'에 생겼어요`); return renderQuestPanel();
+    const id = newId('c'), cpt = conceptFor(ko), tpl = v('tpl') && v('tpl') !== 'auto' ? v('tpl') : cpt.tpl;
+    const icon = v('icon') || cpt.icon, pose = v('pose') && v('pose') !== 'auto' ? v('pose') : cpt.pose;
+    userAreaFor(areaId).categories.push({ id, ko, en: ko, icon, verb: `${ko} 하는 중`, pose, subs: [] });
+    const room = { template: tpl, cat: id };
+    let fid = v('floor'), where;
+    const target = (BUILDING.floors || []).find(x => x.id === fid);
+    if (target) {
+      // the first slot whose category is gone (deleted, hidden or moved to the office), else a new slot at the end
+      const rooms = (target.rooms || []).slice(), i = rooms.findIndex(r => !r || !SKILLS[r.cat] || inOffice(r.cat));
+      if (i >= 0) rooms[i] = room; else rooms.push(room);
+      const own = (USER.floors || []).find(x => x.id === fid);
+      if (own) own.rooms = rooms; else userEdit('floor:' + fid, { rooms });
+      where = target.name;
+    } else {
+      USER.floors ||= [];
+      let fl = USER.floors.find(x => x.id === 'life:mine'); if (!fl) { fl = { id: 'life:mine', name: '✨ 내 공간', en: 'MY SPACE', rooms: [] }; USER.floors.push(fl); }
+      fl.rooms.push(room); where = fl.name;
+    }
+    newCatOpen = false; saveUser(); banner(`🏗️ ${icon} ${ko} — ${TEMPLATE_INFO[tpl]?.ko || '새'} 방이 '${where}'에 생겼어요`); return renderQuestPanel();
   }
 });
 qpanel.addEventListener('keydown', ev => { if (ev.key === 'Escape' && (editQuest || addSubFor || editCat || quickCat || newCatOpen)) { editQuest = addSubFor = editCat = quickCat = null; newCatOpen = false; renderQuestPanel(); } });
@@ -4837,6 +4961,10 @@ qpanel.addEventListener('change', ev => {
   else if (kind === 'cat') {
     const { c } = cfgCat(id); if (!c || (!v && (f === 'ko' || f === 'icon'))) return renderQuestPanel();
     if (f === 'ko' && (!c.verb || c.verb === `${c.ko} 하는 중`)) c.verb = `${v} 하는 중`;
+    if (f === 'ko') {                                   // a plain room takes the look of its new name
+      const { r } = cfgRoom(id), cpt = conceptFor(v);
+      if (r && tplOf(r) === 'blank' && cpt.tpl !== 'blank') { r.template = cpt.tpl; delete r.tint; if (!c.icon || c.icon === '⭐') c.icon = cpt.icon; c.pose = cpt.pose; }
+    }
     c[f] = v;
   } else if (kind === 'sub') {
     const x = cfgCat(id).c?.subs?.find(y => y.id === el.dataset.sub); if (!x || (!v && f === 'ko')) return renderQuestPanel();

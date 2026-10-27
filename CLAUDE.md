@@ -38,7 +38,13 @@ A gamified habit app: your to-dos are quests that earn XP and coins. Your life h
 - **Never test on the real `data/quests.json`** (the user's XP and coins). Start a second server: `PORT=7779 TOWER_DATA=<a temp copy of data/> node claude-office/server.js`, and delete it afterwards.
 - Verify changes in the browser: no console errors, and a screenshot. Remove any test hooks afterwards.
 
-## Where we left off (2026-10-26)
+## Where we left off (2026-10-27)
+
+- Adding a subject: ＋ on each floor heading in 전체 (`addhere`) puts the new category's room in that floor's first empty slot (or a new slot; a full floor carries on as "<name> 2"), saved as a `floor:<id>` edit in the user layer. Room concepts from the name: `CONCEPTS` / `conceptFor()` pick template, icon and pose; new templates `lab`, `atelier`, `kitchen`. Renaming a floor also sets its `en` (the lobby floor text).
+- Python on Windows: read and write repo files in text mode (the working copy has CRLF; anchors with `
+` fail on raw bytes).
+
+## Earlier (2026-10-26)
 
 - Categories can live in the office: `place: "office"` (`inOffice()`, `officeFloor()` in office.html). No island room; their quests send you to your desk (`ME_SEAT`) on a project floor; the lists group them under 🏢 사무실 · 내 자리; set in the ✏️ category form (하는 곳) or the 🏗️ floor picker. The private pack uses it for its work categories.
 - On Windows, run the private repo's `tools/make-pack.py` with `PYTHONUTF8=1` (the default code page cannot read the JSON).
