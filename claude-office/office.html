@@ -262,6 +262,19 @@ h2 small{font-size:10px;font-weight:600;letter-spacing:1.5px;color:var(--faint)}
 .slot button{flex:none;height:26px;padding:0 8px;border-radius:7px;border:1px solid #ffd16660;background:#ffd16626;color:#ffe3a0;cursor:pointer;font-size:11px;font-weight:700}
 .slot button.poor{opacity:.45}.slot button:disabled{cursor:default}
 .qfloor .mini{margin-left:6px;height:20px;padding:0 6px;border-radius:6px;border:1px solid var(--line);background:#ffffff0d;color:var(--ink);cursor:pointer;font-size:11px}
+.pclock{position:relative;width:44px;height:44px;flex:none;display:grid;place-items:center}
+.pclock svg{position:absolute;inset:0;width:100%;height:100%;transform:rotate(-90deg)}
+.pclock span{position:relative;font-size:11px;font-weight:700;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+.pring circle{fill:none;stroke-width:3}.pring .trk{stroke:rgba(255,255,255,.1)}.pring .val{stroke:var(--accent);stroke-linecap:round;transition:stroke-dashoffset .5s linear}
+.pring.break .val{stroke:var(--dim)}.pring.done .val{stroke:var(--accent)}
+.qtree{margin:2px 0 6px 18px;border-left:1px solid var(--line);padding-left:10px}
+.qsubt{display:flex;align-items:center;gap:6px;padding:4px 0;font-size:12px;color:var(--dim)}
+.qsubt span{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.qsubt.d2{padding-left:18px;font-size:11.5px}
+.qsubt small{color:var(--faint);font-size:10.5px}
+.qsubt button{flex:none;width:26px;height:24px;border-radius:7px;border:1px solid var(--line);background:none;color:var(--dim);cursor:pointer;font-size:11px}
+.qsubt button:hover{border-color:var(--accent);color:var(--accent)}
+.qtree .lnk.add-sub{background:none;border:0;color:var(--faint);cursor:pointer;font-size:11px;padding:3px 0}.qtree .lnk.add-sub:hover{color:var(--accent)}
+.qinline.d1,.qinline.d2{margin:4px 0}.qinline.d2{margin-left:18px}
 .swatch{width:16px;height:16px;border-radius:50%;display:inline-block;border:2px solid #ffffff44}
 .opts button.lock{opacity:.6;position:relative}
 .opts .sw-c.lock::after{content:"🔒";position:absolute;font-size:9px;right:-5px;bottom:-5px}
@@ -1379,10 +1392,12 @@ const WORK = { id: 'work', ko: '업무', en: 'WORK', icon: '✳', verb: 'Claude�
 const SKILLS = {}, AREAS = [], LIFE = [];                  // filled from the config by buildLife()
 const GONE = { ko: '(지운 카테고리)', en: '?', icon: '❔', verb: '', subs: [] };
 const catOf = k => SKILLS[k] || GONE;
-const subOf = (k, s) => (s && catOf(k).subs.find(x => x.id === s)) || null;
+// floor › category › subcategory › topic: subcategories may hold topics (subs[].subs); a topic takes its parent's icon, pose and verb
+const subNodes = k => catOf(k).subs.flatMap(x => [x, ...(x.subs || []).map(t => ({ icon: x.icon, pose: x.pose, verb: x.verb, ...t, _parent: x }))]);
+const subOf = (k, s) => (s && subNodes(k).find(x => x.id === s)) || null;
 const qIcon = q => subOf(q.cat, q.sub)?.icon || catOf(q.cat).icon;
 const qVerb = q => subOf(q.cat, q.sub)?.verb || catOf(q.cat).verb;
-const qKind = q => { const s = subOf(q.cat, q.sub); return s ? `${catOf(q.cat).ko} › ${s.ko}` : catOf(q.cat).ko; };
+const qKind = q => { const s = subOf(q.cat, q.sub); return s ? `${catOf(q.cat).ko} › ${s._parent ? s._parent.ko + ' › ' : ''}${s.ko}` : catOf(q.cat).ko; };
 // three rooms per life floor: two along the back glass and one at the front-left; the corridor runs along z=11.
 // front: which side the door is on (1 = the room's high-z wall, 0 = its low-z wall)
 const ZONES = [
@@ -1907,7 +1922,11 @@ function withPacks(base, packs = []) {
         const have = findCat(c.id);
         if (!have) { (area.categories ||= []).push(tag({ ...c, subs: (c.subs || []).map(s => tag(s, id)) }, id)); continue; }
         const subs = (have.subs ||= []);            // a category that already exists only gains the pack's subs
-        for (const s of c.subs || []) if (!subs.some(x => x.id === s.id)) subs.push(tag(s, id));
+        for (const s of c.subs || []) {
+          const ex = subs.find(x => x.id === s.id);
+          if (!ex) { subs.push(tag({ ...s, subs: (s.subs || []).map(t => tag(t, id)) }, id)); continue; }
+          for (const t of s.subs || []) if (!(ex.subs ||= []).some(x => x.id === t.id)) ex.subs.push(tag(t, id));
+        }
       }
     }
     for (const f of p.floors || []) if (!B.floors.some(x => x.id === f.id)) B.floors.push(tag(f, id));
@@ -1921,7 +1940,8 @@ function withPacks(base, packs = []) {
     a.categories = (a.categories || []).filter(c => !hide.has('cat:' + c.id));
     for (const c of a.categories) {
       if (ed['cat:' + c.id]) Object.assign(c, ed['cat:' + c.id]);
-      c.subs = (c.subs || []).filter(x => !hide.has(`sub:${c.id}/${x.id}`)).map(x => (ed[`sub:${c.id}/${x.id}`] ? { ...x, ...ed[`sub:${c.id}/${x.id}`] } : x));
+      const keep = x => !hide.has(`sub:${c.id}/${x.id}`), edit = x => (ed[`sub:${c.id}/${x.id}`] ? { ...x, ...ed[`sub:${c.id}/${x.id}`] } : x);
+      c.subs = (c.subs || []).filter(keep).map(edit).map(x => ({ ...x, subs: (x.subs || []).filter(keep).map(edit) }));
     }
   }
   B.floors = B.floors.filter(f => !hide.has('floor:' + f.id)).map(f => (ed['floor:' + f.id] ? { ...f, ...ed['floor:' + f.id] } : f));
@@ -2261,7 +2281,7 @@ function lifeLeg(k) {
 function lifeWalk(c, to, cb) {
   const a = lifeLeg(c.lifeAt || 'lift'), b = lifeLeg(to);
   const pts = [...a.inner.slice().reverse(), a.c, b.c, ...b.inner].map(([x, z]) => ({ x, z }));
-  const q = c === me && focusRun && questById(focusRun.id), sp = q && q.cat === to && subOf(q.cat, q.sub)?.pose;
+  const q = c === me && runQ(), sp = q && q.cat === to && subOf(q.cat, q.sub)?.pose;
   const spot = POSES.includes(sp) && sp !== b.spot.pose ? { ...b.spot, pose: sp } : b.spot;
   c.onArrive = cb || null; c.spot = spot; c.room = spot.room; c.seated = 0; c.lifeAt = to;
   c.path = instant ? [] : [...pts, spot.node];
@@ -2984,10 +3004,10 @@ function doingPhrase(name, label) {
 }
 function thoughtOf(c) {
   if (c === me) {
-    const q = focusRun && questById(focusRun.id);
+    const q = runQ();
     if (!q || me.room !== (inOffice(q.cat) ? ME_SEAT.room : 'life:' + q.cat) || me.path.length) return null;
-    const left = focusRun.start + q.minutes * 60e3 - Date.now();
-    return { main: `${qIcon(q)} ${q.title}`, sub: left > 0 ? `⏱ ${mmss(left)} 남음 · ${qVerb(q)}` : '✅ 시간 완료! 아래 완료 버튼을 눌러요' };
+    const st = pomo(focusRun);
+    return { main: `${qIcon(q)} ${q.title}`, sub: st.phase === 'focus' ? `🍅 ${mmss(st.left)} · ${st.block}${focusRun.blocks ? '/' + focusRun.blocks : ''}번째 집중 · ${qVerb(q)}` : st.phase === 'break' ? `☕ ${mmss(st.left)} 쉬는 중` : '✅ 다 했어요! 완료를 눌러요' };
   }
   if (c.pose === 'sleep') return null;
   const thinking = c.thinkUntil > now;
@@ -3268,7 +3288,7 @@ function renderFloors() {
 function updateHeader() {
   const f = floors.find(x => x.id === cur.floor);
   if (f?.life) {
-    const q = focusRun && questById(focusRun.id);
+    const q = runQ();
     document.getElementById('proj').textContent = f.name;
     document.getElementById('sessTitle').textContent = q ? `▶ ${qIcon(q)} ${q.title}` : '📜 퀘스트를 골라 시작해 보세요';
     document.getElementById('kvProj').textContent = f.place ? `라이프 아일랜드 · ${f.sub}` : '라이프 아일랜드 · ' + (f.zones.map(k => catOf(k).ko).join(' · ') || '빈 건물');
@@ -3798,7 +3818,7 @@ function undo() {
   undoEl.classList.remove('show');
   if (!u) { banner('되돌릴 게 없어요'); return; }
   game = JSON.parse(u.game);
-  if (focusRun && !questById(focusRun.id)) { focusRun = null; saveFocus(); }
+  if (focusRun && !runQ()) { focusRun = null; saveFocus(); }
   // an outfit you bought and are wearing goes back to the default when the purchase is undone
   let look = false; for (const [k, v] of Object.entries(myLook)) if (isLocked(k, v)) { myLook = { ...myLook, [k]: ME_DEFAULT[k] }; look = true; }
   if (look) { LOOKS.me = myLook; try { localStorage.setItem('claudeTower.me', JSON.stringify(myLook)); } catch {} me?.rebuild(myLook); }
@@ -3824,9 +3844,9 @@ const questById = id => game.quests.find(q => q.id === id);
 const onLife = () => String(cur.floor || '').startsWith('life:');
 function startQuest(id) {
   const q = questById(id); if (!q) return;
-  focusRun = { id, start: Date.now(), minutes: q.minutes, rang: false }; saveFocus();
+  focusRun = { id, start: Date.now(), minutes: q.minutes, ...pomoPlan(q), rang: false, seen: '' }; saveFocus();
   qpanel.classList.remove('open');
-  log('나', `▶ 퀘스트 시작 — ${qIcon(q)} ${q.title} (${q.minutes}분)`);
+  log('나', `▶ 퀘스트 시작 — ${qIcon(q)} ${q.title} (${q.minutes}분 · 🍅 ${focusRun.focus}분씩)`);
   goToSkill(q.cat);
   renderGame();
 }
@@ -3852,8 +3872,8 @@ function completeQuest(id) {
   const q = questById(id); if (!q || isDone(q)) return;
   checkpoint(`✓ ${q.title} 완료`);
   const s = gameStats(), running = focusRun?.id === id;
-  const elapsed = running ? (Date.now() - focusRun.start) / 60e3 : 0;
-  const full = running && elapsed >= q.minutes * 0.95;
+  const st = running ? pomo(focusRun) : null, elapsed = st ? st.focusedMs / 60e3 : 0;
+  const full = running && (st.phase === 'done' || elapsed >= q.minutes * 0.95);
   const xp = Math.round(questXP(q) * (1 + (full ? 0.5 : 0) + Math.min(0.5, s.streak * 0.1) + pathBonus(q.cat)));
   const skillBefore = lvlOf(s.by[q.cat] || 0);
   q.done = [...(q.done || []), dayKey()];
@@ -3875,11 +3895,85 @@ function completeQuest(id) {
 }
 function quitQuest() {
   if (!focusRun) return;
-  const q = questById(focusRun.id);
+  const q = runQ();
   focusRun = null; saveFocus();
-  if (q) log('나', `⏹ 퀘스트 중단 — ${q.title}`);
+  if (q) log('나', `⏹ ${q.free ? '집중' : '퀘스트'} 중단 — ${q.title}`);
   if (onLife() && !isPlace(cur.floor) && me) lifeWalk(me, 'lobby');
   renderGame();
+}
+
+// ---------- pomodoro: every quest and action runs in focus blocks with breaks ----------
+// Focus length follows the kind of activity: a node's or quest's own `focus` (minutes) wins, then keywords, then the pose.
+const FOCUS_RULES = [
+  [/단어|어휘|암기|플래시|vocab|anki|flashcard/i, 15],
+  [/스피킹|speaking|발음|쉐도잉|shadow|회화/i, 20],
+  [/명상|감사|일기|저널|journal|meditat|호흡/i, 10],
+  [/정리|청소|빨래|설거지|집안일|clean|laundry|chore/i, 15],
+  [/강의|코스|course|lecture|독서|읽기|공부|스터디|study|read/i, 25],
+  [/코딩|개발|code|coding|\bai\b|llm|논문|paper|메모|memo|글쓰기|작문|writing|분석|리서치|research|모델|deep/i, 50],
+  [/피아노|연습|드로잉|그림|악기|기타|노래|practice|draw/i, 30],
+];
+const POSE_FOCUS = { meditate: 10, sweep: 15, lift: 30, ballet: 30, pilates: 30, piano: 30, read: 25, write: 25, type: 25 };
+function focusMinutes(q) {
+  const s = subOf(q.cat, q.sub), c = SKILLS[q.cat];
+  const own = q.focus || s?.focus || s?._parent?.focus || c?.focus;
+  if (own) return own;
+  const text = [q.title, s?.ko, s?._parent?.ko, c?.ko, c?.en].filter(Boolean).join(' ');
+  for (const [re, m] of FOCUS_RULES) if (re.test(text)) return m;
+  return POSE_FOCUS[s?.pose || c?.pose] || 25;
+}
+const breakMinutes = f => (f <= 15 ? 3 : f >= 45 ? 10 : 5);
+// the plan for a run: block lengths, short breaks, a long break after every 4th block; a quest's minutes split into blocks,
+// a free action keeps going until you finish it
+function pomoPlan(q) {
+  const f = Math.max(1, Math.min(focusMinutes(q), q.free ? 999 : q.minutes || 25));
+  return { focus: f, brk: breakMinutes(f), blocks: q.free ? 0 : Math.max(1, Math.round((q.minutes || f) / f)) };
+}
+// where a run stands right now, worked out from its start time (so it survives a reload)
+function pomo(run) {
+  const f = (run.focus || run.minutes || 25) * 60e3, b = (run.brk ?? 0) * 60e3, n = run.blocks ?? 1, longB = 15 * 60e3;
+  let t = Math.max(0, Date.now() - run.start - (run.paused || 0)), focusedMs = 0;
+  for (let i = 1; ; i++) {
+    if (t < f) return { phase: 'focus', block: i, left: f - t, len: f, focusedMs: focusedMs + t };
+    t -= f; focusedMs += f;
+    if (n && i >= n) return { phase: 'done', block: n, left: 0, len: f, focusedMs };
+    const br = i % 4 === 0 ? longB : b;
+    if (t < br) return { phase: 'break', block: i, left: br - t, len: br, focusedMs, long: i % 4 === 0 };
+    t -= br;
+  }
+}
+// a free action: start focusing on a category, subcategory or topic without a quest
+function startAction(cat, sub = null) {
+  if (!SKILLS[cat]) return;
+  const node = subOf(cat, sub), title = node ? (node._parent ? `${node._parent.ko} › ${node.ko}` : node.ko) : catOf(cat).ko;
+  const q = { free: true, title, cat, sub };
+  focusRun = { id: 'free:' + Date.now().toString(36), free: true, title, cat, sub, start: Date.now(), ...pomoPlan(q), minutes: 0, rang: false, seen: '' };
+  saveFocus(); qpanel.classList.remove('open');
+  log('나', `▶ 집중 시작 — ${qIcon(focusRun)} ${title} (🍅 ${focusRun.focus}분씩)`);
+  goToSkill(cat); renderGame();
+}
+// what is running: a quest, or the free action itself (it carries cat, sub and title like a quest)
+const runQ = () => (focusRun ? (focusRun.free ? focusRun : questById(focusRun.id)) : null);
+function completeFree() {
+  const run = focusRun; if (!run?.free) return;
+  const st = pomo(run), mins = Math.round(st.focusedMs / 60e3);
+  checkpoint(`✓ ${run.title} 집중 마침`);
+  focusRun = null; saveFocus();
+  if (mins < 1) { banner('1분은 넘게 집중해야 기록돼요'); renderGame(); return; }
+  const s = gameStats(), fullBlock = st.focusedMs >= run.focus * 60e3;
+  const xp = Math.round((Math.min(10, mins) + mins) * (1 + Math.min(0.5, s.streak * 0.1) + pathBonus(run.cat)));
+  game.history.push({ ts: Date.now(), title: run.title, cat: run.cat, ...(run.sub ? { sub: run.sub } : {}), xp, minutes: mins, focused: fullBlock, free: true });
+  saveGame();
+  if (me && !me.hidden) { me.heartUntil = now + 3500; me.bubble('report', `✨ +${xp} XP · ${run.title} ${mins}분 집중`, 4000); }
+  log('나', `✅ ${qIcon(run)} ${run.title} — ${mins}분 집중 +${xp} XP`);
+  const after = gameStats();
+  banner(after.level > s.level ? `🎉 레벨 업! 나 Lv.${after.level}` : `🍅 ${mins}분 집중 · +${xp} XP`);
+  checkPaths(after.level); renderGame();
+}
+// the clock: a ring that empties through the current block, with the block count and what comes next
+function pomoRing(st) {
+  const r = 15, C = 2 * Math.PI * r, frac = st.len ? 1 - st.left / st.len : 1;
+  return `<svg class="pring ${st.phase}" viewBox="0 0 36 36" aria-hidden="true"><circle cx="18" cy="18" r="${r}" class="trk"/><circle cx="18" cy="18" r="${r}" class="val" stroke-dasharray="${C.toFixed(1)}" stroke-dashoffset="${(C * frac).toFixed(1)}"/></svg>`;
 }
 function addQuest(title, cat, minutes, repeat, sub, subtasks) {
   const per = /^([wm])(\d)$/.exec(repeat), times = per ? Number(per[2]) : 1;
@@ -4289,7 +4383,7 @@ qpanel.addEventListener('click', ev => {
   else if (a === 'join') { ev.stopPropagation(); joinPath(id); }
   else if (a === 'leave') { checkpoint('진로 내려놓기'); joinPath(null); }
 });
-const subOptions = k => `<option value="">— 하위 없음</option>` + catOf(k).subs.map(x => `<option value="${esc(x.id)}">${x.icon || '•'} ${esc(x.ko)}</option>`).join('');
+const subOptions = k => `<option value="">— 하위 없음</option>` + subNodes(k).map(x => `<option value="${esc(x.id)}">${x._parent ? '\u00a0\u00a0↳ ' : ''}${x.icon || '•'} ${esc(x.ko)}</option>`).join('');
 // ---------- 📦 코스: ready-made life plans. Starting one adds its floors, skills, path, goals and starter quests ----------
 let openCourse = null, leaveCourse = null;
 function courseStats(p) {
@@ -4344,10 +4438,10 @@ qpanel.addEventListener('click', ev => {
 });
 // ---------- 오늘 / 전체: floor > category > quest, and in 전체 everything can be edited in place ----------
 // editing state (only one form open at a time keeps the list calm)
-let editQuest = null, addSubFor = null, editCat = null, quickCat = null, newCatOpen = false, editFloor = null;
+let editQuest = null, addSubFor = null, editCat = null, quickCat = null, newCatOpen = false, editFloor = null, addTopicFor = null, addSubHere = null;
 const REPEAT_OPTS = [['daily', '매일'], ['weekly', '매주'], ['monthly', '매월'], ['once', '한 번']];
 const catOptions = sel => AREAS.map(a => `<optgroup label="${esc(`${a.icon || ''} ${a.ko}`)}">${(a.categories || []).filter(c => SKILLS[c.id]).map(c => `<option value="${esc(c.id)}"${c.id === sel ? ' selected' : ''}>${c.icon} ${esc(c.ko)}</option>`).join('')}</optgroup>`).join('');
-const subOptionsSel = (k, sel) => `<option value="">— 하위 없음</option>` + catOf(k).subs.map(x => `<option value="${esc(x.id)}"${x.id === sel ? ' selected' : ''}>${x.icon || '•'} ${esc(x.ko)}</option>`).join('');
+const subOptionsSel = (k, sel) => `<option value="">— 하위 없음</option>` + subNodes(k).map(x => `<option value="${esc(x.id)}"${x.id === sel ? ' selected' : ''}>${x._parent ? '\u00a0\u00a0↳ ' : ''}${x.icon || '•'} ${esc(x.ko)}</option>`).join('');
 function questRow(q, at, all) {
   const done = isDone(q), run = focusRun?.id === q.id, st = q.subtasks || [], ticked = st.filter(x => periodDone(q.repeat, x.done)).length;
   if (all && editQuest === q.id) return questForm(q);
@@ -4407,16 +4501,25 @@ function questListHTML(today) {
     ? `<form class="qadd qedit" data-form="floor" data-id="${esc(src)}"><div class="qedit-h">✏️ 층 이름</div><div class="qrow"><input name="name" value="${esc(title)}" maxlength="24" required aria-label="층 이름"><button>저장</button><button type="button" class="ghost" data-a="cancel">취소</button></div></form>`
     : `<div class="qgroup"><b>${esc(title)}</b><span>${l.filter(q => !isDone(q)).length || '✓'}</span>${!today && src ? `<button data-c="addhere" data-id="${esc(src)}" title="이 층에 새 카테고리 (방이 생겨요)">＋</button><button data-c="editfloor" data-id="${esc(src)}" title="층 이름 바꾸기">✏️</button><button data-c="delfloor" data-id="${esc(src)}" title="층과 그 안의 카테고리 지우기 (되돌리기 가능)">🗑</button>` : ''}</div>`;
   const catHead = (c, l) => `<div class="qcat"><span>${catOf(c).icon} ${esc(catOf(c).ko)}</span><small>${l.length}</small>${today ? '' :
-    `<button data-c="edit" data-id="${esc(c)}" title="카테고리 고치기">✏️</button><button data-c="addq" data-id="${esc(c)}" title="이 카테고리에 퀘스트 추가">＋</button>${SKILLS[c] ? `<button data-c="delcat" data-id="${esc(c)}" title="카테고리와 그 퀘스트 지우기 (되돌리기 가능)">🗑</button>` : ''}`}</div>`;
+    `${SKILLS[c] ? `<button data-c="act" data-id="${esc(c)}" title="지금 집중 시작 (🍅 ${focusMinutes({ title: catOf(c).ko, cat: c })}분)">▶</button>` : ''}<button data-c="edit" data-id="${esc(c)}" title="카테고리 고치기">✏️</button><button data-c="addq" data-id="${esc(c)}" title="이 카테고리에 퀘스트 추가">＋</button>${SKILLS[c] ? `<button data-c="delcat" data-id="${esc(c)}" title="카테고리와 그 퀘스트 지우기 (되돌리기 가능)">🗑</button>` : ''}`}</div>`;
   const quick = c => `<form class="qadd qinline" data-form="quick" data-id="${esc(c)}"><input name="t" maxlength="60" required placeholder="${esc(catOf(c).ko)} 퀘스트 (예: 10분만)" autofocus>
     <input name="m" type="number" min="1" max="600" value="15" aria-label="분" class="num"><select name="r">${optHTML(REPEAT_OPTS, 'daily')}</select><button>추가</button><button type="button" class="ghost" data-a="cancel">취소</button></form>`;
+  const subTree = c => {
+    const cat = SKILLS[c]; if (!cat) return '';
+    const row = (node, depth) => `<div class="qsubt d${depth}"><span>${depth > 1 ? '·' : '↳'} ${depth > 1 ? '' : (node.icon || '•') + ' '}${esc(node.ko)}</span><small>${game.quests.filter(q => q.cat === c && (q.sub === node.id || (node.subs || []).some(t => t.id === q.sub))).length || ''}</small>
+      <button data-c="act" data-id="${esc(c)}" data-sub="${esc(node.id)}" title="지금 집중 시작 (🍅 ${focusMinutes({ title: node.ko, cat: c, sub: node.id })}분)">▶</button>${depth === 1 ? `<button data-c="addtopic" data-id="${esc(c)}" data-sub="${esc(node.id)}" title="이 아래에 주제 추가">＋</button>` : ''}<button data-c="delsub" data-id="${esc(c)}" data-sub="${esc(node.id)}" title="지우기 (되돌리기 가능)">🗑</button></div>`
+      + (depth === 1 && addTopicFor === `${c}/${node.id}` ? `<form class="qadd qinline d2" data-form="newtopic" data-id="${esc(c)}" data-sub="${esc(node.id)}"><input name="t" maxlength="30" required placeholder="'${esc(node.ko)}' 아래 주제 (예: Karpathy 강의)" autofocus><button>추가</button><button type="button" class="ghost" data-a="cancel">취소</button></form>` : '');
+    return `<div class="qtree">${(cat.subs || []).map(x => row(x, 1) + (x.subs || []).map(t => row(t, 2)).join('')).join('')}`
+      + (addSubHere === c ? `<form class="qadd qinline d1" data-form="newsubq" data-id="${esc(c)}"><input name="t" maxlength="30" required placeholder="'${esc(cat.ko)}' 아래 하위 카테고리 (예: LLM 코스)" autofocus><button>추가</button><button type="button" class="ghost" data-a="cancel">취소</button></form>`
+        : `<button class="lnk add-sub" data-c="addsubhere" data-id="${esc(c)}">＋ 하위 카테고리</button>`) + '</div>';
+  };
   const byCat = (zones, l) => {
     // in 전체 every category on the floor shows, even an empty one, so it can be edited or filled
     const cats = today ? [...new Set(l.map(q => q.cat))] : [...new Set([...zones, ...l.map(q => q.cat)])];
     cats.sort((a, b) => zones.indexOf(a) - zones.indexOf(b));
     return cats.map(c => {
       const ql = l.filter(q => q.cat === c);
-      return catHead(c, ql) + (editCat === c && SKILLS[c] ? catForm(SKILLS[c]) : '') + (quickCat === c ? quick(c) : '')
+      return catHead(c, ql) + (editCat === c && SKILLS[c] ? catForm(SKILLS[c]) : '') + (quickCat === c ? quick(c) : '') + (today ? '' : subTree(c))
         + (ql.map(q => questRow(q, null, !today)).join('') || (today ? '' : '<div class="none">퀘스트가 없어요 · ＋로 추가</div>'));
     }).join('');
   };
@@ -4459,6 +4562,15 @@ function addUserSub(catId, ko) {
   const c = SKILLS[catId];
   (uc.subs ||= []).push({ id: newId('s'), ko, en: ko, icon: '•', verb: `${ko} 하는 중`, pose: c?.pose || 'type' });
 }
+function addUserTopic(catId, subId, ko) {
+  const { a } = cfgCatAll(catId); if (!a) return;
+  const ua = userAreaFor(a.id); let uc = ua.categories.find(x => x.id === catId);
+  if (!uc) { uc = { id: catId, subs: [] }; ua.categories.push(uc); }
+  let us = (uc.subs ||= []).find(x => x.id === subId);
+  if (!us) { us = { id: subId, subs: [] }; uc.subs.push(us); }
+  const parent = subOf(catId, subId);
+  (us.subs ||= []).push({ id: newId('t'), ko, en: ko, verb: `${ko} 하는 중`, ...(parent?.pose ? { pose: parent.pose } : {}) });
+}
 const cfgCatAll = id => { for (const a of BUILDING.areas) { const c = (a.categories || []).find(x => x.id === id); if (c) return { a, c }; } return {}; };
 qpanel.addEventListener('click', ev => {
   const b = ev.target.closest('button[data-c]'); if (!b) return;
@@ -4467,6 +4579,9 @@ qpanel.addEventListener('click', ev => {
   else if (c === 'addq') { quickCat = quickCat === id ? null : id; editCat = null; }
   else if (c === 'newcat') newCatOpen = true;
   else if (c === 'addhere') newCatOpen = newCatOpen === id ? false : id;
+  else if (c === 'act') { startAction(id, b.dataset.sub || null); return; }
+  else if (c === 'addtopic') { const k = `${id}/${b.dataset.sub}`; addTopicFor = addTopicFor === k ? null : k; addSubHere = null; }
+  else if (c === 'addsubhere') { addSubHere = addSubHere === id ? null : id; addTopicFor = null; }
   else if (c === 'delsub') { checkpoint(`🗑 하위 '${subOf(id, b.dataset.sub)?.ko || ''}' 지우기`); userHide(`sub:${id}/${b.dataset.sub}`); saveUser(); }
   else if (c === 'addsub') {
     const v = f?.elements.newsub.value.trim(); if (!v) { f?.elements.newsub.focus(); return; }
@@ -4492,6 +4607,12 @@ qpanel.addEventListener('submit', ev => {
   if (kind === 'floor') {
     if (!v('name')) return;
     checkpoint(`✏️ 층 이름 → ${v('name')}`); userEdit('floor:' + f.dataset.id, { name: v('name'), en: v('name').replace(/^[^\p{L}\p{N}]+/u, '').trim() || v('name') }); editFloor = null; saveUser(); return renderQuestPanel();
+  }
+  if (kind === 'newtopic' || kind === 'newsubq') {
+    const t = v('t'); if (!t) return;
+    checkpoint(`＋ '${t}' 추가`);
+    if (kind === 'newtopic') addUserTopic(f.dataset.id, f.dataset.sub, t.slice(0, 30)); else addUserSub(f.dataset.id, t.slice(0, 30));
+    addTopicFor = addSubHere = null; saveUser(); return renderQuestPanel();
   }
   if (kind === 'addsub') {
     const q = questById(f.dataset.id); if (!q || !v('t')) return;
@@ -4599,7 +4720,7 @@ qpanel.addEventListener('click', ev => {
   else if (b.dataset.a === 'del') removeQuest(id);
   else if (b.dataset.a === 'addst') { addSubFor = addSubFor === id ? null : id; editQuest = null; renderQuestPanel(); }
   else if (b.dataset.a === 'edit') { editQuest = editQuest === id ? null : id; addSubFor = null; renderQuestPanel(); }
-  else if (b.dataset.a === 'cancel') { editQuest = addSubFor = editCat = quickCat = editFloor = null; newCatOpen = false; editGoal = null; newGoalOpen = false; renderQuestPanel(); }
+  else if (b.dataset.a === 'cancel') { editQuest = addSubFor = editCat = quickCat = editFloor = addTopicFor = addSubHere = null; newCatOpen = false; editGoal = null; newGoalOpen = false; renderQuestPanel(); }
 });
 qpanel.addEventListener('submit', ev => {
   ev.preventDefault();
@@ -4619,24 +4740,37 @@ qpanel.addEventListener('change', ev => {
 });
 document.getElementById('questBtn').onclick = () => { qpanel.classList.toggle('open'); if (qpanel.classList.contains('open')) renderQuestPanel(); };
 function renderFocus() {
-  const q = focusRun && questById(focusRun.id);
+  const q = runQ();
   if (focusRun && !q && gameReady) { focusRun = null; saveFocus(); }
   focusEl.classList.toggle('on', !!q);
   if (!q) { if (me && me.kind === 'me') me.current = ''; return; }
-  const left = focusRun.start + q.minutes * 60e3 - Date.now(), here = inOffice(q.cat) ? !onLife() && me?.room === ME_SEAT.room : cur.floor === SKILL_ZONE[q.cat]?.floor;
-  if (left <= 0 && !focusRun.rang) { focusRun.rang = true; saveFocus(); banner(`⏰ ${q.title} — 시간 다 됐어요!`); me?.bubble('me', '⏰ 다 했다! 완료 누르기', 5000); }
-  const html = `<span class="fi">${qIcon(q)}</span><div class="ft"><b>${esc(q.title)}</b><small>${left > 0 ? `⏱ ${mmss(left)} 남음` : '✅ 시간 완료! 완주 보너스 +50%'} · ${esc(qVerb(q))}</small><div class="fbar"><i style="width:${Math.min(100, (1 - left / (q.minutes * 60e3)) * 100).toFixed(1)}%"></i></div></div>
-    ${here ? '' : '<button data-f="go" title="그 방으로 가기">🛗</button>'}<button data-f="done" class="ok">✓ 완료</button><button data-f="quit" title="그만두기">✕</button>`;
+  if (!focusRun.focus) Object.assign(focusRun, { focus: focusRun.minutes || 25, brk: 0, blocks: 1 });   // a run started before pomodoro
+  const st = pomo(focusRun), here = inOffice(q.cat) ? !onLife() && me?.room === ME_SEAT.room : cur.floor === SKILL_ZONE[q.cat]?.floor;
+  const key = `${st.phase}${st.block}`;
+  if (key !== focusRun.seen) {                    // announce each change of phase once
+    const first = !focusRun.seen; focusRun.seen = key; if (st.phase === 'done') focusRun.rang = true; saveFocus();
+    if (!first || st.phase !== 'focus') {
+      if (st.phase === 'break') { banner(st.long ? '🛋️ 4번 집중했어요 · 15분 길게 쉬어요' : `☕ ${Math.round(st.len / 60e3)}분 쉬어요`); me?.bubble('me', '☕ 잠깐 스트레칭~', 3500); }
+      else if (st.phase === 'focus') { banner(`🍅 ${st.block}번째 집중 · ${focusRun.focus}분`); me?.bubble('me', '🍅 다시 집중!', 2500); }
+      else { banner(`⏰ ${q.title} — 다 했어요!`); me?.bubble('me', '⏰ 다 했다! 완료 누르기', 5000); }
+    }
+  }
+  if (me && !me.path.length && here) { const want = st.phase === 'break' ? 'stretch' : me.spot?.pose; if (want && me.pose !== want && me.pose !== 'wave') me.pose = want; }
+  const n = focusRun.blocks, focusedMin = Math.floor(st.focusedMs / 60e3);
+  const label = st.phase === 'focus' ? `🍅 집중 ${st.block}${n ? '/' + n : ''}` : st.phase === 'break' ? (st.long ? '🛋️ 긴 휴식' : '☕ 휴식') : '✅ 끝';
+  const html = `<div class="pclock">${pomoRing(st)}<span>${st.phase === 'done' ? '✓' : mmss(st.left)}</span></div><div class="ft"><b>${qIcon(q)} ${esc(q.title)}</b><small>${label} · ${focusRun.focus}분씩 · 집중 ${focusedMin}분${n ? ` / ${n * focusRun.focus}분` : ''}${st.phase === 'done' && !q.free ? ' · 완주 보너스 +50%' : ''}</small></div>
+    ${st.phase === 'break' ? '<button data-f="skip" title="휴식 건너뛰기">⏭</button>' : ''}${here ? '' : '<button data-f="go" title="그 방으로 가기">🛗</button>'}<button data-f="done" class="ok">✓ ${q.free ? '마치기' : '완료'}</button><button data-f="quit" title="그만두기">✕</button>`;
   if (focusEl.dataset.h !== html) { focusEl.innerHTML = html; focusEl.dataset.h = html; }
   if (me) me.current = here ? `${qIcon(q)} ${q.title}` : '';
 }
 focusEl.addEventListener('click', ev => {
   const b = ev.target.closest('button[data-f]'); if (!b || !focusRun) return;
-  if (b.dataset.f === 'done') completeQuest(focusRun.id);
+  if (b.dataset.f === 'done') { if (focusRun.free) completeFree(); else completeQuest(focusRun.id); }
   else if (b.dataset.f === 'quit') quitQuest();
-  else goToSkill(questById(focusRun.id).cat);
+  else if (b.dataset.f === 'skip') { const st = pomo(focusRun); if (st.phase === 'break') { focusRun.start -= st.left; saveFocus(); renderFocus(); } }
+  else goToSkill(runQ().cat);
 });
-const isLifeActive = id => { const q = focusRun && questById(focusRun.id); return !!q && SKILL_ZONE[q.cat]?.floor === id; };
+const isLifeActive = id => { const q = runQ(); return !!q && SKILL_ZONE[q.cat]?.floor === id; };
 function lifeFloorList() {
   const fac = LIFE.map(def => {
     const last = Math.max(0, ...game.history.filter(h => def.zones.includes(h.cat)).map(h => h.ts));
@@ -4660,7 +4794,7 @@ function enterLife(f, viaLift) {
     me.later(500, () => me.bubble('me', f.id === HOME ? (worn ? '언젠가 여기도 근사해질 거야… 🛍️' : '우리 집 최고! ✨') : '오늘은 어디서 퀘스트를 할까? 📜', 3000));
     return;
   }
-  const q = focusRun && questById(focusRun.id), dest = q && SKILL_ZONE[q.cat]?.floor === f.id ? q.cat : 'lobby';
+  const q = runQ(), dest = q && SKILL_ZONE[q.cat]?.floor === f.id ? q.cat : 'lobby';
   me.lifeAt = 'lift';
   if (viaLift) {
     openLift('liftB', 2000);

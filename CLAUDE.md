@@ -40,6 +40,9 @@ A gamified habit app: your to-dos are quests that earn XP and coins. Your life h
 
 ## Where we left off (2026-10-27)
 
+- Topics: subcategories can hold `subs` (`subNodes()`, `subOf()` search both levels; `addUserTopic()`; packs merge topics into existing subs; hide/edit reach topics). 전체 shows each category's tree (`subTree()`), with ▶ (`startAction()`), ＋ topic, ＋ 하위 카테고리 and 🗑.
+- Pomodoro (`FOCUS_RULES`, `focusMinutes()`, `pomoPlan()`, `pomo()`): runs are derived from their start time, so they survive reloads; `runQ()` is the running quest or free action; `completeFree()` records free actions. During breaks the character stretches.
+
 - Adding a subject: ＋ on each floor heading in 전체 (`addhere`) puts the new category's room in that floor's first empty slot (or a new slot; a full floor carries on as "<name> 2"), saved as a `floor:<id>` edit in the user layer. Room concepts from the name: `CONCEPTS` / `conceptFor()` pick template, icon and pose; new templates `lab`, `atelier`, `kitchen`. Renaming a floor also sets its `en` (the lobby floor text).
 - Python on Windows: read and write repo files in text mode (the working copy has CRLF; anchors with `
 ` fail on raw bytes).
