@@ -275,6 +275,7 @@ h2 small{font-size:10px;font-weight:600;letter-spacing:1.5px;color:var(--faint)}
 .qsubt button:hover{border-color:var(--accent);color:var(--accent)}
 .qtree .lnk.add-sub{background:none;border:0;color:var(--faint);cursor:pointer;font-size:11px;padding:3px 0}.qtree .lnk.add-sub:hover{color:var(--accent)}
 .qinline.d1,.qinline.d2{margin:4px 0}.qinline.d2{margin-left:18px}
+.qtree .qedit{margin:4px 0 8px}.qtree .qedit.d2{margin-left:18px}
 .swatch{width:16px;height:16px;border-radius:50%;display:inline-block;border:2px solid #ffffff44}
 .opts button.lock{opacity:.6;position:relative}
 .opts .sw-c.lock::after{content:"🔒";position:absolute;font-size:9px;right:-5px;bottom:-5px}
@@ -1393,7 +1394,8 @@ const SKILLS = {}, AREAS = [], LIFE = [];                  // filled from the co
 const GONE = { ko: '(지운 카테고리)', en: '?', icon: '❔', verb: '', subs: [] };
 const catOf = k => SKILLS[k] || GONE;
 // floor › category › subcategory › topic: subcategories may hold topics (subs[].subs); a topic takes its parent's icon, pose and verb
-const subNodes = k => catOf(k).subs.flatMap(x => [x, ...(x.subs || []).map(t => ({ icon: x.icon, pose: x.pose, verb: x.verb, ...t, _parent: x }))]);
+const setOnly = o => Object.fromEntries(Object.entries(o).filter(([, v]) => v != null && v !== ''));
+const subNodes = k => catOf(k).subs.flatMap(x => [x, ...(x.subs || []).map(t => ({ icon: x.icon, pose: x.pose, verb: x.verb, ...setOnly(t), _parent: x }))]);
 const subOf = (k, s) => (s && subNodes(k).find(x => x.id === s)) || null;
 const qIcon = q => subOf(q.cat, q.sub)?.icon || catOf(q.cat).icon;
 const qVerb = q => subOf(q.cat, q.sub)?.verb || catOf(q.cat).verb;
@@ -4438,7 +4440,7 @@ qpanel.addEventListener('click', ev => {
 });
 // ---------- 오늘 / 전체: floor > category > quest, and in 전체 everything can be edited in place ----------
 // editing state (only one form open at a time keeps the list calm)
-let editQuest = null, addSubFor = null, editCat = null, quickCat = null, newCatOpen = false, editFloor = null, addTopicFor = null, addSubHere = null;
+let editQuest = null, addSubFor = null, editCat = null, quickCat = null, newCatOpen = false, editFloor = null, addTopicFor = null, addSubHere = null, editNode = null;
 const REPEAT_OPTS = [['daily', '매일'], ['weekly', '매주'], ['monthly', '매월'], ['once', '한 번']];
 const catOptions = sel => AREAS.map(a => `<optgroup label="${esc(`${a.icon || ''} ${a.ko}`)}">${(a.categories || []).filter(c => SKILLS[c.id]).map(c => `<option value="${esc(c.id)}"${c.id === sel ? ' selected' : ''}>${c.icon} ${esc(c.ko)}</option>`).join('')}</optgroup>`).join('');
 const subOptionsSel = (k, sel) => `<option value="">— 하위 없음</option>` + subNodes(k).map(x => `<option value="${esc(x.id)}"${x.id === sel ? ' selected' : ''}>${x._parent ? '\u00a0\u00a0↳ ' : ''}${x.icon || '•'} ${esc(x.ko)}</option>`).join('');
@@ -4504,10 +4506,21 @@ function questListHTML(today) {
     `${SKILLS[c] ? `<button data-c="act" data-id="${esc(c)}" title="지금 집중 시작 (🍅 ${focusMinutes({ title: catOf(c).ko, cat: c })}분)">▶</button>` : ''}<button data-c="edit" data-id="${esc(c)}" title="카테고리 고치기">✏️</button><button data-c="addq" data-id="${esc(c)}" title="이 카테고리에 퀘스트 추가">＋</button>${SKILLS[c] ? `<button data-c="delcat" data-id="${esc(c)}" title="카테고리와 그 퀘스트 지우기 (되돌리기 가능)">🗑</button>` : ''}`}</div>`;
   const quick = c => `<form class="qadd qinline" data-form="quick" data-id="${esc(c)}"><input name="t" maxlength="60" required placeholder="${esc(catOf(c).ko)} 퀘스트 (예: 10분만)" autofocus>
     <input name="m" type="number" min="1" max="600" value="15" aria-label="분" class="num"><select name="r">${optHTML(REPEAT_OPTS, 'daily')}</select><button>추가</button><button type="button" class="ghost" data-a="cancel">취소</button></form>`;
+  // editing a subcategory or topic: name, icon, motion and pomodoro length (blank = automatic / from the level above)
+  const nodeForm = (c, node, depth) => {
+    const auto = focusMinutes({ title: node.ko, cat: c, sub: node.id }), parent = depth > 1 ? (SKILLS[c].subs || []).find(x => (x.subs || []).some(t => t.id === node.id)) : null;
+    const own = parent ? (parent.subs || []).find(t => t.id === node.id) : node;
+    return `<form class="qadd qedit d${depth}" data-form="node" data-id="${esc(c)}" data-sub="${esc(node.id)}"><div class="qedit-h">✏️ ${depth > 1 ? '주제' : '하위 카테고리'} 고치기</div>
+      <div class="qrow"><input name="icon" value="${esc(own.icon || '')}" maxlength="4" class="ic" placeholder="${esc(parent?.icon || '•')}" aria-label="아이콘"><input name="ko" value="${esc(node.ko)}" maxlength="30" required aria-label="이름"></div>
+      <div class="qrow"><select name="pose" aria-label="동작">${optHTML([['', depth > 1 ? `위와 같게 (${POSE_KO[parent?.pose || SKILLS[c].pose] || '자동'})` : `카테고리와 같게 (${POSE_KO[SKILLS[c].pose] || '자동'})`], ...POSE_OPTS], own.pose || '')}</select>
+      <label class="fld">🍅 <input name="focus" type="number" min="5" max="120" step="5" value="${own.focus || ''}" placeholder="${auto}">분씩</label></div>
+      <div class="qrow"><button>저장</button><button type="button" class="ghost" data-a="cancel">닫기</button></div></form>`;
+  };
   const subTree = c => {
     const cat = SKILLS[c]; if (!cat) return '';
     const row = (node, depth) => `<div class="qsubt d${depth}"><span>${depth > 1 ? '·' : '↳'} ${depth > 1 ? '' : (node.icon || '•') + ' '}${esc(node.ko)}</span><small>${game.quests.filter(q => q.cat === c && (q.sub === node.id || (node.subs || []).some(t => t.id === q.sub))).length || ''}</small>
-      <button data-c="act" data-id="${esc(c)}" data-sub="${esc(node.id)}" title="지금 집중 시작 (🍅 ${focusMinutes({ title: node.ko, cat: c, sub: node.id })}분)">▶</button>${depth === 1 ? `<button data-c="addtopic" data-id="${esc(c)}" data-sub="${esc(node.id)}" title="이 아래에 주제 추가">＋</button>` : ''}<button data-c="delsub" data-id="${esc(c)}" data-sub="${esc(node.id)}" title="지우기 (되돌리기 가능)">🗑</button></div>`
+      <button data-c="act" data-id="${esc(c)}" data-sub="${esc(node.id)}" title="지금 집중 시작 (🍅 ${focusMinutes({ title: node.ko, cat: c, sub: node.id })}분)">▶</button>${depth === 1 ? `<button data-c="addtopic" data-id="${esc(c)}" data-sub="${esc(node.id)}" title="이 아래에 주제 추가">＋</button>` : ''}<button data-c="editnode" data-id="${esc(c)}" data-sub="${esc(node.id)}" title="고치기">✏️</button><button data-c="delsub" data-id="${esc(c)}" data-sub="${esc(node.id)}" title="지우기 (되돌리기 가능)">🗑</button></div>`
+      + (editNode === `${c}/${node.id}` ? nodeForm(c, node, depth) : '')
       + (depth === 1 && addTopicFor === `${c}/${node.id}` ? `<form class="qadd qinline d2" data-form="newtopic" data-id="${esc(c)}" data-sub="${esc(node.id)}"><input name="t" maxlength="30" required placeholder="'${esc(node.ko)}' 아래 주제 (예: Karpathy 강의)" autofocus><button>추가</button><button type="button" class="ghost" data-a="cancel">취소</button></form>` : '');
     return `<div class="qtree">${(cat.subs || []).map(x => row(x, 1) + (x.subs || []).map(t => row(t, 2)).join('')).join('')}`
       + (addSubHere === c ? `<form class="qadd qinline d1" data-form="newsubq" data-id="${esc(c)}"><input name="t" maxlength="30" required placeholder="'${esc(cat.ko)}' 아래 하위 카테고리 (예: LLM 코스)" autofocus><button>추가</button><button type="button" class="ghost" data-a="cancel">취소</button></form>`
@@ -4580,7 +4593,8 @@ qpanel.addEventListener('click', ev => {
   else if (c === 'newcat') newCatOpen = true;
   else if (c === 'addhere') newCatOpen = newCatOpen === id ? false : id;
   else if (c === 'act') { startAction(id, b.dataset.sub || null); return; }
-  else if (c === 'addtopic') { const k = `${id}/${b.dataset.sub}`; addTopicFor = addTopicFor === k ? null : k; addSubHere = null; }
+  else if (c === 'addtopic') { const k = `${id}/${b.dataset.sub}`; addTopicFor = addTopicFor === k ? null : k; addSubHere = editNode = null; }
+  else if (c === 'editnode') { const k = `${id}/${b.dataset.sub}`; editNode = editNode === k ? null : k; addTopicFor = addSubHere = null; }
   else if (c === 'addsubhere') { addSubHere = addSubHere === id ? null : id; addTopicFor = null; }
   else if (c === 'delsub') { checkpoint(`🗑 하위 '${subOf(id, b.dataset.sub)?.ko || ''}' 지우기`); userHide(`sub:${id}/${b.dataset.sub}`); saveUser(); }
   else if (c === 'addsub') {
@@ -4607,6 +4621,14 @@ qpanel.addEventListener('submit', ev => {
   if (kind === 'floor') {
     if (!v('name')) return;
     checkpoint(`✏️ 층 이름 → ${v('name')}`); userEdit('floor:' + f.dataset.id, { name: v('name'), en: v('name').replace(/^[^\p{L}\p{N}]+/u, '').trim() || v('name') }); editFloor = null; saveUser(); return renderQuestPanel();
+  }
+  if (kind === 'node') {
+    const c = f.dataset.id, id = f.dataset.sub, node = subOf(c, id), ko = v('ko'); if (!node || !ko) return;
+    checkpoint(`✏️ '${node.ko}' 고치기`);
+    const focus = Number(v('focus')) || null;
+    userEdit(`sub:${c}/${id}`, { ko: ko.slice(0, 30), en: !node.en || node.en === node.ko ? ko.slice(0, 30) : node.en, icon: v('icon') || null, pose: v('pose') || null, focus,
+      ...(!node.verb || node.verb === `${node.ko} 하는 중` || node._parent ? { verb: `${ko} 하는 중` } : {}) });
+    editNode = null; saveUser(); return renderQuestPanel();
   }
   if (kind === 'newtopic' || kind === 'newsubq') {
     const t = v('t'); if (!t) return;
@@ -4720,7 +4742,7 @@ qpanel.addEventListener('click', ev => {
   else if (b.dataset.a === 'del') removeQuest(id);
   else if (b.dataset.a === 'addst') { addSubFor = addSubFor === id ? null : id; editQuest = null; renderQuestPanel(); }
   else if (b.dataset.a === 'edit') { editQuest = editQuest === id ? null : id; addSubFor = null; renderQuestPanel(); }
-  else if (b.dataset.a === 'cancel') { editQuest = addSubFor = editCat = quickCat = editFloor = addTopicFor = addSubHere = null; newCatOpen = false; editGoal = null; newGoalOpen = false; renderQuestPanel(); }
+  else if (b.dataset.a === 'cancel') { editQuest = addSubFor = editCat = quickCat = editFloor = addTopicFor = addSubHere = editNode = null; newCatOpen = false; editGoal = null; newGoalOpen = false; renderQuestPanel(); }
 });
 qpanel.addEventListener('submit', ev => {
   ev.preventDefault();
