@@ -263,7 +263,8 @@ node server.js
 ```
 
 Then open http://localhost:7777. On Windows you can also double-click `start.cmd`.
-To update first, double-click `update-and-start.cmd`: it pulls the app and your private course repo (`data/private`), stops a tower that is already running, and starts the new one.
+To update first, double-click `update-and-start.cmd`: it sends this device's edits (`data/private/user.json`) to your private repo, pulls the app and your private course, stops a tower that is already running, and starts the new one.
+While the tower runs, every edit you make in the page is committed and pushed to the private repo 30 s after your last change (when `data/private` is a clone of it; turn off with `TOWER_GIT_SYNC=0`). Your progress, `data/quests.json`, is not synced this way; the online version does that.
 
 Leave it open next to your terminal or the Claude desktop app and work as usual.
 

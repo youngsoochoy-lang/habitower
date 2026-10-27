@@ -40,6 +40,8 @@ A gamified habit app: your to-dos are quests that earn XP and coins. Your life h
 
 ## Where we left off (2026-10-27)
 
+- Edits sync between devices through the private repo: `syncUser()` in server.js commits and pushes `data/private/user.json` 30 s after a save (`TOWER_GIT_SYNC=0` off, `TOWER_GIT_SYNC_MS` for tests); `update-and-start.cmd` commits, `pull --rebase`s and pushes it before starting. `quests.json` is not synced (the online version will).
+
 - Topics: subcategories can hold `subs` (`subNodes()`, `subOf()` search both levels; `addUserTopic()`; packs merge topics into existing subs; hide/edit reach topics). 전체 shows each category's tree (`subTree()`), with ▶ (`startAction()`), ＋ topic, ＋ 하위 카테고리 and 🗑.
 - Pomodoro (`FOCUS_RULES`, `focusMinutes()`, `pomoPlan()`, `pomo()`): runs are derived from their start time, so they survive reloads; `runQ()` is the running quest or free action; `completeFree()` records free actions. During breaks the character stretches.
 

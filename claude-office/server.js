@@ -7,6 +7,7 @@ const http = require('http');
 const fs = require('fs');
 const path = require('path');
 const os = require('os');
+const { execFile } = require('child_process');
 
 const PORT = Number(process.env.PORT || 7777);
 const POLL_MS = 250;
@@ -299,7 +300,8 @@ function readPacks() {
 }
 // GET returns { data, mtime } (data is null when the file does not exist yet); PUT replaces the file atomically.
 // extra() can add fields to the GET answer, and its mtime counts, so the page reloads when they change.
-function jsonStore(file, check, extra) {
+// saved() runs after each successful write.
+function jsonStore(file, check, extra, saved) {
   const name = 'data/' + path.basename(file);
   return (req, res) => {
     const send = (code, obj) => { res.writeHead(code, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' }); res.end(JSON.stringify(obj)); };
@@ -321,6 +323,7 @@ function jsonStore(file, check, extra) {
       fs.writeFileSync(file + '.tmp', JSON.stringify(data, null, 2));
       fs.renameSync(file + '.tmp', file);
       send(200, { ok: true, mtime: statSafe(file).mtimeMs });
+      saved?.();
     });
   };
 }
@@ -328,7 +331,37 @@ const quests = jsonStore(QUESTS_FILE, d => (d && Array.isArray(d.quests) ? null 
 // your own edits on top of the defaults and packs (renames, deletions, new categories and goals, which courses are on):
 // data/private/user.json, written by the page, git-ignored like the rest of data/private
 const USER_FILE = path.join(DATA_DIR, 'private', 'user.json');
-const userStore = jsonStore(USER_FILE, d => (d?.pack?.id === 'user' ? null : 'expected { pack: { id: "user" } }'));
+const userStore = jsonStore(USER_FILE, d => (d?.pack?.id === 'user' ? null : 'expected { pack: { id: "user" } }'), null, () => syncUser());
+// ...and from there to your other devices: when data/private is a clone of your private repo, each save is
+// committed and pushed 30 s after the last change (a burst of edits becomes one commit). The next device picks it up
+// with update-and-start.cmd. Off with TOWER_GIT_SYNC=0. If another device changed user.json at the same time,
+// yours stays here, unpushed, and the console says so.
+const PRIVATE_DIR = path.dirname(USER_FILE), SYNC_MS = Number(process.env.TOWER_GIT_SYNC_MS || 30e3);
+let syncTimer = null, syncing = false;
+function syncUser() {
+  if (process.env.TOWER_GIT_SYNC === '0' || !statSafe(path.join(PRIVATE_DIR, '.git'))) return;
+  clearTimeout(syncTimer);
+  syncTimer = setTimeout(async () => {
+    if (syncing) return syncUser();
+    syncing = true;
+    const git = (...a) => new Promise(done => execFile('git', ['-C', PRIVATE_DIR, ...a], { timeout: 60e3, windowsHide: true },
+      (err, out, errOut) => done({ ok: !err, out: `${out}${errOut}`.trim() })));
+    try {
+      await git('add', 'user.json');
+      const c = await git('commit', '-m', `My edits from Habitower (${os.hostname()})`);
+      if (!c.ok && !/nothing to commit|nothing added/.test(c.out)) return console.log('[sync] could not commit your edits:', c.out);
+      let p = await git('push');
+      if (!p.ok) {                                       // another device pushed first: put ours on top and try again
+        if (!(await git('pull', '--rebase', '--autostash')).ok) {
+          await git('rebase', '--abort');
+          return console.log('[sync] another device changed your edits at the same time; yours are kept here, not pushed');
+        }
+        p = await git('push');
+      }
+      console.log(p.ok ? '[sync] your edits are on GitHub' : `[sync] could not push your edits: ${p.out}`);
+    } finally { syncing = false; }
+  }, SYNC_MS);
+}
 const buildingStore = jsonStore(BUILDING_FILE, d => (d && Array.isArray(d.areas) && Array.isArray(d.floors) ? null : 'expected { areas: [...], floors: [...] }'), readPacks);
 
 // ---------- http ----------

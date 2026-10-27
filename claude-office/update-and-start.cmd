@@ -1,6 +1,6 @@
 @echo off
 rem Habitower: get the latest from GitHub, then start the tower.
-rem   1. git pull the app (habitower)          2. git pull your own course (data\private)
+rem   1. git pull the app (habitower)          2. send your edits (user.json), then pull your own course (data\private)
 rem   3. stop a tower that is already running (so a new server.js takes effect)
 rem   4. start the server and open http://localhost:7777
 setlocal
@@ -14,7 +14,11 @@ git -C .. pull --ff-only || echo [!] The app could not update ^(see the message 
 echo.
 echo == Updating your course (data\private) ==
 if exist "data\private\.git" (
-  git -C data\private pull --ff-only || echo [!] Your course could not update ^(see above^).
+  rem first send this device's edits (user.json) that are not on GitHub yet, then take the other devices'
+  git -C data\private add user.json 2>nul
+  git -C data\private commit -q -m "My edits from Habitower (%COMPUTERNAME%)" >nul 2>nul
+  git -C data\private pull --rebase --autostash || (git -C data\private rebase --abort 2>nul & echo [!] Your edits and another device's changed at the same time. Yours are kept here; tell Claude to merge them.)
+  git -C data\private push -q || echo [!] Your edits could not be sent to GitHub ^(see above^).
 ) else if exist "data\private" (
   rem the files are there but not linked to the private repo: keep them as a backup, then link
   set "BK=data\private-backup-%RANDOM%"
