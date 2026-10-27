@@ -263,6 +263,7 @@ node server.js
 ```
 
 Then open http://localhost:7777. On Windows you can also double-click `start.cmd`.
+To update first, double-click `update-and-start.cmd`: it pulls the app and your private course repo (`data/private`), stops a tower that is already running, and starts the new one.
 
 Leave it open next to your terminal or the Claude desktop app and work as usual.
 

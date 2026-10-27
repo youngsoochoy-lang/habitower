@@ -4,7 +4,7 @@ A gamified habit app: your to-dos are quests that earn XP and coins. Your life h
 
 ## Run it
 
-- Node 18+ only, **no packages, no build step**: `node claude-office/server.js`, then open http://localhost:7777 (or `/tower`, or double-click `claude-office/start.cmd` on Windows).
+- Node 18+ only, **no packages, no build step**: `node claude-office/server.js`, then open http://localhost:7777 (or `/tower`, or double-click `claude-office/start.cmd` on Windows; `claude-office/update-and-start.cmd` first pulls the app and the private repo, linking `data/private` to it if needed, and restarts a running tower).
 - The page loads three.js, Pretendard and Galmuri from jsDelivr, so it needs internet.
 - After editing `server.js`, restart the server. `office.html` and the data files are re-read on every page load.
 
