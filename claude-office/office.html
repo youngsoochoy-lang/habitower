@@ -454,6 +454,13 @@ h2 small{font-size:10.5px;font-weight:500;letter-spacing:.06em;color:var(--faint
 .bk{display:flex;align-items:center;gap:6px;min-width:0}.bk+.bk{margin-top:4px}.bk span{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.bk.did{opacity:.55}
 .bk input{background:var(--raise);border:1px solid transparent;border-radius:6px;color:var(--ink);font:inherit;font-size:11px;padding:2px 4px;width:96px}
 .bk button{padding:1px 6px}
+.bk.rt em{width:96px;flex:none;font-style:normal;color:var(--faint);font-size:11px;padding:0 4px;font-variant-numeric:tabular-nums}.bk.rt span{color:var(--dim)}
+.pcats{display:flex;flex-wrap:wrap;gap:6px;margin-top:14px}
+.pcats button{border:1px solid var(--line);background:var(--raise);color:var(--dim);border-radius:8px;padding:5px 10px;font:inherit;font-size:11.5px;cursor:pointer;letter-spacing:-.02em}
+.pcats button small{margin-left:3px;color:var(--faint);font-variant-numeric:tabular-nums}
+.pcats button.on{color:var(--accent-ink);background:var(--accent);border-color:var(--accent);font-weight:700}.pcats button.on small{color:inherit;opacity:.75}
+.pcat{display:flex;align-items:baseline;gap:6px;margin:16px 0 0;font-size:12px;font-weight:700;letter-spacing:-.02em;color:var(--ink)}.pcat span{color:var(--faint);font-weight:500;font-size:11px}
+.qgroup button.wide{width:auto;padding:0 8px}.qgroup button.on{color:var(--ink);background:var(--raise)}
 .prow{padding:10px 0;border-bottom:1px solid var(--line);display:grid;gap:6px}
 .prow .ph{display:flex;align-items:center;gap:8px;min-width:0}.prow .ph b{flex:1;min-width:0;font-size:12.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.prow .ph small{color:var(--faint);font-size:10.5px}
 .step{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--dim);font-variant-numeric:tabular-nums}.step button{padding:1px 7px}
@@ -4142,22 +4149,40 @@ function weekDates(off) {
   const mon = new Date(weekOf(new Date()) + 'T00:00'); mon.setDate(mon.getDate() + off * 7);
   return [...Array(7)].map((_, i) => { const d = new Date(mon); d.setDate(mon.getDate() + i); return d; });
 }
+// the schedule's lists go category by category, in the order the floors list them, and a category within by its subcategories
+function byCategory(list) {
+  const order = [...new Set([...LIFE.flatMap(d => d.zones), ...Object.keys(SKILLS)])], rank = k => (order.includes(k) ? order.indexOf(k) : 1e3);
+  const subRank = q => { const i = subNodes(q.cat).findIndex(x => x.id === q.sub); return i < 0 ? 1e3 : i; };
+  return [...new Set(list.map(q => q.cat))].sort((a, b) => rank(a) - rank(b)).map(c => [c, list.filter(q => q.cat === c).sort((a, b) => subRank(a) - subRank(b))]);
+}
+let planCat = null, planRoutines = true;              // the category the schedule shows (null = all), routines in the week view
 function planHTML() {
   const days = weekDates(planWeek), wk = dayKey(days[0]), md = d => `${d.getMonth() + 1}/${d.getDate()}`;
-  const weekly = game.quests.filter(flexible), daily = game.quests.filter(q => q.repeat === 'daily');
-  let h = `<div class="shophead">📅 <b>일정</b><small>유연한 수업은 횟수(주 또는 월)를 정하고 주마다 요일을 골라 예약해요. 고정 루틴은 요일을 정해 두세요. 예약한 날에만 '오늘'에 떠요.</small></div>
+  const allWeekly = game.quests.filter(flexible), allDaily = game.quests.filter(q => q.repeat === 'daily');
+  if (planCat && ![...allWeekly, ...allDaily].some(q => q.cat === planCat)) planCat = null;
+  const pick = q => !planCat || q.cat === planCat, weekly = allWeekly.filter(pick), daily = allDaily.filter(pick);
+  let h = `<div class="shophead">📅 <b>일정</b><small>유연한 수업은 횟수(주 또는 월)를 정하고 주마다 요일을 골라 예약해요. 고정 루틴은 요일을 정해 두세요. 예약한 날과 루틴 요일에만 '오늘'에 떠요.</small></div>
     <div class="wknav"><button data-sch="wk" data-v="0" class="${planWeek ? '' : 'sel'}">이번 주</button><button data-sch="wk" data-v="1" class="${planWeek ? 'sel' : ''}">다음 주</button><span>${md(days[0])} – ${md(days[6])}</span></div>`;
-  // the week at a glance
-  h += '<div class="qgroup"><b>이번 주 예약</b></div><div class="wkdays">' + days.map(d => {
+  // which category to look at: every list below follows it
+  const cats = byCategory([...allWeekly, ...allDaily]);
+  h += `<div class="pcats"><button data-sch="cat" data-v="" class="${planCat ? '' : 'on'}">전체 <small>${allWeekly.length + allDaily.length}</small></button>${cats.map(([c, l]) =>
+    `<button data-sch="cat" data-v="${esc(c)}" class="${planCat === c ? 'on' : ''}">${catOf(c).icon} ${esc(catOf(c).ko)} <small>${l.length}</small></button>`).join('')}</div>`;
+  // the week at a glance: booked sessions by time, then that day's routines
+  h += `<div class="qgroup"><b>${planWeek ? '다음 주 일정' : '이번 주 일정'}</b><span>${planRoutines ? '예약 + 루틴' : '예약만'}</span><button data-sch="routines" class="wide${planRoutines ? ' on' : ''}" title="${planRoutines ? '루틴 숨기기' : '루틴도 보기'}">🔁</button></div><div class="wkdays">` + days.map(d => {
     const k = dayKey(d), items = weekly.filter(q => k in bookingsOf(q, wk)).sort((a, b) => (bookingsOf(a, wk)[k] || '99').localeCompare(bookingsOf(b, wk)[k] || '99'));
+    const routines = planRoutines ? byCategory(daily.filter(q => isDue(q, d))).flatMap(([, l]) => l) : [];
     return `<div class="wkday${k === dayKey() ? ' now' : ''}"><span class="dl">${WD[d.getDay()]} <small>${md(d)}</small></span><div>${items.map(q => {
       const did = (q.done || []).includes(k);
       return `<div class="bk${did ? ' did' : ''}"><input type="time" data-sch="time" data-id="${q.id}" data-d="${k}" value="${esc(bookingsOf(q, wk)[k] || '')}" aria-label="${esc(q.title)} 시간"><span>${qIcon(q)} ${esc(q.title)}</span>${did ? '✓' : `<button data-sch="book" data-id="${q.id}" data-d="${k}" title="예약 취소">✕</button>`}</div>`;
-    }).join('') || '<small class="none">—</small>'}</div></div>`;
+    }).join('')}${routines.map(q => {
+      const did = (q.done || []).includes(k);
+      return `<div class="bk rt${did ? ' did' : ''}" title="${esc(q.cue ? `⏰ ${q.cue}` : '매일 루틴')}"><em>🔁 ${q.minutes}분</em><span>${qIcon(q)} ${esc(q.title)}</span>${did ? '✓' : ''}</div>`;
+    }).join('')}${items.length + routines.length ? '' : '<small class="none">—</small>'}</div></div>`;
   }).join('') + '</div>';
+  const catHeadP = (c, l) => `<div class="pcat">${catOf(c).icon} ${esc(catOf(c).ko)}<span>${l.length}</span></div>`;
   // flexible sessions: how many times per week or month, and which days this week
   h += '<div class="qgroup"><b>횟수 · 요일 예약</b><span>주 또는 월 단위</span></div>';
-  h += weekly.map(q => {
+  h += byCategory(weekly).map(([c, l]) => catHeadP(c, l) + l.map(q => {
     const b = bookingsOf(q, wk), n = timesOf(q), booked = Object.keys(b).length, mon = q.repeat === 'monthly';
     const allOn = days.every(d => dayKey(d) in b);
     const note = mon ? `이번 주 ${booked}회 예약 · 이번 달 ${doneThisPeriod(q)}/${n}` : `${booked}/${n} 예약${booked > n ? ' · 횟수보다 많아요' : ''}`;
@@ -4166,20 +4191,22 @@ function planHTML() {
       <div class="chips"><button data-sch="bookall" data-id="${q.id}" class="all${allOn ? ' on' : ''}" title="${allOn ? '이번 주 예약 모두 취소' : '이번 주 모든 요일 예약'}">${allOn ? '해제' : '전체'}</button>${days.map(d => { const k = dayKey(d), did = (q.done || []).includes(k);
         return `<button data-sch="book" data-id="${q.id}" data-d="${k}" class="${k in b ? 'on' : ''}${did ? ' did' : ''}" title="${md(d)} ${k in b ? '예약 취소' : '예약'}">${did ? '✓' : WD[d.getDay()]}</button>`; }).join('')}
       <small>${note}</small></div></div>`;
-  }).join('') || '<div class="empty">매주 · 매월 하는 퀘스트가 없어요</div>';
+  }).join('')).join('') || '<div class="empty">매주 · 매월 하는 퀘스트가 없어요</div>';
   // fixed routines: which weekdays a daily quest is on (all off pauses it)
   h += '<div class="qgroup"><b>요일 루틴</b><span>매일 퀘스트</span></div>';
-  h += daily.map(q => {
+  h += byCategory(daily).map(([c, l]) => catHeadP(c, l) + l.map(q => {
     const on = Array.isArray(q.days) ? q.days : [0, 1, 2, 3, 4, 5, 6], allOn = on.length === 7;
     return `<div class="prow"><div class="ph"><span>${qIcon(q)}</span><b>${esc(q.title)}</b><small>${esc(repeatLabel(q))}</small></div>
       <div class="chips"><button data-sch="dayall" data-id="${q.id}" class="all${allOn ? ' on' : ''}" title="${allOn ? '모든 요일 끄기 (쉬기)' : '모든 요일 켜기'}">${allOn ? '해제' : '전체'}</button>${WEEK_ORDER.map(i => `<button data-sch="day" data-id="${q.id}" data-v="${i}" class="${on.includes(i) ? 'on' : ''}" aria-pressed="${on.includes(i)}">${WD[i]}</button>`).join('')}</div></div>`;
-  }).join('') || '<div class="empty">매일 하는 퀘스트가 없어요</div>';
+  }).join('')).join('') || '<div class="empty">매일 하는 퀘스트가 없어요</div>';
   return h;
 }
 qpanel.addEventListener('click', ev => {
   const b = ev.target.closest('button[data-sch]'); if (!b) return;
   const a = b.dataset.sch, q = b.dataset.id && questById(b.dataset.id), wk = dayKey(weekDates(planWeek)[0]);
   if (a === 'wk') planWeek = Number(b.dataset.v);
+  else if (a === 'cat') { planCat = b.dataset.v || null; return renderQuestPanel(); }
+  else if (a === 'routines') { planRoutines = !planRoutines; return renderQuestPanel(); }
   else if (a === 'times' && q) q.times = Math.max(1, Math.min(maxTimes(q), timesOf(q) + Number(b.dataset.v)));
   else if (a === 'period' && q) {
     checkpoint(`${q.title} 횟수 단위 변경`);                    // weekly ↔ monthly keeps roughly the same pace (×4)
