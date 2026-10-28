@@ -195,12 +195,12 @@
           "ko": "니기리 담당",
           "en": "NIGIRI COOK",
           "title": "니기리 담당",
-          "needXP": 1500,
+          "needXP": 4000,
           "milestone": {
             "streak": 14
           },
           "perk": {
-            "xp": 0.05
+            "xp": 0.03
           },
           "unlocks": [
             {
@@ -214,12 +214,12 @@
           "ko": "이타마에",
           "en": "ITAMAE",
           "title": "이타마에",
-          "needXP": 6000,
+          "needXP": 18000,
           "milestone": {
             "focused": 40
           },
           "perk": {
-            "xp": 0.1
+            "xp": 0.06
           },
           "unlocks": [
             {
@@ -233,12 +233,12 @@
           "ko": "오너 셰프",
           "en": "OWNER CHEF",
           "title": "오너 셰프",
-          "needXP": 20000,
+          "needXP": 60000,
           "milestone": {
             "streak": 60
           },
           "perk": {
-            "xp": 0.15
+            "xp": 0.1
           },
           "unlocks": [
             {

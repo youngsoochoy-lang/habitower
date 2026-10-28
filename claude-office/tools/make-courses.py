@@ -20,13 +20,13 @@ def q(title, cat_, sub_, minutes, repeat, cue=None, easy=None, subtasks=None, ti
     if subtasks: o["subtasks"] = subtasks
     return o
 
-def stages(names, xp=(0, 1500, 6000, 20000)):
+def stages(names, xp=(0, 4000, 18000, 60000)):
     ms = [None, {"streak": 14}, {"focused": 40}, {"streak": 60}]
     out = []
     for i, (ko, en, unlock) in enumerate(names):
         st = {"ko": ko, "en": en, "title": ko, "needXP": xp[i]}
         if ms[i]: st["milestone"] = ms[i]
-        if i: st["perk"] = {"xp": [0, 0.05, 0.1, 0.15][i]}
+        if i: st["perk"] = {"xp": [0, 0.03, 0.06, 0.1][i]}
         st["unlocks"] = [{"icon": unlock[0], "ko": unlock[1], **({"planned": True} if i else {})}]
         out.append(st)
     return out

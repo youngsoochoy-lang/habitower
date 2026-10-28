@@ -38,7 +38,12 @@ A gamified habit app: your to-dos are quests that earn XP and coins. Your life h
 - **Never test on the real `data/quests.json`** (the user's XP and coins). Start a second server: `PORT=7779 TOWER_DATA=<a temp copy of data/> node claude-office/server.js`, and delete it afterwards.
 - Verify changes in the browser: no console errors, and a screenshot. Remove any test hooks afterwards.
 
-## Where we left off (2026-10-27)
+## Where we left off (2026-10-28)
+
+- 3-year reward rebalance: every reward number lives in `building.json` → `progression` (`PROG()`, `dayRate()`, `xpMultiplier()`, `baseXP()` in office.html); the model and pricing rule are in DESIGN.md §6. Path stage thresholds (4,000 / 18,000 / 60,000, perks 3/6/10%) live in the pack generators too.
+- 📅 일정: the week view lists routines too (`planRoutines`), category chips filter it (`planCat`), lists group by category (`byCategory()`).
+
+## Earlier (2026-10-27)
 
 - Edits sync between devices through the private repo: `syncUser()` in server.js commits and pushes `data/private/user.json` 30 s after a save (`TOWER_GIT_SYNC=0` off, `TOWER_GIT_SYNC_MS` for tests); `update-and-start.cmd` commits, `pull --rebase`s and pushes it before starting. `quests.json` is not synced (the online version will).
 

@@ -203,12 +203,12 @@
           "ko": "데뷔조",
           "en": "DEBUT TEAM",
           "title": "데뷔조",
-          "needXP": 1500,
+          "needXP": 4000,
           "milestone": {
             "streak": 14
           },
           "perk": {
-            "xp": 0.05
+            "xp": 0.03
           },
           "unlocks": [
             {
@@ -222,12 +222,12 @@
           "ko": "루키",
           "en": "ROOKIE",
           "title": "루키",
-          "needXP": 6000,
+          "needXP": 18000,
           "milestone": {
             "focused": 40
           },
           "perk": {
-            "xp": 0.1
+            "xp": 0.06
           },
           "unlocks": [
             {
@@ -241,12 +241,12 @@
           "ko": "월드 스타",
           "en": "WORLD STAR",
           "title": "월드 스타",
-          "needXP": 20000,
+          "needXP": 60000,
           "milestone": {
             "streak": 60
           },
           "perk": {
-            "xp": 0.15
+            "xp": 0.1
           },
           "unlocks": [
             {

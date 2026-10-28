@@ -2,8 +2,42 @@
   "version": 1,
   "progression": {
     "curve": "linear",
-    "base": 40,
-    "step": 16
+    "base": 60,
+    "step": 49,
+    "day": [
+      [
+        30,
+        2
+      ],
+      [
+        120,
+        1
+      ],
+      [
+        240,
+        0.5
+      ],
+      [
+        null,
+        0.25
+      ]
+    ],
+    "bonus": {
+      "timer": 0.2,
+      "streak": 0.02,
+      "streakMax": 0.2
+    },
+    "work": {
+      "perTurn": 2,
+      "dayMax": 40
+    },
+    "coinRate": 10,
+    "skill": 100,
+    "tiers": [
+      3,
+      7,
+      12
+    ]
   },
   "maps": [
     {
@@ -142,12 +176,12 @@
           "ko": "1인 사업자",
           "en": "SOLO FOUNDER",
           "title": "1인 사업자",
-          "needXP": 1500,
+          "needXP": 4000,
           "milestone": {
             "streak": 14
           },
           "perk": {
-            "xp": 0.05
+            "xp": 0.03
           },
           "unlocks": [
             {
@@ -166,12 +200,12 @@
           "ko": "스타트업 대표",
           "en": "STARTUP FOUNDER",
           "title": "대표",
-          "needXP": 6000,
+          "needXP": 18000,
           "milestone": {
             "focused": 40
           },
           "perk": {
-            "xp": 0.1
+            "xp": 0.06
           },
           "unlocks": [
             {
@@ -190,12 +224,12 @@
           "ko": "CEO",
           "en": "CEO",
           "title": "CEO",
-          "needXP": 20000,
+          "needXP": 60000,
           "milestone": {
             "streak": 60
           },
           "perk": {
-            "xp": 0.15
+            "xp": 0.1
           },
           "unlocks": [
             {
@@ -240,12 +274,12 @@
           "ko": "생활 체육인",
           "en": "REGULAR",
           "title": "생활 체육인",
-          "needXP": 1500,
+          "needXP": 4000,
           "milestone": {
             "streak": 14
           },
           "perk": {
-            "xp": 0.05
+            "xp": 0.03
           },
           "unlocks": [
             {
@@ -259,12 +293,12 @@
           "ko": "코치",
           "en": "COACH",
           "title": "코치",
-          "needXP": 6000,
+          "needXP": 18000,
           "milestone": {
             "focused": 40
           },
           "perk": {
-            "xp": 0.1
+            "xp": 0.06
           },
           "unlocks": [
             {
@@ -283,12 +317,12 @@
           "ko": "챔피언",
           "en": "CHAMPION",
           "title": "챔피언",
-          "needXP": 20000,
+          "needXP": 60000,
           "milestone": {
             "streak": 60
           },
           "perk": {
-            "xp": 0.15
+            "xp": 0.1
           },
           "unlocks": [
             {
@@ -332,12 +366,12 @@
           "ko": "크리에이터",
           "en": "CREATOR",
           "title": "크리에이터",
-          "needXP": 1500,
+          "needXP": 4000,
           "milestone": {
             "streak": 14
           },
           "perk": {
-            "xp": 0.05
+            "xp": 0.03
           },
           "unlocks": [
             {
@@ -351,12 +385,12 @@
           "ko": "아티스트",
           "en": "ARTIST",
           "title": "아티스트",
-          "needXP": 6000,
+          "needXP": 18000,
           "milestone": {
             "focused": 40
           },
           "perk": {
-            "xp": 0.1
+            "xp": 0.06
           },
           "unlocks": [
             {
@@ -375,12 +409,12 @@
           "ko": "스타",
           "en": "STAR",
           "title": "스타",
-          "needXP": 20000,
+          "needXP": 60000,
           "milestone": {
             "streak": 60
           },
           "perk": {
-            "xp": 0.15
+            "xp": 0.1
           },
           "unlocks": [
             {
@@ -424,12 +458,12 @@
           "ko": "연구자",
           "en": "RESEARCHER",
           "title": "연구자",
-          "needXP": 1500,
+          "needXP": 4000,
           "milestone": {
             "streak": 14
           },
           "perk": {
-            "xp": 0.05
+            "xp": 0.03
           },
           "unlocks": [
             {
@@ -443,12 +477,12 @@
           "ko": "교수",
           "en": "PROFESSOR",
           "title": "교수",
-          "needXP": 6000,
+          "needXP": 18000,
           "milestone": {
             "focused": 40
           },
           "perk": {
-            "xp": 0.1
+            "xp": 0.06
           },
           "unlocks": [
             {
@@ -462,12 +496,12 @@
           "ko": "마스터",
           "en": "MASTER",
           "title": "마스터",
-          "needXP": 20000,
+          "needXP": 60000,
           "milestone": {
             "streak": 60
           },
           "perk": {
-            "xp": 0.15
+            "xp": 0.1
           },
           "unlocks": [
             {
@@ -781,7 +815,7 @@
         "template": "chores",
         "icon": "🐱",
         "name": "고양이와 방석",
-        "price": 60
+        "price": 120
       },
       {
         "id": "sunflower",
@@ -789,7 +823,7 @@
         "template": "chores",
         "icon": "🌻",
         "name": "해바라기 화병",
-        "price": 25
+        "price": 50
       },
       {
         "id": "globe",
@@ -797,7 +831,7 @@
         "template": "learning",
         "icon": "🌍",
         "name": "빈티지 지구본",
-        "price": 40
+        "price": 80
       },
       {
         "id": "moodrug",
@@ -805,7 +839,7 @@
         "template": "learning",
         "icon": "🕯️",
         "name": "원형 러그와 무드등",
-        "price": 30
+        "price": 60
       },
       {
         "id": "lanterns",
@@ -813,7 +847,7 @@
         "template": "growth",
         "icon": "🏮",
         "name": "종이 랜턴",
-        "price": 35
+        "price": 70
       },
       {
         "id": "monstera",
@@ -821,7 +855,7 @@
         "template": "growth",
         "icon": "🪴",
         "name": "큰 몬스테라",
-        "price": 30
+        "price": 60
       },
       {
         "id": "mirrorball",
@@ -829,7 +863,7 @@
         "template": "ballet",
         "icon": "🪩",
         "name": "미러볼",
-        "price": 80
+        "price": 160
       },
       {
         "id": "swan",
@@ -837,7 +871,7 @@
         "template": "ballet",
         "icon": "🦢",
         "name": "백조의 호수 포스터",
-        "price": 45
+        "price": 90
       },
       {
         "id": "mats",
@@ -845,7 +879,7 @@
         "template": "pilates",
         "icon": "🟪",
         "name": "컬러 요가 매트",
-        "price": 30
+        "price": 60
       },
       {
         "id": "hanging",
@@ -853,7 +887,7 @@
         "template": "pilates",
         "icon": "🌿",
         "name": "행잉 플랜트",
-        "price": 40
+        "price": 80
       },
       {
         "id": "bag",
@@ -861,7 +895,7 @@
         "template": "gym",
         "icon": "🥊",
         "name": "샌드백",
-        "price": 60
+        "price": 120
       },
       {
         "id": "nopain",
@@ -869,7 +903,7 @@
         "template": "gym",
         "icon": "💪",
         "name": "네온 \"NO PAIN NO GAIN\"",
-        "price": 45
+        "price": 90
       },
       {
         "id": "chandelier",
@@ -877,7 +911,7 @@
         "template": "piano",
         "icon": "🕯️",
         "name": "크리스털 샹들리에",
-        "price": 90
+        "price": 180
       },
       {
         "id": "cello",
@@ -885,7 +919,7 @@
         "template": "piano",
         "icon": "🎻",
         "name": "첼로",
-        "price": 70
+        "price": 140
       },
       {
         "id": "mic",
@@ -893,7 +927,7 @@
         "template": "video",
         "icon": "🎙️",
         "name": "팟캐스트 마이크",
-        "price": 50
+        "price": 100
       },
       {
         "id": "rgb",
@@ -901,7 +935,7 @@
         "template": "video",
         "icon": "🌈",
         "name": "RGB 네온 패널",
-        "price": 35
+        "price": 70
       },
       {
         "id": "boss",
@@ -909,7 +943,7 @@
         "template": "hustle",
         "icon": "😎",
         "name": "네온 \"LIKE A BOSS\"",
-        "price": 45
+        "price": 90
       },
       {
         "id": "safe",
@@ -917,23 +951,23 @@
         "template": "hustle",
         "icon": "💸",
         "name": "황금 금고",
-        "price": 60
+        "price": 120
       }
     ],
     "outfits": {
-      "hairStyle:bun": 20,
-      "hairStyle:spiky": 20,
-      "hair:#ff8fc8": 25,
-      "hair:#7fd8c4": 25,
-      "hair:#d8d8e0": 25,
-      "top:hoodie": 40,
-      "top:dress": 40,
-      "shirt:#ffc8d2": 20,
-      "shirt:#f2c14e": 35,
-      "acc:beanie": 30,
-      "acc:cap": 30,
-      "acc:fedora": 50,
-      "acc:halo": 120
+      "hairStyle:bun": 40,
+      "hairStyle:spiky": 40,
+      "hair:#ff8fc8": 50,
+      "hair:#7fd8c4": 50,
+      "hair:#d8d8e0": 50,
+      "top:hoodie": 80,
+      "top:dress": 80,
+      "shirt:#ffc8d2": 40,
+      "shirt:#f2c14e": 70,
+      "acc:beanie": 60,
+      "acc:cap": 60,
+      "acc:fedora": 100,
+      "acc:halo": 240
     }
   },
   "seed": [
@@ -1007,16 +1041,16 @@
           },
           {
             "ko": "싱글 침대",
-            "price": 40
+            "price": 60
           },
           {
             "ko": "퀸 침대",
-            "price": 200
+            "price": 400
           },
           {
             "ko": "캐노피 침대",
-            "price": 900,
-            "minLevel": 25
+            "price": 1800,
+            "minLevel": 40
           }
         ]
       },
@@ -1030,16 +1064,16 @@
           },
           {
             "ko": "LED 스탠드",
-            "price": 25
+            "price": 40
           },
           {
             "ko": "펜던트 조명",
-            "price": 60
+            "price": 120
           },
           {
             "ko": "샹들리에",
-            "price": 500,
-            "minLevel": 25
+            "price": 1000,
+            "minLevel": 40
           }
         ]
       },
@@ -1053,16 +1087,16 @@
           },
           {
             "ko": "방수 수리",
-            "price": 30
+            "price": 45
           },
           {
             "ko": "새 천장",
-            "price": 120
+            "price": 240
           },
           {
             "ko": "천창",
-            "price": 600,
-            "minLevel": 25
+            "price": 1200,
+            "minLevel": 40
           }
         ]
       },
@@ -1076,16 +1110,16 @@
           },
           {
             "ko": "새 벽지",
-            "price": 50
+            "price": 75
           },
           {
             "ko": "원목 패널",
-            "price": 250
+            "price": 500
           },
           {
             "ko": "갤러리 월",
-            "price": 800,
-            "minLevel": 25
+            "price": 1600,
+            "minLevel": 40
           }
         ]
       },
@@ -1099,16 +1133,16 @@
           },
           {
             "ko": "새 선풍기",
-            "price": 20
+            "price": 30
           },
           {
             "ko": "에어컨",
-            "price": 120
+            "price": 240
           },
           {
             "ko": "시스템 냉난방",
-            "price": 700,
-            "minLevel": 25
+            "price": 1400,
+            "minLevel": 40
           }
         ]
       },
@@ -1122,16 +1156,16 @@
           },
           {
             "ko": "접이식 테이블",
-            "price": 25
+            "price": 40
           },
           {
             "ko": "원목 책상",
-            "price": 150
+            "price": 300
           },
           {
             "ko": "월넛 대형 책상",
-            "price": 900,
-            "minLevel": 25
+            "price": 1800,
+            "minLevel": 40
           }
         ]
       },
@@ -1145,16 +1179,16 @@
           },
           {
             "ko": "평면 TV",
-            "price": 80
+            "price": 120
           },
           {
             "ko": "대형 TV + 사운드바",
-            "price": 300
+            "price": 600
           },
           {
             "ko": "홈시어터",
-            "price": 1200,
-            "minLevel": 25
+            "price": 2400,
+            "minLevel": 40
           }
         ]
       }

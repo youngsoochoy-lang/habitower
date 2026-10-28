@@ -162,12 +162,12 @@
           "ko": "마이크로 인플루언서",
           "en": "MICRO",
           "title": "마이크로 인플루언서",
-          "needXP": 1500,
+          "needXP": 4000,
           "milestone": {
             "streak": 14
           },
           "perk": {
-            "xp": 0.05
+            "xp": 0.03
           },
           "unlocks": [
             {
@@ -181,12 +181,12 @@
           "ko": "인플루언서",
           "en": "INFLUENCER",
           "title": "인플루언서",
-          "needXP": 6000,
+          "needXP": 18000,
           "milestone": {
             "focused": 40
           },
           "perk": {
-            "xp": 0.1
+            "xp": 0.06
           },
           "unlocks": [
             {
@@ -200,12 +200,12 @@
           "ko": "셀럽",
           "en": "CELEB",
           "title": "셀럽",
-          "needXP": 20000,
+          "needXP": 60000,
           "milestone": {
             "streak": 60
           },
           "perk": {
-            "xp": 0.15
+            "xp": 0.1
           },
           "unlocks": [
             {

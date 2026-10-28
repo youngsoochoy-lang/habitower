@@ -561,7 +561,7 @@ h2 small{font-size:10.5px;font-weight:500;letter-spacing:.06em;color:var(--faint
     <div class="clock" id="clock" title="지금 시간대에 맞춰 하늘이 바뀌어요. 클릭하면 다른 시간대를 미리 볼 수 있어요"></div>
     <div class="custom"><button id="customBtn">🎨 나 꾸미기</button><div class="pop" id="pop"></div></div>
     <div class="zoom"><button id="zin" title="Zoom in">+</button><button id="zout" title="Zoom out">−</button><button id="zreset" title="Reset view">⟲</button></div>
-    <div class="hud" id="hud"><span class="lv">Lv.1</span><div class="xp"><div class="xpbar"><i></i></div><span class="xptxt">0 / 40 XP</span></div><span class="next" hidden></span><span class="streak">🔥 0일</span><span class="coins" title="XP 5마다 1코인 · 나중에 방 꾸미기에 써요">🪙 0</span><button id="questBtn">📜 퀘스트</button></div>
+    <div class="hud" id="hud"><span class="lv">Lv.1</span><div class="xp"><div class="xpbar"><i></i></div><span class="xptxt">0 / 60 XP</span></div><span class="next" hidden></span><span class="streak">🔥 0일</span><span class="coins" title="XP 5마다 1코인 · 나중에 방 꾸미기에 써요">🪙 0</span><button id="questBtn">📜 퀘스트</button></div>
     <div class="qpanel" id="qpanel"></div>
     <div class="focus" id="focus"></div>
     <div class="fade" id="fade"></div>
@@ -2029,7 +2029,7 @@ function signBoard(x, y, z, text, bg = '#f3ead8', ink = '#2a241e', w = 2.4) {
 }
 const FAC_TINTS = ['#e0505a', '#3fae8a', '#5a7fd8', '#e8a33a', '#a06ad8', '#d9707e', '#4fb3c8'];
 // how grown a studio building looks: from the average skill level of its rooms
-const facTier = (def, by) => { if (!def.zones.length) return 1; const lv = def.zones.reduce((n, k) => n + lvlOf(by[k] || 0), 0) / def.zones.length; return lv >= 10 ? 4 : lv >= 6 ? 3 : lv >= 3 ? 2 : 1; };
+const facTier = (def, by) => { if (!def.zones.length) return 1; const lv = def.zones.reduce((n, k) => n + lvlOf(by[k] || 0), 0) / def.zones.length; const [t2, t3, t4] = skillTiers(); return lv >= t4 ? 4 : lv >= t3 ? 3 : lv >= t2 ? 2 : 1; };
 const TIER_KO = ['', '임시 공간', '동네 건물', '번듯한 건물', '랜드마크'];
 function facilityBuilding(cx, cz, def, tier, i) {
   const tint = FAC_TINTS[i % FAC_TINTS.length], label = def.name;
@@ -3686,15 +3686,18 @@ try { focusRun = JSON.parse(localStorage.getItem('claudeTower.focus') || 'null')
 const saveFocus = () => { try { localStorage.setItem('claudeTower.focus', JSON.stringify(focusRun)); } catch {} };
 const dayKey = (d = new Date()) => d.toLocaleDateString('sv-SE');                  // YYYY-MM-DD, local time
 const weekOf = s => { const d = typeof s === 'string' ? new Date(s + 'T00:00') : new Date(s); d.setDate(d.getDate() - (d.getDay() + 6) % 7); return dayKey(d); };
-// skill (category) levels: Lv2 at 40 XP, Lv3 at 160, Lv4 at 360… (trophies at Lv.2, 4, 6)
-const lvlOf = xp => Math.floor(Math.sqrt(xp / 40)) + 1;
-const lvlFloor = l => 40 * (l - 1) ** 2;
-// your own level follows building.json's progression. linear: each level costs base + step × (L − 1) XP,
-// so with 40/16 Lv.10 is ~1 week and Lv.80 ~14 months at 120 XP a day. sqrt: the old curve, base × (L − 1)².
+// All reward numbers come from building.json's progression, tuned so ~2 focused hours a day reach Lv.100 in about 3 years.
+function PROG() { return BUILDING.progression || {}; }
+// skill (category) levels: Lv2 at `skill` XP, then skill × (L − 1)²; studios and trophy cups grow at the `tiers` levels
+const lvlOf = xp => Math.floor(Math.sqrt(xp / (PROG().skill ?? 100))) + 1;
+const lvlFloor = l => (PROG().skill ?? 100) * (l - 1) ** 2;
+function skillTiers() { return PROG().tiers || [3, 7, 12]; }
+// your own level. linear: each level costs base + step × (L − 1) XP (60/49: Lv.10 in ~10 days, Lv.50 ~9 months,
+// Lv.100 ~3 years at ~220 XP a day). sqrt: the old curve, base × (L − 1)².
 function playerFloor(l) {
-  const p = BUILDING.progression || {}, base = p.base ?? 40;
+  const p = PROG(), base = p.base ?? 60;
   if (p.curve === 'sqrt') return base * (l - 1) ** 2;
-  const step = p.step ?? 16;
+  const step = p.step ?? 49;
   return (l - 1) * base + step * (l - 1) * (l - 2) / 2;
 }
 function playerLvl(xp) {
@@ -3705,7 +3708,28 @@ function playerLvl(xp) {
 // the next map (or other level unlock) still ahead of you
 const nextUnlock = level => (BUILDING.maps || []).filter(m => (m.unlock?.level || 1) > level).sort((a, b) => a.unlock.level - b.unlock.level)[0] || null;
 const unlockedAt = level => (BUILDING.maps || []).filter(m => m.unlock?.level === level);
-const questXP = q => 10 + Math.round(q.minutes);
+// XP is time: a quest's minutes plus a small finish bonus (at most 5), so splitting work into many tiny quests earns nothing extra
+const baseXP = m => Math.round(m) + Math.min(5, Math.round(m));
+const questXP = q => baseXP(q.minutes);
+// the day's minutes earn on a curve (progression.day: [upTo, rate] steps, the last open-ended): the first half hour
+// counts double, long days earn less per minute, so adding more activities and categories never races you to Lv.100
+const DAY_CURVE = [[30, 2], [120, 1], [240, 0.5], [null, 0.25]];
+function dayRate(before, mins) {
+  if (mins <= 0) return 1;
+  let got = 0, at = before, left = mins;
+  for (const [upTo, rate] of PROG().day || DAY_CURVE) {
+    const room = upTo == null ? left : Math.max(0, upTo - at), m = Math.min(left, room);
+    got += m * rate; at += m; left -= m;
+    if (!left) break;
+  }
+  return got / mins;
+}
+const minutesToday = () => game.history.filter(h => h.cat !== 'work' && dayKey(new Date(h.ts)) === dayKey()).reduce((m, h) => m + (h.minutes || 0), 0);
+// bonuses on top: the pomodoro timer finished, the streak (per day, capped) and your path stage's perk
+function xpMultiplier(s, cat, full) {
+  const b = PROG().bonus || {};
+  return 1 + (full ? b.timer ?? 0.2 : 0) + Math.min(b.streakMax ?? 0.2, s.streak * (b.streak ?? 0.02)) + pathBonus(cat);
+}
 const REPEAT = { daily: '매일', weekly: '매주', monthly: '매월', once: '한 번' };
 // Routines and schedules: a daily quest can be fixed to weekdays (days: 0 = Sun … 6 = Sat; [] pauses it); a weekly or
 // monthly quest can be wanted several times per period (times), and each week you book which days
@@ -3744,7 +3768,7 @@ function gameStats() {
   const days = new Set(game.history.filter(h => h.cat !== 'work').map(h => dayKey(new Date(h.ts))));
   let streak = 0; const d = new Date(); if (!days.has(dayKey(d))) d.setDate(d.getDate() - 1);
   while (days.has(dayKey(d))) { streak++; d.setDate(d.getDate() - 1); }
-  return { by, total, streak, coins: Math.floor(total / 5) - (game.spent || 0), level: playerLvl(total) };
+  return { by, total, streak, coins: Math.floor(total / (PROG().coinRate ?? 10)) - (game.spent || 0), level: playerLvl(total) };
 }
 // a subtask's done is the day it was ticked; it counts for the quest's current day / week like the quest itself
 const periodDone = (repeat, d) => !!d && (repeat === 'daily' ? d === dayKey() : repeat === 'weekly' ? weekOf(d) === weekOf(new Date()) : repeat === 'monthly' ? monthOf(d) === monthOf(new Date()) : true);
@@ -3842,11 +3866,13 @@ undoEl.querySelector('button').onclick = undo;
 addEventListener('keydown', ev => {
   if ((ev.ctrlKey || ev.metaKey) && !ev.shiftKey && ev.key.toLowerCase() === 'z' && !/INPUT|TEXTAREA|SELECT/.test(document.activeElement?.tagName || '')) { ev.preventDefault(); undo(); }
 });
-// Claude finishing a turn in the office counts toward your work skill, a little at a time
+// Claude finishing a turn in the office counts toward your work skill, a little at a time, up to a daily cap
 function gainWork() {
-  const today = dayKey(), last = game.history[game.history.length - 1];
-  if (last && last.cat === 'work' && dayKey(new Date(last.ts)) === today) { last.xp += 2; last.turns = (last.turns || 1) + 1; last.ts = Date.now(); }
-  else game.history.push({ ts: Date.now(), cat: 'work', title: 'Claude와 협업', xp: 2, turns: 1 });
+  const today = dayKey(), last = game.history[game.history.length - 1], w = PROG().work || {};
+  const used = game.history.filter(h => h.cat === 'work' && dayKey(new Date(h.ts)) === today).reduce((n, h) => n + h.xp, 0);
+  const add = Math.max(0, Math.min(w.perTurn ?? 2, (w.dayMax ?? 40) - used));
+  if (last && last.cat === 'work' && dayKey(new Date(last.ts)) === today) { last.xp += add; last.turns = (last.turns || 1) + 1; last.ts = Date.now(); }
+  else game.history.push({ ts: Date.now(), cat: 'work', title: 'Claude와 협업', xp: add, turns: 1 });
   saveGame(); renderGame();
 }
 const questById = id => game.quests.find(q => q.id === id);
@@ -3883,7 +3909,7 @@ function completeQuest(id) {
   const s = gameStats(), running = focusRun?.id === id;
   const st = running ? pomo(focusRun) : null, elapsed = st ? st.focusedMs / 60e3 : 0;
   const full = running && (st.phase === 'done' || elapsed >= q.minutes * 0.95);
-  const xp = Math.round(questXP(q) * (1 + (full ? 0.5 : 0) + Math.min(0.5, s.streak * 0.1) + pathBonus(q.cat)));
+  const xp = Math.max(1, Math.round(questXP(q) * dayRate(minutesToday(), q.minutes) * xpMultiplier(s, q.cat, full)));
   const skillBefore = lvlOf(s.by[q.cat] || 0);
   q.done = [...(q.done || []), dayKey()];
   game.history.push({ ts: Date.now(), id: q.id, title: q.title, cat: q.cat, xp, minutes: running ? Math.max(1, Math.round(elapsed)) : q.minutes, focused: full });
@@ -3970,7 +3996,7 @@ function completeFree() {
   focusRun = null; saveFocus();
   if (mins < 1) { banner('1분은 넘게 집중해야 기록돼요'); renderGame(); return; }
   const s = gameStats(), fullBlock = st.focusedMs >= run.focus * 60e3;
-  const xp = Math.round((Math.min(10, mins) + mins) * (1 + Math.min(0.5, s.streak * 0.1) + pathBonus(run.cat)));
+  const xp = Math.max(1, Math.round(baseXP(mins) * dayRate(minutesToday(), mins) * xpMultiplier(s, run.cat, false)));
   game.history.push({ ts: Date.now(), title: run.title, cat: run.cat, ...(run.sub ? { sub: run.sub } : {}), xp, minutes: mins, focused: fullBlock, free: true });
   saveGame();
   if (me && !me.hidden) { me.heartUntil = now + 3500; me.bubble('report', `✨ +${xp} XP · ${run.title} ${mins}분 집중`, 4000); }
@@ -4099,7 +4125,7 @@ function renderGame() {
     const xp = s.by[k] || 0, lv = lvlOf(xp), sk = catOf(k);
     const label = `${sk.en} · ${sk.ko}  Lv.${lv}`;
     if (roomTags[k].label !== label) { roomTags[k].label = label; paintTag(roomTags[k], label); }
-    trophies[k].forEach((cg, i) => { cg.visible = lv >= [2, 4, 6][i]; });
+    trophies[k].forEach((cg, i) => { cg.visible = lv >= skillTiers()[i]; });
   }
   for (const def of LIFE) paintQuestBoard(def);
   applyDecor();
@@ -4991,7 +5017,7 @@ function applyDecor() {
 }
 function shopHTML() {
   const s = gameStats(), hidden = new Set(game.hiddenDecor || []);
-  let html = `<div class="shophead">🪙 <b>${s.coins}</b> 코인 <small>XP 5마다 1코인 · 지금까지 ${game.spent || 0}코인 사용</small></div>`;
+  let html = `<div class="shophead">🪙 <b>${s.coins}</b> 코인 <small>XP ${PROG().coinRate ?? 10}마다 1코인 · 지금까지 ${game.spent || 0}코인 사용</small></div>`;
   // your home: each slot shows its whole upgrade chain, and the next item to buy
   const H = BUILDING.home;
   if (H?.slots?.length) {

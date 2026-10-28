@@ -76,7 +76,7 @@ Your life happens away from the office: on the **🏝️ 라이프 아일랜드*
 
 - **Instant travel:** going to or from a life place is an instant lift trip: you step into the lift, the screen fades, and you are there. Project floors still ride the lift up and down the tower.
 - **🏝️ The island:** your old block with the 🏚️ 옥탑방 on its roof, one building per studio, and empty lots with 매물 signs. Each studio building's look follows the average skill level of its rooms (임시 공간 → 동네 건물 → 번듯한 건물 → 랜드마크). The greenery grows with your level: dead trees and broken lamps at first, then trees, flowers, a pond.
-- **🏚️ 내 옥탑방:** you start shabby: a mattress on the floor, a flickering bulb, a bucket under the leaky ceiling, peeling wallpaper, a rattling fan, a crate table and an old CRT. In **🛍️ 상점 › 내 옥탑방 고치기**, each of the seven slots shows its whole upgrade chain; buying the next item replaces the old one in the room (and some fixes show on the island too: the tarp comes off the roof once the ceiling is repaired). The top item of each chain unlocks at Lv.25.
+- **🏚️ 내 옥탑방:** you start shabby: a mattress on the floor, a flickering bulb, a bucket under the leaky ceiling, peeling wallpaper, a rattling fan, a crate table and an old CRT. In **🛍️ 상점 › 내 옥탑방 고치기**, each of the seven slots shows its whole upgrade chain; buying the next item replaces the old one in the room (and some fixes show on the island too: the tarp comes off the roof once the ceiling is repaired). The top item of each chain unlocks at Lv.40.
 - **Studio buildings:** each studio floor is now its own glass pavilion on a lawn. Starting a quest takes you straight to its building and room.
 
 The default building has three studio buildings:
@@ -90,8 +90,12 @@ The default building has three studio buildings:
 - **Quests:** click **📜 퀘스트** at the bottom of the view. Each quest has a category, an optional subcategory, a length in minutes and a repeat (매일, 매주 or 한 번). Nine sample quests are added the first time.
 - **Checklists:** a quest can have subtasks. Add them when you create the quest (one per line), or with ＋ in the 전체 tab. Tick them off in the quest list; they reset with the quest each day or week.
 - **▶ Start:** turns on a focus timer. You ride the elevator alone to that room, and your character does the activity (ballet turns, presses at the gym, playing the piano and so on). Claude stays behind and keeps the office running. Your thought cloud shows the countdown.
-- **✓ Done:** earns XP. A quest is worth 10 XP plus 1 XP per minute. Finishing the full timer adds +50%, and each day of your streak adds +10% (up to +50%).
-- **Levels:** you level up on a gentle curve: Lv.2 costs 40 XP and each level after that costs 16 XP more than the one before (Lv.10 at 936 XP, about a week of three quests a day; Lv.25 at 5,376; Lv.80 at 52,456, about 14 months). Every skill levels up too (Lv.2 at 40 XP, Lv.3 at 160, Lv.4 at 360, and so on); room signs show the skill level, and trophy cups appear on the room's shelf at Lv.2, 4 and 6.
+- **✓ Done:** earns XP. XP is time: 1 XP per minute plus a finish bonus of up to 5 XP, so ten 2-minute quests earn no more than one 20-minute quest.
+  - **The day's curve:** your first 30 minutes of the day count double, minutes 30–120 count once, 120–240 count half and anything beyond a quarter. A short day still moves you forward, and adding more activities or categories never races you to Lv.100.
+  - **Bonuses:** finishing the full timer adds +20%, each day of your streak +2% (up to +20%), and your life path's stage +3%, +6% or +10% on its quests.
+  - A free ▶ action (no quest) earns the same per minute, without the timer bonus.
+- **Levels:** Lv.2 costs 60 XP and each level after that costs 49 XP more than the one before. The curve is tuned for about 2 focused hours a day, 6 days a week: Lv.10 (2,304 XP) in about 10 days, Lv.25 (14,964) in about 2 months, Lv.50 (60,564) in about 9 months, Lv.80 (155,709) in about 2 years and Lv.100 (243,639) in about 3 years. Four hours a day gets there in about 2 years, 45 minutes a day in about 6.
+- **Skills:** every category levels up too (Lv.2 at 100 XP, Lv.3 at 400, Lv.4 at 900, and so on: 100 × (L − 1)²). Room signs show the skill level. Trophy cups appear on the room's shelf, and the studio building grows a tier, at skill Lv.3, 7 and 12 (about 10 days, 3 months and 9 months at 30 minutes a day).
 - **Next unlock:** the pink chip next to the XP bar shows the next map and how much XP is left (hover it for the whole list). Reaching an unlock level shows a 🔓 banner. The maps themselves are still being built (see [DESIGN.md](DESIGN.md)).
 - **🧭 Life paths:** the 🧭 진로 tab shows what you focused on over the last 30 days, and five paths you can grow along: 💼 사업가, 🏅 운동선수, 🎨 크리에이터, 📚 학자 and 🌿 균형 잡힌 삶.
   - Each path has stages, for example 💼 부업러 → 1인 사업자 → 스타트업 대표 → CEO. A stage needs XP in the path's categories plus a milestone (days in a row, focus timers finished, or balance across areas).
@@ -100,10 +104,10 @@ The default building has three studio buildings:
   - Switching is free and loses nothing: progress is worked out from your quest history, so going back picks up where you were.
   - Your path's stage title shows under your name, its XP perk applies to that path's quests, and a 🎖️ banner marks each promotion.
 - **🔥 Streak:** counts the days in a row you finished at least one quest.
-- **🪙 Coins:** you earn 1 coin per 5 XP and spend them in the **🛍️ 상점** tab of the quest panel.
-  - **Room decorations:** 18 items, two for each studio, from 25 to 90 coins. Examples: a mirror ball and a Swan Lake poster for ballet, a cat on a cushion for the kitchen, a crystal chandelier and a cello for the piano room, a punching bag and a "NO PAIN NO GAIN" neon for the gym, and a gold safe and a "LIKE A BOSS" neon for the side hustle. Bought items appear in the room right away. You can hide or show each one, and 📍 takes you to its room.
-  - **Outfits:** 13 items, from 20 to 120 coins: the bun and spiky hairstyles, pink, mint and silver hair, the hoodie and the dress, pink and gold shirts, and the beanie, cap, fedora and halo. Locked options show 🔒 in 🎨 나 꾸미기 too; clicking one there offers to unlock it. Anything you were already wearing when the shop opened stays free.
-- **Working with Claude counts too:** every turn Claude finishes in the office adds 2 XP to the ✳ 업무 skill.
+- **🪙 Coins:** you earn 1 coin per 10 XP (about 20 a day at 2 hours) and spend them in the **🛍️ 상점** tab of the quest panel. Prices follow days of play: a first home upgrade costs 2–5 days, a second 1–4 weeks, the top tier (from Lv.40) 2–4 months. Everything on sale today costs about 16,700 coins, two-thirds of what 3 years earn; the rest is room for the maps, cars and studios still to come.
+  - **Room decorations:** 18 items, two for each studio, from 50 to 180 coins. Examples: a mirror ball and a Swan Lake poster for ballet, a cat on a cushion for the kitchen, a crystal chandelier and a cello for the piano room, a punching bag and a "NO PAIN NO GAIN" neon for the gym, and a gold safe and a "LIKE A BOSS" neon for the side hustle. Bought items appear in the room right away. You can hide or show each one, and 📍 takes you to its room.
+  - **Outfits:** 13 items, from 40 to 240 coins: the bun and spiky hairstyles, pink, mint and silver hair, the hoodie and the dress, pink and gold shirts, and the beanie, cap, fedora and halo. Locked options show 🔒 in 🎨 나 꾸미기 too; clicking one there offers to unlock it. Anything you were already wearing when the shop opened stays free.
+- **Working with Claude counts too:** every turn Claude finishes in the office adds 2 XP to the ✳ 업무 skill, up to 40 XP a day.
 - **Quest boards:** each studio building's lobby has a board showing its quests.
 - **Storage:** quests, history and what you own are saved in `data/quests.json` next to `server.js` (or the folder in `TOWER_DATA`). It is plain JSON, so you can ask Claude Code to add or change quests and the page picks up the change within a few seconds.
 
@@ -125,7 +129,9 @@ The server serves it at `GET /api/building` and saves it with `PUT /api/building
 ```jsonc
 {
   "version": 1,
-  "progression": { "curve": "linear", "base": 40, "step": 16 },   // your level curve
+  "progression": { "curve": "linear", "base": 60, "step": 49, "day": [[30, 2], [120, 1], [240, 0.5], [null, 0.25]],
+                   "bonus": { "timer": 0.2, "streak": 0.02, "streakMax": 0.2 }, "work": { "perTurn": 2, "dayMax": 40 },
+                   "coinRate": 10, "skill": 100, "tiers": [3, 7, 12] },   // every reward number
   "maps": [                               // places that unlock with your level (shown in the next-unlock chip)
     { "id": "rooftop", "icon": "🌿", "ko": "옥상 정원", "en": "ROOFTOP GARDEN", "unlock": { "level": 10 }, "scene": "rooftop", "planned": true }
   ],
@@ -159,7 +165,7 @@ The server serves it at `GET /api/building` and saves it with `PUT /api/building
 
 | Field | Meaning |
 |---|---|
-| `progression` | Your level curve. `linear`: each level costs `base + step × (L − 1)` XP (default 40 and 16). `sqrt`: the old curve, `base × (L − 1)²` XP in total. Skill levels always use the old curve. |
+| `progression` | Every reward number. `curve`: `linear` (each level costs `base + step × (L − 1)` XP, default 60 and 49) or `sqrt` (`base × (L − 1)²` in total). `day`: the day's minute curve, `[upTo, rate]` steps with the last `upTo` null. `bonus`: `timer` (full timer), `streak` per day up to `streakMax`. `work`: XP per Claude turn and the daily cap. `coinRate`: XP per coin. `skill`: skill levels cost `skill × (L − 1)²`. `tiers`: the skill levels for trophy cups and studio tiers. Tune these together: the defaults put ~2 focused hours a day at Lv.100 in 3 years. |
 | `maps[]` | Places unlocked by level: `id`, `icon`, `ko`, `en`, `unlock.level`, `scene`. `planned: true` marks a map that is not built yet ("곧 열려요"). |
 | `pathRules` | When paths open up: `minLevel` (15), `focusShare` (0.45: the share of recent XP that suggests a path), `balancedMax` (0.4: below this for every path suggests 🌿), `windowDays` (30). |
 | `paths[]` | `id`, `icon`, `ko`, `en`, `desc`, `categories` (category ids, or `"*"` for all), `balanced`, `stages[]`. |

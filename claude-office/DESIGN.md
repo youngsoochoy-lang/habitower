@@ -31,6 +31,8 @@ Two questions drive the design:
 
 ## 4. Progression and the XP curve
 
+> **Superseded on 2026-10-28** by the 3-year rebalance in section 6 (curve 60 + 49 × (L − 1)). The reasoning below is kept as history.
+
 ### Problem
 
 Today `Lv = ⌊√(XP / 40)⌋ + 1`. At a realistic 120 XP a day (three 30-minute quests), Lv.80 takes about **2,080 days (5.7 years)**. Mid-game unlocks are too slow as well: Lv.25 takes about 6 months.
@@ -79,17 +81,17 @@ Your home is made of **slots**, and each slot holds one item from a chain of upg
 
 | Slot | Chain (coins) |
 |---|---|
-| 🛏️ Bed | 바닥 매트리스 → 싱글 침대 (40) → 퀸 침대 (200) → 캐노피 침대 (900) |
-| 💡 Light | 깜빡이는 전구 → LED 스탠드 (25) → 펜던트 조명 (60) → 샹들리에 (500) |
-| 🏚️ Ceiling | 비 새는 천장 + 양동이 → 방수 수리 (30) → 새 천장 (120) → 천창 (600) |
-| 🧱 Walls | 벗겨진 벽지 → 새 벽지 (50) → 원목 패널 (250) → 갤러리 월 (800) |
-| ❄️ Air | 덜덜이 선풍기 → 새 선풍기 (20) → 에어컨 (120) → 시스템 냉난방 (700) |
-| 🪵 Table | 박스 테이블 → 접이식 테이블 (25) → 원목 책상 (150) → 아일랜드 키친 (900) |
-| 📺 Screen | 브라운관 TV → 모니터 (80) → 빔 프로젝터 (300) → 홈시어터 (1,200) |
-| 🪟 Window | 테이프 붙인 창문 → 새 창문 (60) → 통창 (400) → 파노라마 창 (1,500) |
-| 🍳 Kitchen | 휴대용 버너 → 원룸 주방 (100) → 풀 키친 (600) → 셰프 키친 (2,000) |
+| 🛏️ Bed | 바닥 매트리스 → 싱글 침대 (60) → 퀸 침대 (400) → 캐노피 침대 (1,800) |
+| 💡 Light | 깜빡이는 전구 → LED 스탠드 (40) → 펜던트 조명 (120) → 샹들리에 (1,000) |
+| 🏚️ Ceiling | 비 새는 천장 + 양동이 → 방수 수리 (45) → 새 천장 (240) → 천창 (1,200) |
+| 🧱 Walls | 벗겨진 벽지 → 새 벽지 (75) → 원목 패널 (500) → 갤러리 월 (1,600) |
+| ❄️ Air | 덜덜이 선풍기 → 새 선풍기 (30) → 에어컨 (240) → 시스템 냉난방 (1,400) |
+| 🪵 Table | 박스 테이블 → 접이식 테이블 (40) → 원목 책상 (300) → 아일랜드 키친 (1,800) |
+| 📺 Screen | 브라운관 TV → 모니터 (120) → 빔 프로젝터 (600) → 홈시어터 (2,400) |
+| 🪟 Window | 테이프 붙인 창문 → 새 창문 (90) → 통창 (800) → 파노라마 창 (3,000) |
+| 🍳 Kitchen | 휴대용 버너 → 원룸 주방 (150) → 풀 키친 (1,200) → 셰프 키친 (4,000) |
 
-- **The first fixes are cheap** (20–60 coins): the first week already changes the room.
+- **The first fixes are cheap** (30–150 coins, 2–5 days of play): the first week already changes the room. Prices since the 2026-10-28 rebalance (section 6).
 - **Higher tiers need a home big enough** for them: a chandelier needs the townhouse or later, a home theatre needs the penthouse or later.
 - The existing shop decorations (the cat, the mirror ball, …) stay as extras on top of the slots.
 
@@ -122,26 +124,48 @@ Every category has a building (a lot) on the street. Its **look** follows that c
 
 Inside each facility, the same slot system applies (equipment chains bought with coins).
 
-## 6. Time to level 100
+## 6. Time to level 100 (3-year rebalance, 2026-10-28)
 
-The table below assumes 30-minute quests:
+**Goal:** a committed player (about 2 focused hours a day, 6 days a week) reaches Lv.100 in about **3 years**, however many activities and categories they add.
 
-| Bonus situation | XP per hour |
-|---|---:|
-| No bonuses | 80 |
-| Timer finished (+50%) | 120 |
-| Timer finished and a 5-day streak (+100%) | 160 |
+### What was wrong
 
-| Goal | XP needed | Hours (no bonus / timer / best) | At 1 focused hour a day (best) |
-|---|---:|---|---:|
-| Player Lv.80 (villa) | 52,456 | 656 / 437 / 328 | ~11 months |
-| **Player Lv.100 (home: island resort)** | 81,576 | 1,020 / 680 / **510** | **~17 months** |
-| Facility Lv.100 with **today's** skill curve | 392,040 | 4,901 / 3,267 / 2,450 | ~6.7 years in *one* category |
-| **Facility Lv.100 with the proposed curve** | 40,788 | 510 / 340 / **255** | ~8.5 months at 1 h/day in that category, ~1.4 years at 30 min |
+- **Far too fast for real routines.** A personal plan of ~5.5 h a day reached Lv.100 in about **3.5 months**; 2 h a day in about 9 months.
+- **XP grew with the number of quests**, not with time: every quest gave a flat +10, so 2-minute quests earned 6 XP a minute against 1.2 for an hour. Every new activity or category made the whole game faster.
+- **Stacked bonuses up to ×2.1** (timer +50%, streak +50% after 5 days, path +15%): missing one day cost a third of the XP.
+- **Coins ran out of uses:** 1 coin per 5 XP earned ~16,000 by Lv.100, everything on sale cost ~8,400 and could all be bought around Lv.70.
+- **Studios maxed in weeks:** skill tier 4 (skill Lv.10) took ~7 weeks at 30 min a day; paths reached their last stage in ~5 months.
+- **Claude turns were uncapped** (2 XP each): a busy coding day could out-earn every habit.
 
-- **Problem:** with today's skill curve (`√(XP / 40)`), a facility never realistically reaches Lv.100.
-- **Proposal:** skill levels get a linear curve too, half the player's: **20 + 8 × (L − 1)** XP per level. The trophy cups move to Lv.10, 30 and 60, matching the facility tiers.
-- **Coins:** by player Lv.100 you have earned about **16,300 coins**. Upgrading every home slot to the top costs about 11,700, most of that, so you choose what to upgrade first. Facility equipment, the shop extras and cars come on top. That is intentional: there is always something to save up for.
+### The rules now (all in `building.json` → `progression`)
+
+| Rule | Value |
+|---|---|
+| Quest XP | minutes + finish bonus min(minutes, 5) |
+| Day curve | first 30 min ×2, 30–120 ×1, 120–240 ×0.5, beyond ×0.25 |
+| Bonuses | timer finished +20%, streak +2%/day up to +20%, path stage +3/6/10% |
+| Level curve | each level costs 60 + 49 × (L − 1) XP; Lv.100 at 243,639 |
+| Coins | 1 per 10 XP (~20 a day at 2 h) |
+| Skills | 100 × (L − 1)² XP; trophies and studio tiers at skill Lv.3, 7, 12 |
+| Paths | stages at 4,000 / 18,000 / 60,000 path XP |
+| Claude turns | 2 XP each, up to 40 a day |
+
+### Time to each level
+
+| Player | XP a day | Lv.10 | Lv.25 | Lv.50 | Lv.80 | Lv.100 |
+|---|---:|---:|---:|---:|---:|---:|
+| 45 min a day | ~105 | 22 d | 4.7 mo | 1.6 y | 4 y | 6.3 y |
+| **2 h a day** | **~220** | **10 d** | **2.2 mo** | **9 mo** | **1.9 y** | **3 y** |
+| 4 h a day | ~320 | 7 d | 1.5 mo | 6.3 mo | 1.3 y | 2.1 y |
+
+(6 active days a week, 70–80% of timers finished, typical streaks.) Late levels take ~2–3 weeks each, so the map and home unlocks carry the late game.
+
+- **Skills at 30 min a day in one category:** tier 2 in ~10 days, tier 3 in ~3 months, tier 4 in ~9 months.
+- **Paths at ~45% of your XP:** stage 2 in ~7 weeks, stage 3 in ~7 months, the last stage in ~2 years.
+
+### Pricing rule for new content
+
+Price items in **days of play at ~20 coins a day**: a first fix 2–5 days, a mid tier 1–4 weeks, a top tier 2–4 months (and level-gated). Everything on sale now costs ~16,700 coins (home slots 14,010, decorations 1,740, outfits 960), two-thirds of the ~24,000 that 3 years earn. The other third is the budget for the maps, cars, facility equipment and studios still to come; each new map should bring roughly 1–3 months of coins in items.
 
 ## 7. Maps (other islands)
 

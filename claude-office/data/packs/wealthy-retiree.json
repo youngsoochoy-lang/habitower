@@ -185,12 +185,12 @@
           "ko": "투자자",
           "en": "INVESTOR",
           "title": "투자자",
-          "needXP": 1500,
+          "needXP": 4000,
           "milestone": {
             "streak": 14
           },
           "perk": {
-            "xp": 0.05
+            "xp": 0.03
           },
           "unlocks": [
             {
@@ -204,12 +204,12 @@
           "ko": "자산가",
           "en": "WEALTH BUILDER",
           "title": "자산가",
-          "needXP": 6000,
+          "needXP": 18000,
           "milestone": {
             "focused": 40
           },
           "perk": {
-            "xp": 0.1
+            "xp": 0.06
           },
           "unlocks": [
             {
@@ -223,12 +223,12 @@
           "ko": "자유인",
           "en": "FREE",
           "title": "자유인",
-          "needXP": 20000,
+          "needXP": 60000,
           "milestone": {
             "streak": 60
           },
           "perk": {
-            "xp": 0.15
+            "xp": 0.1
           },
           "unlocks": [
             {
