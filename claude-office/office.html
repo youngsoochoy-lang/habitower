@@ -394,6 +394,7 @@ h2 small{font-size:10.5px;font-weight:500;letter-spacing:.06em;color:var(--faint
 .focus .ft small{color:var(--dim)}
 .focus button{background:transparent;border:1px solid var(--line);color:var(--dim);border-radius:10px}
 .focus button.ok{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.focus .pclock.paused{opacity:.45}
 /* shop and home slots */
 .shophead{background:none;border:0;border-radius:0;padding:18px 0 4px;font-size:13px}
 .shophead b{color:var(--ink);font-size:20px;font-weight:700}
@@ -3016,7 +3017,7 @@ function thoughtOf(c) {
     const q = runQ();
     if (!q || me.room !== (inOffice(q.cat) ? ME_SEAT.room : 'life:' + q.cat) || me.path.length) return null;
     const st = pomo(focusRun);
-    return { main: `${qIcon(q)} ${q.title}`, sub: st.phase === 'focus' ? `🍅 ${mmss(st.left)} · ${st.block}${focusRun.blocks ? '/' + focusRun.blocks : ''}번째 집중 · ${qVerb(q)}` : st.phase === 'break' ? `☕ ${mmss(st.left)} 쉬는 중` : '✅ 다 했어요! 완료를 눌러요' };
+    return { main: `${qIcon(q)} ${q.title}`, sub: focusRun.pausedAt ? `⏸ 잠시 멈춤 · ${mmss(st.left)} 남음` : st.phase === 'focus' ? `🍅 ${mmss(st.left)} · ${st.block}${focusRun.blocks ? '/' + focusRun.blocks : ''}번째 집중 · ${qVerb(q)}` : st.phase === 'break' ? `☕ ${mmss(st.left)} 쉬는 중` : '✅ 다 했어요! 완료를 눌러요' };
   }
   if (c.pose === 'sleep') return null;
   const thinking = c.thinkUntil > now;
@@ -3967,7 +3968,7 @@ function pomoPlan(q) {
 // where a run stands right now, worked out from its start time (so it survives a reload)
 function pomo(run) {
   const f = (run.focus || run.minutes || 25) * 60e3, b = (run.brk ?? 0) * 60e3, n = run.blocks ?? 1, longB = 15 * 60e3;
-  let t = Math.max(0, Date.now() - run.start - (run.paused || 0)), focusedMs = 0;
+  let t = Math.max(0, (run.pausedAt || Date.now()) - run.start - (run.paused || 0)), focusedMs = 0;   // a paused run stands still
   for (let i = 1; ; i++) {
     if (t < f) return { phase: 'focus', block: i, left: f - t, len: f, focusedMs: focusedMs + t };
     t -= f; focusedMs += f;
@@ -4830,18 +4831,22 @@ function renderFocus() {
       else { banner(`⏰ ${q.title} — 다 했어요!`); me?.bubble('me', '⏰ 다 했다! 완료 누르기', 5000); }
     }
   }
-  if (me && !me.path.length && here) { const want = st.phase === 'break' ? 'stretch' : me.spot?.pose; if (want && me.pose !== want && me.pose !== 'wave') me.pose = want; }
+  const paused = !!focusRun.pausedAt;
+  if (me && !me.path.length && here) { const want = paused ? 'stand' : st.phase === 'break' ? 'stretch' : me.spot?.pose; if (want && me.pose !== want && me.pose !== 'wave') me.pose = want; }
   const n = focusRun.blocks, focusedMin = Math.floor(st.focusedMs / 60e3);
-  const label = st.phase === 'focus' ? `🍅 집중 ${st.block}${n ? '/' + n : ''}` : st.phase === 'break' ? (st.long ? '🛋️ 긴 휴식' : '☕ 휴식') : '✅ 끝';
-  const html = `<div class="pclock">${pomoRing(st)}<span>${st.phase === 'done' ? '✓' : mmss(st.left)}</span></div><div class="ft"><b>${qIcon(q)} ${esc(q.title)}</b><small>${label} · ${focusRun.focus}분씩 · 집중 ${focusedMin}분${n ? ` / ${n * focusRun.focus}분` : ''}${st.phase === 'done' && !q.free ? ' · 완주 보너스 +50%' : ''}</small></div>
-    ${st.phase === 'break' ? '<button data-f="skip" title="휴식 건너뛰기">⏭</button>' : ''}${here ? '' : '<button data-f="go" title="그 방으로 가기">🛗</button>'}<button data-f="done" class="ok">✓ ${q.free ? '마치기' : '완료'}</button><button data-f="quit" title="그만두기">✕</button>`;
+  const label = paused ? `⏸ 일시정지 · ${Math.floor((Date.now() - focusRun.pausedAt) / 60e3)}분째` : st.phase === 'focus' ? `🍅 집중 ${st.block}${n ? '/' + n : ''}` : st.phase === 'break' ? (st.long ? '🛋️ 긴 휴식' : '☕ 휴식') : '✅ 끝';
+  const timerB = Math.round((PROG().bonus?.timer ?? 0.2) * 100);
+  const html = `<div class="pclock${paused ? ' paused' : ''}">${pomoRing(st)}<span>${st.phase === 'done' ? '✓' : mmss(st.left)}</span></div><div class="ft"><b>${qIcon(q)} ${esc(q.title)}</b><small>${label} · ${focusRun.focus}분씩 · 집중 ${focusedMin}분${n ? ` / ${n * focusRun.focus}분` : ''}${st.phase === 'done' && !q.free ? ` · 완주 보너스 +${timerB}%` : ''}</small></div>
+    ${st.phase === 'done' ? '' : paused ? '<button data-f="resume" class="ok" title="이어서 하기">▶ 계속</button>' : '<button data-f="pause" title="잠시 멈추기 (시간이 흐르지 않아요)">⏸</button>'}${st.phase === 'break' && !paused ? '<button data-f="skip" title="휴식 건너뛰기">⏭</button>' : ''}${here ? '' : '<button data-f="go" title="그 방으로 가기">🛗</button>'}<button data-f="done" class="${paused ? '' : 'ok'}">✓ ${q.free ? '마치기' : '완료'}</button><button data-f="quit" title="그만두기">✕</button>`;
   if (focusEl.dataset.h !== html) { focusEl.innerHTML = html; focusEl.dataset.h = html; }
-  if (me) me.current = here ? `${qIcon(q)} ${q.title}` : '';
+  if (me) me.current = here ? `${paused ? '⏸ ' : ''}${qIcon(q)} ${q.title}` : '';
 }
 focusEl.addEventListener('click', ev => {
   const b = ev.target.closest('button[data-f]'); if (!b || !focusRun) return;
   if (b.dataset.f === 'done') { if (focusRun.free) completeFree(); else completeQuest(focusRun.id); }
   else if (b.dataset.f === 'quit') quitQuest();
+  else if (b.dataset.f === 'pause') { focusRun.pausedAt = Date.now(); saveFocus(); log('나', `⏸ 잠시 멈춤 — ${runQ()?.title || ''}`); renderFocus(); }
+  else if (b.dataset.f === 'resume') { focusRun.paused = (focusRun.paused || 0) + Date.now() - focusRun.pausedAt; delete focusRun.pausedAt; saveFocus(); log('나', `▶ 다시 시작 — ${runQ()?.title || ''}`); renderFocus(); }
   else if (b.dataset.f === 'skip') { const st = pomo(focusRun); if (st.phase === 'break') { focusRun.start -= st.left; saveFocus(); renderFocus(); } }
   else goToSkill(runQ().cat);
 });
