@@ -365,6 +365,10 @@ h2 small{font-size:10.5px;font-weight:500;letter-spacing:.06em;color:var(--faint
 .qtabs{gap:0 2px;padding:6px 18px 0;border-bottom:1px solid var(--line);flex-wrap:wrap}
 .qtabs button{flex:none;padding:10px 7px 9px;border:0;border-radius:0;font-size:12px;font-weight:600;color:var(--faint);box-shadow:inset 0 -2px 0 transparent}
 .qtabs button.sel{background:none;color:var(--ink);border:0;box-shadow:inset 0 -2px 0 var(--accent)}
+.qtabs .qsize{margin-left:auto;color:var(--faint);font-size:13px;padding:10px 4px 9px}.qtabs .qsize:hover{color:var(--ink)}
+/* ⤢ enlarges the quest panel: every tab on one row, more room for lists */
+.qpanel.wide{width:min(820px,calc(100% - 96px));max-height:min(860px,calc(100% - 196px))}
+.qpanel.wide .qtabs{flex:none;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;padding:6px 12px 0}.qpanel.wide .qtabs button{white-space:nowrap;padding:10px 6px 9px}
 .qbody{padding:8px 20px 22px;gap:0}
 .qfloor{margin:22px 0 6px;font-size:11px;font-weight:600;letter-spacing:.01em;color:var(--faint)}
 .qfloor.sub{margin-top:14px}
@@ -4117,6 +4121,9 @@ function joinPath(id) {
 // ---------- HUD, quest panel, focus bar ----------
 const hudEl = document.getElementById('hud'), qpanel = document.getElementById('qpanel'), focusEl = document.getElementById('focus');
 let qTab = 'today';
+// ⤢ / ⤡: the quest panel's size, remembered on this device
+let qWide = false; try { qWide = localStorage.getItem('claudeTower.qwide') === '1'; } catch {}
+qpanel.classList.toggle('wide', qWide);
 const mmss = ms => { const s = Math.max(0, Math.round(ms / 1000)); return `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`; };
 function renderGame() {
   if (!gameReady) return;
@@ -4841,7 +4848,7 @@ function unlog(i, ts) {
 }
 function renderQuestPanel() {
   const s = gameStats(), scroll = qpanel.querySelector('.qbody')?.scrollTop || 0;
-  const tabs = [['today', '오늘'], ['all', '전체'], ['goals', '🎯 목표'], ['plan', '📅 일정'], ['courses', '📦 코스'], ['skills', '스킬'], ['path', '🧭 진로'], ['shop', '🛍️ 상점'], ['log', '📝 기록'], ['build', '🏗️ 건물']];
+  const tabs = [['today', '☀️ 오늘'], ['all', '📋 전체'], ['goals', '🎯 목표'], ['plan', '📅 일정'], ['courses', '📦 코스'], ['skills', '🏆 스킬'], ['path', '🧭 진로'], ['shop', '🛍️ 상점'], ['log', '📝 기록'], ['build', '🏗️ 건물']];
   let body = '';
   if (qTab === 'today' || qTab === 'all') {
     body = questListHTML(qTab === 'today');
@@ -4865,10 +4872,11 @@ function renderQuestPanel() {
   } else {
     body = logHTML();
   }
-  qpanel.innerHTML = `<div class="qtabs">${tabs.map(([k, l]) => `<button data-tab="${k}" class="${qTab === k ? 'sel' : ''}">${l}</button>`).join('')}</div><div class="qbody">${body}</div>`;
+  qpanel.innerHTML = `<div class="qtabs">${tabs.map(([k, l]) => `<button data-tab="${k}" class="${qTab === k ? 'sel' : ''}">${l}</button>`).join('')}<button class="qsize" data-qsize title="${qWide ? '작게 보기' : '크게 보기 (탭을 한 줄로)'}" aria-pressed="${qWide}">${qWide ? '⤡' : '⤢'}</button></div><div class="qbody">${body}</div>`;
   qpanel.querySelector('.qbody').scrollTop = scroll;
 }
 qpanel.addEventListener('click', ev => {
+  if (ev.target.closest('[data-qsize]')) { qWide = !qWide; qpanel.classList.toggle('wide', qWide); try { localStorage.setItem('claudeTower.qwide', qWide ? '1' : '0'); } catch {} renderQuestPanel(); return; }
   const t = ev.target.closest('[data-tab]'); if (t) { qTab = t.dataset.tab; renderQuestPanel(); return; }
   const g = ev.target.closest('[data-go]'); if (g) { qpanel.classList.remove('open'); goToSkill(g.dataset.go); return; }
   const lt = ev.target.closest('[data-late]'); if (lt) { const y = new Date(); y.setDate(y.getDate() - 1); logLate('q:' + lt.dataset.late, dayKey(y), '', 0); return; }
