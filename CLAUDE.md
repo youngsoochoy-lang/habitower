@@ -41,6 +41,7 @@ A gamified habit app: your to-dos are quests that earn XP and coins. Your life h
 ## Where we left off (2026-10-28)
 
 - 3-year reward rebalance: every reward number lives in `building.json` → `progression` (`PROG()`, `dayRate()`, `xpMultiplier()`, `baseXP()` in office.html); the model and pricing rule are in DESIGN.md §6. Path stage thresholds (4,000 / 18,000 / 60,000, perks 3/6/10%) live in the pack generators too.
+- Mistaken starts: `cancelStart()` (focus bar ↶ 취소 for 3 minutes, or the undo toast via `startCheckpoint()`; `focusRun.from` is the floor to return to); ↺ restarts, ⏸ pauses (`pausedAt`/`paused`). Late logging: `logLate()` / `unlog()` in the 📝 기록 tab (`logHTML()`), history kept sorted by `ts`, entries flagged `late`.
 - 📅 일정: the week view lists routines too (`planRoutines`), category chips filter it (`planCat`), lists group by category (`byCategory()`).
 
 ## Earlier (2026-10-27)

@@ -455,6 +455,8 @@ h2 small{font-size:10.5px;font-weight:500;letter-spacing:.06em;color:var(--faint
 .bk{display:flex;align-items:center;gap:6px;min-width:0}.bk+.bk{margin-top:4px}.bk span{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.bk.did{opacity:.55}
 .bk input{background:var(--raise);border:1px solid transparent;border-radius:6px;color:var(--ink);font:inherit;font-size:11px;padding:2px 4px;width:96px}
 .bk button{padding:1px 6px}
+.bk .ck{flex:none;width:18px;height:18px;padding:0;border:1px solid var(--line);border-radius:5px;background:none;color:var(--accent-ink);font-size:11px;line-height:16px;cursor:pointer}
+.bk span.ck{border-color:transparent;cursor:default}.bk .ck.on{background:var(--accent);border-color:var(--accent);font-weight:700}.bk button.ck:hover{border-color:var(--accent)}
 .bk.rt em{width:96px;flex:none;font-style:normal;color:var(--faint);font-size:11px;padding:0 4px;font-variant-numeric:tabular-nums}.bk.rt span{color:var(--dim)}
 .pcats{display:flex;flex-wrap:wrap;gap:6px;margin-top:14px}
 .pcats button{border:1px solid var(--line);background:var(--raise);color:var(--dim);border-radius:8px;padding:5px 10px;font:inherit;font-size:11.5px;cursor:pointer;letter-spacing:-.02em}
@@ -500,7 +502,10 @@ h2 small{font-size:10.5px;font-weight:500;letter-spacing:.06em;color:var(--faint
 .skill b{font-size:13px;font-weight:600}
 .phead b{font-size:var(--fs-group);font-weight:700;letter-spacing:-.02em}.stage .sh{font-size:var(--fs-item)}
 .slot b{font-size:13px;font-weight:600}.item b{font-size:12px}
-.hrow{font-size:11.5px}
+.hrow{font-size:11.5px;grid-template-columns:84px 1fr auto 26px;align-items:center}
+.hrow em{font-style:normal;color:var(--faint);font-size:10.5px;margin-left:4px}
+.hrow button{width:24px;height:22px;border:0;background:none;color:var(--faint);cursor:pointer;border-radius:6px;font-size:11px;opacity:.6}.hrow button:hover{opacity:1;background:var(--raise)}
+.qadd .lnote{display:block;color:var(--faint);font-size:10.5px}
 .barea>input:not(.ic){font-size:var(--fs-group);font-weight:700}
 .none{color:var(--faint);font-size:var(--fs-meta);padding:4px 0 2px 34px}
 /* courses */
@@ -3842,15 +3847,29 @@ const undoEl = document.createElement('div'); undoEl.className = 'undo'; undoEl.
 document.body.appendChild(undoEl);
 let undoTimer = 0;
 function checkpoint(label, o = {}) {
-  undoStack.push({ label, game: JSON.stringify(game), user: JSON.stringify(USER), base: o.base ? JSON.stringify(BASE) : null });
+  undoStack.push({ label, game: JSON.stringify(game), user: JSON.stringify(USER), base: o.base ? JSON.stringify(BASE) : null, run: o.run || null });
   if (undoStack.length > 50) undoStack.shift();
   undoEl.querySelector('span').textContent = label;
   undoEl.classList.add('show'); clearTimeout(undoTimer); undoTimer = setTimeout(() => undoEl.classList.remove('show'), 10000);
+}
+// a start pressed by mistake: the undo toast (and Ctrl+Z) cancels it as if it never happened
+function startCheckpoint(title) { checkpoint(`▶ ${title} 시작`, { run: focusRun.id }); }
+function cancelStart(silent) {
+  if (!focusRun) return;
+  const q = runQ(), from = focusRun.from;
+  focusRun = null; saveFocus();
+  // back to where you were, once the lift that started the trip has arrived
+  const back = (n = 0) => { if (riding && n < 40) return setTimeout(() => back(n + 1), 250); if (cur.floor !== from) { pauseFollow(); rideTo(from, 'all'); } };
+  if (from && (from !== cur.floor || riding) && floors.some(f => f.id === from)) back();
+  else if (onLife() && !isPlace(cur.floor) && me) lifeWalk(me, 'lobby');
+  if (!silent) banner(`↶ 시작을 취소했어요${q ? ` · ${q.title}` : ''}`);
+  renderGame();
 }
 function undo() {
   const u = undoStack.pop();
   undoEl.classList.remove('show');
   if (!u) { banner('되돌릴 게 없어요'); return; }
+  if (u.run) { if (focusRun?.id === u.run) cancelStart(); else banner('이미 끝난 활동이에요'); return; }
   game = JSON.parse(u.game);
   if (focusRun && !runQ()) { focusRun = null; saveFocus(); }
   // an outfit you bought and are wearing goes back to the default when the purchase is undone
@@ -3880,7 +3899,8 @@ const questById = id => game.quests.find(q => q.id === id);
 const onLife = () => String(cur.floor || '').startsWith('life:');
 function startQuest(id) {
   const q = questById(id); if (!q) return;
-  focusRun = { id, start: Date.now(), minutes: q.minutes, ...pomoPlan(q), rang: false, seen: '' }; saveFocus();
+  focusRun = { id, start: Date.now(), minutes: q.minutes, ...pomoPlan(q), rang: false, seen: '', from: cur.floor }; saveFocus();
+  startCheckpoint(q.title);
   qpanel.classList.remove('open');
   log('나', `▶ 퀘스트 시작 — ${qIcon(q)} ${q.title} (${q.minutes}분 · 🍅 ${focusRun.focus}분씩)`);
   goToSkill(q.cat);
@@ -3983,8 +4003,8 @@ function startAction(cat, sub = null) {
   if (!SKILLS[cat]) return;
   const node = subOf(cat, sub), title = node ? (node._parent ? `${node._parent.ko} › ${node.ko}` : node.ko) : catOf(cat).ko;
   const q = { free: true, title, cat, sub };
-  focusRun = { id: 'free:' + Date.now().toString(36), free: true, title, cat, sub, start: Date.now(), ...pomoPlan(q), minutes: 0, rang: false, seen: '' };
-  saveFocus(); qpanel.classList.remove('open');
+  focusRun = { id: 'free:' + Date.now().toString(36), free: true, title, cat, sub, start: Date.now(), ...pomoPlan(q), minutes: 0, rang: false, seen: '', from: cur.floor };
+  saveFocus(); startCheckpoint(title); qpanel.classList.remove('open');
   log('나', `▶ 집중 시작 — ${qIcon(focusRun)} ${title} (🍅 ${focusRun.focus}분씩)`);
   goToSkill(cat); renderGame();
 }
@@ -4163,7 +4183,7 @@ function habitHint(q) {
   const y = new Date(); y.setDate(y.getDate() - 1);
   const missed = q.repeat === 'daily' && isDue(q, y) && q.created < new Date(dayKey(y) + 'T00:00').getTime() && !(q.done || []).includes(dayKey(y));
   const bits = [];
-  if (missed) bits.push(`<span class="miss">어제 놓쳤어요 · 두 번 연속은 안 돼요${q.easy ? ` → 오늘은 2분 버전: ${esc(q.easy)}` : ''}</span>`);
+  if (missed) bits.push(`<span class="miss">어제 놓쳤어요 · 두 번 연속은 안 돼요${q.easy ? ` → 오늘은 2분 버전: ${esc(q.easy)}` : ''}</span> <button class="lnk" data-late="${q.id}" title="어제 했는데 기록을 못 했다면">✍️ 어제 했어요</button>`);
   else {
     if (q.cue) bits.push(`⏰ ${esc(q.cue)}`);
     if (q.easy) bits.push(`2분 버전: ${esc(q.easy)}`);
@@ -4182,7 +4202,10 @@ function byCategory(list) {
   const subRank = q => { const i = subNodes(q.cat).findIndex(x => x.id === q.sub); return i < 0 ? 1e3 : i; };
   return [...new Set(list.map(q => q.cat))].sort((a, b) => rank(a) - rank(b)).map(c => [c, list.filter(q => q.cat === c).sort((a, b) => subRank(a) - subRank(b))]);
 }
-let planCat = null, planRoutines = true;              // the category the schedule shows (null = all), routines in the week view
+let planCat = null, planRoutines = true;
+// today and past days can be ticked off right in the week view (a past day is logged late, with its XP); future days can't
+const checkBox = (q, k, did) => k > dayKey() ? '<span class="ck"></span>'
+  : `<button class="ck${did ? ' on' : ''}" data-sch="${did ? 'uncheck' : 'check'}" data-id="${q.id}" data-d="${k}" aria-pressed="${did}" title="${did ? '체크 해제 (그 기록과 XP를 지워요)' : k === dayKey() ? '했어요 · 완료하고 XP 받기' : '했어요 · 그날로 기록하고 XP 받기'}">${did ? '✓' : ''}</button>`;              // the category the schedule shows (null = all), routines in the week view
 function planHTML() {
   const days = weekDates(planWeek), wk = dayKey(days[0]), md = d => `${d.getMonth() + 1}/${d.getDate()}`;
   const allWeekly = game.quests.filter(flexible), allDaily = game.quests.filter(q => q.repeat === 'daily');
@@ -4200,10 +4223,10 @@ function planHTML() {
     const routines = planRoutines ? byCategory(daily.filter(q => isDue(q, d))).flatMap(([, l]) => l) : [];
     return `<div class="wkday${k === dayKey() ? ' now' : ''}"><span class="dl">${WD[d.getDay()]} <small>${md(d)}</small></span><div>${items.map(q => {
       const did = (q.done || []).includes(k);
-      return `<div class="bk${did ? ' did' : ''}"><input type="time" data-sch="time" data-id="${q.id}" data-d="${k}" value="${esc(bookingsOf(q, wk)[k] || '')}" aria-label="${esc(q.title)} 시간"><span>${qIcon(q)} ${esc(q.title)}</span>${did ? '✓' : `<button data-sch="book" data-id="${q.id}" data-d="${k}" title="예약 취소">✕</button>`}</div>`;
+      return `<div class="bk${did ? ' did' : ''}">${checkBox(q, k, did)}<input type="time" data-sch="time" data-id="${q.id}" data-d="${k}" value="${esc(bookingsOf(q, wk)[k] || '')}" aria-label="${esc(q.title)} 시간"><span>${qIcon(q)} ${esc(q.title)}</span>${did ? '' : `<button data-sch="book" data-id="${q.id}" data-d="${k}" title="예약 취소">✕</button>`}</div>`;
     }).join('')}${routines.map(q => {
       const did = (q.done || []).includes(k);
-      return `<div class="bk rt${did ? ' did' : ''}" title="${esc(q.cue ? `⏰ ${q.cue}` : '매일 루틴')}"><em>🔁 ${q.minutes}분</em><span>${qIcon(q)} ${esc(q.title)}</span>${did ? '✓' : ''}</div>`;
+      return `<div class="bk rt${did ? ' did' : ''}" title="${esc(q.cue ? `⏰ ${q.cue}` : '매일 루틴')}">${checkBox(q, k, did)}<em>🔁 ${q.minutes}분</em><span>${qIcon(q)} ${esc(q.title)}</span></div>`;
     }).join('')}${items.length + routines.length ? '' : '<small class="none">—</small>'}</div></div>`;
   }).join('') + '</div>';
   const catHeadP = (c, l) => `<div class="pcat">${catOf(c).icon} ${esc(catOf(c).ko)}<span>${l.length}</span></div>`;
@@ -4231,6 +4254,17 @@ function planHTML() {
 qpanel.addEventListener('click', ev => {
   const b = ev.target.closest('button[data-sch]'); if (!b) return;
   const a = b.dataset.sch, q = b.dataset.id && questById(b.dataset.id), wk = dayKey(weekDates(planWeek)[0]);
+  if (a === 'check' && q) {
+    const d = b.dataset.d;
+    if (d === dayKey()) completeQuest(q.id); else logLate('q:' + q.id, d, bookingsOf(q, wk)[d] || '', 0);
+    return renderQuestPanel();
+  }
+  if (a === 'uncheck' && q) {
+    const d = b.dataset.d, i = game.history.findLastIndex(h => h.id === q.id && dayKey(new Date(h.ts)) === d);
+    if (i >= 0) unlog(i, game.history[i].ts);
+    else { checkpoint(`${q.title} 체크 해제`); const j = q.done.lastIndexOf(d); if (j >= 0) q.done.splice(j, 1); saveGame(); renderGame(); }
+    return renderQuestPanel();
+  }
   if (a === 'wk') planWeek = Number(b.dataset.v);
   else if (a === 'cat') { planCat = b.dataset.v || null; return renderQuestPanel(); }
   else if (a === 'routines') { planRoutines = !planRoutines; return renderQuestPanel(); }
@@ -4676,6 +4710,7 @@ qpanel.addEventListener('submit', ev => {
     if (!v('name')) return;
     checkpoint(`✏️ 층 이름 → ${v('name')}`); userEdit('floor:' + f.dataset.id, { name: v('name'), en: v('name').replace(/^[^\p{L}\p{N}]+/u, '').trim() || v('name') }); editFloor = null; saveUser(); return renderQuestPanel();
   }
+  if (kind === 'late') return logLate(v('what'), v('day'), v('at'), Number(v('m')) || 0);
   if (kind === 'node') {
     const c = f.dataset.id, id = f.dataset.sub, node = subOf(c, id), ko = v('ko'); if (!node || !ko) return;
     checkpoint(`✏️ '${node.ko}' 고치기`);
@@ -4756,9 +4791,57 @@ qpanel.addEventListener('change', ev => {
   const el = ev.target, f = el.form;
   if (el.name === 'c' && f?.dataset.form === 'quest') f.elements.s.innerHTML = subOptionsSel(el.value, null);
 });
+// ---------- 기록: what you did, adding what you did while away from the tower, removing a mistake ----------
+const LATE_DAYS = 30;                                  // how far back you can log
+function logHTML() {
+  const today = dayKey(), min = new Date(); min.setDate(min.getDate() - LATE_DAYS);
+  const groups = byCategory(game.quests.filter(q => SKILLS[q.cat]));
+  const opts = groups.map(([c, l]) => `<optgroup label="${esc(`${catOf(c).icon} ${catOf(c).ko}`)}">${l.map(q => `<option value="q:${q.id}">${esc(q.title)} · ${q.minutes}분</option>`).join('')}<option value="c:${esc(c)}">⏱ 퀘스트 없이 ${esc(catOf(c).ko)} 시간만</option></optgroup>`).join('')
+    + Object.keys(SKILLS).filter(c => c !== 'work' && !groups.some(([k]) => k === c)).map(c => `<option value="c:${esc(c)}">${catOf(c).icon} ${esc(catOf(c).ko)} · 시간만</option>`).join('');
+  let h = `<div class="shophead">📝 <b>기록</b><small>타워를 못 켰던 날의 활동도 나중에 적을 수 있어요 (${LATE_DAYS}일 전까지). 잘못된 기록은 🗑로 지워요.</small></div>
+    <form class="qadd qedit" data-form="late"><div class="qedit-h">✍️ 지난 활동 기록하기</div>
+      <select name="what" aria-label="무엇을 했나요" required>${opts}</select>
+      <div class="qrow"><input name="day" type="date" value="${today}" min="${dayKey(min)}" max="${today}" required aria-label="날짜"><input name="at" type="time" value="${String(new Date().getHours()).padStart(2, '0')}:00" aria-label="시간">
+        <label class="fld"><input name="m" type="number" min="1" max="600" placeholder="자동" aria-label="한 시간">분</label></div>
+      <div class="qrow"><button>기록하기</button></div><small class="lnote">시간을 비우면 퀘스트 시간으로 · 완주 보너스 없이 그날의 XP로 쳐요</small></form>`;
+  const rows = game.history.map((x, i) => [x, i]).slice(-60).reverse();
+  h += `<div class="qgroup"><b>최근 기록</b><span>${game.history.length}개</span></div>` + (rows.map(([x, i]) => `<div class="hrow"><time>${new Date(x.ts).toLocaleString('ko-KR', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</time><span>${SKILLS[x.cat]?.icon || '•'} ${esc(x.title)}${x.turns ? ` ×${x.turns}` : ''}${x.minutes && !x.turns ? ` · ${x.minutes}분` : ''}${x.focused ? ' ⏱' : ''}${x.late ? ' <em>나중에 기록</em>' : ''}</span><b>+${x.xp}</b>${x.cat === 'work' ? '' : `<button data-a="unlog" data-id="${i}" data-ts="${x.ts}" title="이 기록 지우기 (되돌리기 가능)">🗑</button>`}</div>`).join('') || '<div class="empty">아직 기록이 없어요</div>');
+  return h;
+}
+// minutes already logged on a day, for the day's XP curve
+const minutesOn = day => game.history.filter(h => h.cat !== 'work' && dayKey(new Date(h.ts)) === day).reduce((m, h) => m + (h.minutes || 0), 0);
+function logLate(what, day, at, mins) {
+  const [kind, id] = [what.slice(0, 1), what.slice(2)], q = kind === 'q' ? questById(id) : null, cat = q ? q.cat : id;
+  if (!SKILLS[cat] || !day || day > dayKey()) return;
+  const m = Math.max(1, Math.min(600, Math.round(mins || q?.minutes || 25)));
+  const already = q && (q.repeat === 'once' ? (q.done || []).length : q.repeat === 'daily' && (q.done || []).includes(day));
+  if (already) { banner(`그날은 이미 '${q.title}'를 했다고 적혀 있어요`); return; }
+  checkpoint(`✍️ ${day} ${q ? q.title : catOf(cat).ko} 기록`);
+  const ts = new Date(`${day}T${at || '12:00'}`).getTime(), s = gameStats();
+  const xp = Math.max(1, Math.round(baseXP(m) * dayRate(minutesOn(day), m) * xpMultiplier(s, cat, false)));
+  const entry = { ts, ...(q ? { id: q.id, title: q.title } : { title: `${catOf(cat).ko} 시간` }), cat, ...(q?.sub ? { sub: q.sub } : {}), xp, minutes: m, focused: false, late: true };
+  const i = game.history.findIndex(x => x.ts > ts); i < 0 ? game.history.push(entry) : game.history.splice(i, 0, entry);
+  if (q) q.done = [...(q.done || []), day].sort();
+  saveGame();
+  // the same rewards as finishing it on the day: XP (and so coins), the skill, the streak, paths and level-ups
+  const after = gameStats(), lvUp = after.level > s.level, skUp = lvlOf(after.by[cat] || 0) > lvlOf(s.by[cat] || 0);
+  log('나', `✍️ ${day} ${entry.title} ${m}분 기록 +${xp} XP`);
+  banner(`✍️ ${day.slice(5).replace('-', '/')} · ${entry.title} ${m}분 · +${xp} XP · 🪙 ${after.coins}${after.streak > s.streak ? ` · 🔥 ${after.streak}일` : ''}`);
+  if (lvUp) { const got = []; for (let l = s.level + 1; l <= after.level; l++) got.push(...unlockedAt(l)); setTimeout(() => banner(`🎉 레벨 업! 나 Lv.${after.level}`), 2200); if (got.length) setTimeout(() => banner(`🔓 ${got.map(x => `${x.icon} ${x.ko}`).join(' · ')} 해금!`), 4400); }
+  else if (skUp) setTimeout(() => banner(`🏆 ${catOf(cat).icon} ${catOf(cat).ko} Lv.${lvlOf(after.by[cat] || 0)}!`), 2200);
+  checkPaths(after.level); renderGame();
+}
+function unlog(i, ts) {
+  const x = game.history[i]; if (!x || String(x.ts) !== String(ts)) return;
+  checkpoint(`🗑 기록 지우기 · ${x.title}`);
+  game.history.splice(i, 1);
+  const q = x.id && questById(x.id), day = dayKey(new Date(x.ts));
+  if (q) { const k = (q.done || []).lastIndexOf(day); if (k >= 0) q.done.splice(k, 1); }
+  saveGame(); renderGame();
+}
 function renderQuestPanel() {
   const s = gameStats(), scroll = qpanel.querySelector('.qbody')?.scrollTop || 0;
-  const tabs = [['today', '오늘'], ['all', '전체'], ['goals', '🎯 목표'], ['plan', '📅 일정'], ['courses', '📦 코스'], ['skills', '스킬'], ['path', '🧭 진로'], ['shop', '🛍️ 상점'], ['log', '기록'], ['build', '🏗️ 건물']];
+  const tabs = [['today', '오늘'], ['all', '전체'], ['goals', '🎯 목표'], ['plan', '📅 일정'], ['courses', '📦 코스'], ['skills', '스킬'], ['path', '🧭 진로'], ['shop', '🛍️ 상점'], ['log', '📝 기록'], ['build', '🏗️ 건물']];
   let body = '';
   if (qTab === 'today' || qTab === 'all') {
     body = questListHTML(qTab === 'today');
@@ -4780,7 +4863,7 @@ function renderQuestPanel() {
       return `<div class="skill" ${SKILL_ZONE[k] ? `data-go="${k}" title="${v.ko} 방으로 가기"` : ''}><span>${v.icon}</span><div><b>${v.ko} <em>Lv.${lv}</em></b><div class="sbar"><i style="width:${((xp - a) / (b - a) * 100).toFixed(0)}%"></i></div><small>${xp} XP</small></div></div>`;
     }).join('') + '</div>';
   } else {
-    body = game.history.slice(-40).reverse().map(h => `<div class="hrow"><time>${new Date(h.ts).toLocaleString('ko-KR', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</time><span>${SKILLS[h.cat]?.icon || '•'} ${esc(h.title)}${h.turns ? ` ×${h.turns}` : ''}${h.focused ? ' ⏱' : ''}</span><b>+${h.xp}</b></div>`).join('') || '<div class="empty">아직 기록이 없어요</div>';
+    body = logHTML();
   }
   qpanel.innerHTML = `<div class="qtabs">${tabs.map(([k, l]) => `<button data-tab="${k}" class="${qTab === k ? 'sel' : ''}">${l}</button>`).join('')}</div><div class="qbody">${body}</div>`;
   qpanel.querySelector('.qbody').scrollTop = scroll;
@@ -4788,12 +4871,14 @@ function renderQuestPanel() {
 qpanel.addEventListener('click', ev => {
   const t = ev.target.closest('[data-tab]'); if (t) { qTab = t.dataset.tab; renderQuestPanel(); return; }
   const g = ev.target.closest('[data-go]'); if (g) { qpanel.classList.remove('open'); goToSkill(g.dataset.go); return; }
+  const lt = ev.target.closest('[data-late]'); if (lt) { const y = new Date(); y.setDate(y.getDate() - 1); logLate('q:' + lt.dataset.late, dayKey(y), '', 0); return; }
   const b = ev.target.closest('button[data-a]'); if (!b) return;
   const id = b.dataset.id;
   if (b.dataset.a === 'start') startQuest(id);
   else if (b.dataset.a === 'go') { qpanel.classList.remove('open'); goToSkill(questById(id).cat); }
   else if (b.dataset.a === 'done') completeQuest(id);
   else if (b.dataset.a === 'del') removeQuest(id);
+  else if (b.dataset.a === 'unlog') unlog(Number(id), b.dataset.ts);
   else if (b.dataset.a === 'addst') { addSubFor = addSubFor === id ? null : id; editQuest = null; renderQuestPanel(); }
   else if (b.dataset.a === 'edit') { editQuest = editQuest === id ? null : id; addSubFor = null; renderQuestPanel(); }
   else if (b.dataset.a === 'cancel') { editQuest = addSubFor = editCat = quickCat = editFloor = addTopicFor = addSubHere = editNode = null; newCatOpen = false; editGoal = null; newGoalOpen = false; renderQuestPanel(); }
@@ -4837,7 +4922,7 @@ function renderFocus() {
   const label = paused ? `⏸ 일시정지 · ${Math.floor((Date.now() - focusRun.pausedAt) / 60e3)}분째` : st.phase === 'focus' ? `🍅 집중 ${st.block}${n ? '/' + n : ''}` : st.phase === 'break' ? (st.long ? '🛋️ 긴 휴식' : '☕ 휴식') : '✅ 끝';
   const timerB = Math.round((PROG().bonus?.timer ?? 0.2) * 100);
   const html = `<div class="pclock${paused ? ' paused' : ''}">${pomoRing(st)}<span>${st.phase === 'done' ? '✓' : mmss(st.left)}</span></div><div class="ft"><b>${qIcon(q)} ${esc(q.title)}</b><small>${label} · ${focusRun.focus}분씩 · 집중 ${focusedMin}분${n ? ` / ${n * focusRun.focus}분` : ''}${st.phase === 'done' && !q.free ? ` · 완주 보너스 +${timerB}%` : ''}</small></div>
-    ${st.phase === 'done' ? '' : paused ? '<button data-f="resume" class="ok" title="이어서 하기">▶ 계속</button>' : '<button data-f="pause" title="잠시 멈추기 (시간이 흐르지 않아요)">⏸</button>'}${st.phase === 'break' && !paused ? '<button data-f="skip" title="휴식 건너뛰기">⏭</button>' : ''}${here ? '' : '<button data-f="go" title="그 방으로 가기">🛗</button>'}<button data-f="done" class="${paused ? '' : 'ok'}">✓ ${q.free ? '마치기' : '완료'}</button><button data-f="quit" title="그만두기">✕</button>`;
+    ${st.phase === 'done' ? '' : paused ? '<button data-f="resume" class="ok" title="이어서 하기">▶ 계속</button>' : '<button data-f="pause" title="잠시 멈추기 (시간이 흐르지 않아요)">⏸</button>'}${st.phase === 'break' && !paused ? '<button data-f="skip" title="휴식 건너뛰기">⏭</button>' : ''}${here ? '' : '<button data-f="go" title="그 방으로 가기">🛗</button>'}${st.phase === 'done' || st.focusedMs < 60e3 ? '' : '<button data-f="restart" title="타이머를 처음부터 다시">↺</button>'}<button data-f="done" class="${paused ? '' : 'ok'}">✓ ${q.free ? '마치기' : '완료'}</button>${Date.now() - focusRun.start < 3 * 60e3 ? '<button data-f="cancel" title="잘못 눌렀어요: 기록 없이 시작 전으로">↶ 취소</button>' : '<button data-f="quit" title="그만두기 (기록 없이)">✕</button>'}`;
   if (focusEl.dataset.h !== html) { focusEl.innerHTML = html; focusEl.dataset.h = html; }
   if (me) me.current = here ? `${paused ? '⏸ ' : ''}${qIcon(q)} ${q.title}` : '';
 }
@@ -4845,6 +4930,8 @@ focusEl.addEventListener('click', ev => {
   const b = ev.target.closest('button[data-f]'); if (!b || !focusRun) return;
   if (b.dataset.f === 'done') { if (focusRun.free) completeFree(); else completeQuest(focusRun.id); }
   else if (b.dataset.f === 'quit') quitQuest();
+  else if (b.dataset.f === 'cancel') cancelStart();
+  else if (b.dataset.f === 'restart') { Object.assign(focusRun, { start: Date.now(), paused: 0, seen: '', rang: false }); delete focusRun.pausedAt; saveFocus(); banner('↺ 타이머를 처음부터 다시 시작해요'); renderFocus(); }
   else if (b.dataset.f === 'pause') { focusRun.pausedAt = Date.now(); saveFocus(); log('나', `⏸ 잠시 멈춤 — ${runQ()?.title || ''}`); renderFocus(); }
   else if (b.dataset.f === 'resume') { focusRun.paused = (focusRun.paused || 0) + Date.now() - focusRun.pausedAt; delete focusRun.pausedAt; saveFocus(); log('나', `▶ 다시 시작 — ${runQ()?.title || ''}`); renderFocus(); }
   else if (b.dataset.f === 'skip') { const st = pomo(focusRun); if (st.phase === 'break') { focusRun.start -= st.left; saveFocus(); renderFocus(); } }
