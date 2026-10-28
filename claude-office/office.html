@@ -571,7 +571,7 @@ h2 small{font-size:10.5px;font-weight:500;letter-spacing:.06em;color:var(--faint
     <div class="clock" id="clock" title="지금 시간대에 맞춰 하늘이 바뀌어요. 클릭하면 다른 시간대를 미리 볼 수 있어요"></div>
     <div class="custom"><button id="customBtn">🎨 나 꾸미기</button><div class="pop" id="pop"></div></div>
     <div class="zoom"><button id="zin" title="Zoom in">+</button><button id="zout" title="Zoom out">−</button><button id="zreset" title="Reset view">⟲</button></div>
-    <div class="hud" id="hud"><span class="lv">Lv.1</span><div class="xp"><div class="xpbar"><i></i></div><span class="xptxt">0 / 60 XP</span></div><span class="next" hidden></span><span class="streak">🔥 0일</span><span class="coins" title="XP 5마다 1코인 · 나중에 방 꾸미기에 써요">🪙 0</span><button id="questBtn">📜 퀘스트</button></div>
+    <div class="hud" id="hud"><span class="lv">Lv.1</span><div class="xp"><div class="xpbar"><i></i></div><span class="xptxt">0 / 308 XP</span></div><span class="next" hidden></span><span class="streak">🔥 0일</span><span class="coins" title="XP 5마다 1코인 · 나중에 방 꾸미기에 써요">🪙 0</span><button id="questBtn">📜 퀘스트</button></div>
     <div class="qpanel" id="qpanel"></div>
     <div class="focus" id="focus"></div>
     <div class="fade" id="fade"></div>
@@ -3702,12 +3702,12 @@ function PROG() { return BUILDING.progression || {}; }
 const lvlOf = xp => Math.floor(Math.sqrt(xp / (PROG().skill ?? 100))) + 1;
 const lvlFloor = l => (PROG().skill ?? 100) * (l - 1) ** 2;
 function skillTiers() { return PROG().tiers || [3, 7, 12]; }
-// your own level. linear: each level costs base + step × (L − 1) XP (60/49: Lv.10 in ~10 days, Lv.50 ~9 months,
+// your own level. linear: each level costs base + step × (L − 1) XP (308/44: Lv.3 in ~3 days, Lv.10 ~3 weeks, Lv.50 ~10 months,
 // Lv.100 ~3 years at ~220 XP a day). sqrt: the old curve, base × (L − 1)².
 function playerFloor(l) {
-  const p = PROG(), base = p.base ?? 60;
+  const p = PROG(), base = p.base ?? 308;
   if (p.curve === 'sqrt') return base * (l - 1) ** 2;
-  const step = p.step ?? 49;
+  const step = p.step ?? 44;
   return (l - 1) * base + step * (l - 1) * (l - 2) / 2;
 }
 function playerLvl(xp) {
@@ -3934,7 +3934,9 @@ function completeQuest(id) {
   const s = gameStats(), running = focusRun?.id === id;
   const st = running ? pomo(focusRun) : null, elapsed = st ? st.focusedMs / 60e3 : 0;
   const full = running && (st.phase === 'done' || elapsed >= q.minutes * 0.95);
-  const xp = Math.max(1, Math.round(questXP(q) * dayRate(minutesToday(), q.minutes) * xpMultiplier(s, q.cat, full)));
+  // a timed run pays for the minutes you actually focused (up to the quest's length); ✓ without a timer trusts the quest's minutes
+  const credit = running ? Math.min(q.minutes, Math.max(1, Math.round(elapsed))) : q.minutes;
+  const xp = Math.max(1, Math.round(baseXP(credit) * dayRate(minutesToday(), credit) * xpMultiplier(s, q.cat, full)));
   const skillBefore = lvlOf(s.by[q.cat] || 0);
   q.done = [...(q.done || []), dayKey()];
   game.history.push({ ts: Date.now(), id: q.id, title: q.title, cat: q.cat, xp, minutes: running ? Math.max(1, Math.round(elapsed)) : q.minutes, focused: full });
@@ -4633,9 +4635,13 @@ function questListHTML(today) {
   };
   let rest = list;
   if (today) {
+    // 오늘 일정 matches the 📅 일정 week view: today's booked sessions by time, then every routine due today
     const booked = list.filter(q => flexible(q) && dayKey() in bookingsOf(q)).sort((a, b) => (bookingsOf(a)[dayKey()] || '99').localeCompare(bookingsOf(b)[dayKey()] || '99'));
-    if (booked.length) body += group('📅 오늘 일정', booked) + booked.map(q => questRow(q, bookingsOf(q)[dayKey()])).join('');
-    rest = list.filter(q => !booked.includes(q));
+    const routines = byCategory(list.filter(q => q.repeat === 'daily')).flatMap(([, l]) => l);
+    const sched = [...booked, ...routines];
+    if (sched.length) body += group('📅 오늘 일정', sched) + booked.map(q => questRow(q, bookingsOf(q)[dayKey()])).join('')
+      + (routines.length ? `<div class="qcat"><span>🔁 매일 루틴</span><small>${routines.filter(q => !isDone(q)).length || '✓'}</small></div>` + routines.map(q => questRow(q)).join('') : '');
+    rest = list.filter(q => !sched.includes(q));
   }
   const floorsL = LIFE.map(def => [def.name, def.zones, rest.filter(q => def.zones.includes(q.cat)), def.src]);
   const officeCats = Object.keys(SKILLS).filter(inOffice), roomless = Object.keys(SKILLS).filter(k => k !== 'work' && !SKILL_ZONE[k] && !inOffice(k));

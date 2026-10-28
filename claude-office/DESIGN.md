@@ -31,7 +31,7 @@ Two questions drive the design:
 
 ## 4. Progression and the XP curve
 
-> **Superseded on 2026-10-28** by the 3-year rebalance in section 6 (curve 60 + 49 × (L − 1)). The reasoning below is kept as history.
+> **Superseded on 2026-10-28** by the 3-year rebalance in section 6 (curve 308 + 44 × (L − 1)). The reasoning below is kept as history.
 
 ### Problem
 
@@ -144,7 +144,8 @@ Inside each facility, the same slot system applies (equipment chains bought with
 | Quest XP | minutes + finish bonus min(minutes, 5) |
 | Day curve | first 30 min ×2, 30–120 ×1, 120–240 ×0.5, beyond ×0.25 |
 | Bonuses | timer finished +20%, streak +2%/day up to +20%, path stage +3/6/10% |
-| Level curve | each level costs 60 + 49 × (L − 1) XP; Lv.100 at 243,639 |
+| Level curve | each level costs 308 + 44 × (L − 1) XP; Lv.100 at 243,936 (was 60 + 49 × (L − 1) until 2026-10-28: Lv.3 came on day one, too fast) |
+| Timed runs | pay for the minutes actually focused, up to the quest's length |
 | Coins | 1 per 10 XP (~20 a day at 2 h) |
 | Skills | 100 × (L − 1)² XP; trophies and studio tiers at skill Lv.3, 7, 12 |
 | Paths | stages at 4,000 / 18,000 / 60,000 path XP |
@@ -154,9 +155,9 @@ Inside each facility, the same slot system applies (equipment chains bought with
 
 | Player | XP a day | Lv.10 | Lv.25 | Lv.50 | Lv.80 | Lv.100 |
 |---|---:|---:|---:|---:|---:|---:|
-| 45 min a day | ~105 | 22 d | 4.7 mo | 1.6 y | 4 y | 6.3 y |
-| **2 h a day** | **~220** | **10 d** | **2.2 mo** | **9 mo** | **1.9 y** | **3 y** |
-| 4 h a day | ~320 | 7 d | 1.5 mo | 6.3 mo | 1.3 y | 2.1 y |
+| 45 min a day | ~105 | 41 d | 6.1 mo | 1.7 y | 4.2 y | 6.4 y |
+| **2 h a day** | **~220** | **20 d** | **2.9 mo** | **10 mo** | **2 y** | **3 y** |
+| 4 h a day | ~320 | 14 d | 2 mo | 6.9 mo | 1.4 y | 2.1 y |
 
 (6 active days a week, 70–80% of timers finished, typical streaks.) Late levels take ~2–3 weeks each, so the map and home unlocks carry the late game.
 

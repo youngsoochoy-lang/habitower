@@ -2,8 +2,8 @@
   "version": 1,
   "progression": {
     "curve": "linear",
-    "base": 60,
-    "step": 49,
+    "base": 308,
+    "step": 44,
     "day": [
       [
         30,

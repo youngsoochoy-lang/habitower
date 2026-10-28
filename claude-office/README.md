@@ -94,7 +94,7 @@ The default building has three studio buildings:
   - **The day's curve:** your first 30 minutes of the day count double, minutes 30–120 count once, 120–240 count half and anything beyond a quarter. A short day still moves you forward, and adding more activities or categories never races you to Lv.100.
   - **Bonuses:** finishing the full timer adds +20%, each day of your streak +2% (up to +20%), and your life path's stage +3%, +6% or +10% on its quests.
   - A free ▶ action (no quest) earns the same per minute, without the timer bonus.
-- **Levels:** Lv.2 costs 60 XP and each level after that costs 49 XP more than the one before. The curve is tuned for about 2 focused hours a day, 6 days a week: Lv.10 (2,304 XP) in about 10 days, Lv.25 (14,964) in about 2 months, Lv.50 (60,564) in about 9 months, Lv.80 (155,709) in about 2 years and Lv.100 (243,639) in about 3 years. Four hours a day gets there in about 2 years, 45 minutes a day in about 6.
+- **Levels:** Lv.2 costs 308 XP and each level after that costs 44 XP more than the one before. The curve is tuned for about 2 focused hours a day, 6 days a week: Lv.3 (660 XP) in about 3 days, Lv.10 (4,356) in about 3 weeks, Lv.25 (19,536) in about 3 months, Lv.50 (66,836) in about 10 months, Lv.80 (159,896) in about 2 years and Lv.100 (243,936) in about 3 years. A timed run pays for the minutes you actually focused, up to the quest's length. Four hours a day gets there in about 2 years, 45 minutes a day in about 6.
 - **Skills:** every category levels up too (Lv.2 at 100 XP, Lv.3 at 400, Lv.4 at 900, and so on: 100 × (L − 1)²). Room signs show the skill level. Trophy cups appear on the room's shelf, and the studio building grows a tier, at skill Lv.3, 7 and 12 (about 10 days, 3 months and 9 months at 30 minutes a day).
 - **Next unlock:** the pink chip next to the XP bar shows the next map and how much XP is left (hover it for the whole list). Reaching an unlock level shows a 🔓 banner. The maps themselves are still being built (see [DESIGN.md](DESIGN.md)).
 - **🧭 Life paths:** the 🧭 진로 tab shows what you focused on over the last 30 days, and five paths you can grow along: 💼 사업가, 🏅 운동선수, 🎨 크리에이터, 📚 학자 and 🌿 균형 잡힌 삶.
@@ -131,7 +131,7 @@ The server serves it at `GET /api/building` and saves it with `PUT /api/building
 ```jsonc
 {
   "version": 1,
-  "progression": { "curve": "linear", "base": 60, "step": 49, "day": [[30, 2], [120, 1], [240, 0.5], [null, 0.25]],
+  "progression": { "curve": "linear", "base": 308, "step": 44, "day": [[30, 2], [120, 1], [240, 0.5], [null, 0.25]],
                    "bonus": { "timer": 0.2, "streak": 0.02, "streakMax": 0.2 }, "work": { "perTurn": 2, "dayMax": 40 },
                    "coinRate": 10, "skill": 100, "tiers": [3, 7, 12] },   // every reward number
   "maps": [                               // places that unlock with your level (shown in the next-unlock chip)
@@ -167,7 +167,7 @@ The server serves it at `GET /api/building` and saves it with `PUT /api/building
 
 | Field | Meaning |
 |---|---|
-| `progression` | Every reward number. `curve`: `linear` (each level costs `base + step × (L − 1)` XP, default 60 and 49) or `sqrt` (`base × (L − 1)²` in total). `day`: the day's minute curve, `[upTo, rate]` steps with the last `upTo` null. `bonus`: `timer` (full timer), `streak` per day up to `streakMax`. `work`: XP per Claude turn and the daily cap. `coinRate`: XP per coin. `skill`: skill levels cost `skill × (L − 1)²`. `tiers`: the skill levels for trophy cups and studio tiers. Tune these together: the defaults put ~2 focused hours a day at Lv.100 in 3 years. |
+| `progression` | Every reward number. `curve`: `linear` (each level costs `base + step × (L − 1)` XP, default 308 and 44) or `sqrt` (`base × (L − 1)²` in total). `day`: the day's minute curve, `[upTo, rate]` steps with the last `upTo` null. `bonus`: `timer` (full timer), `streak` per day up to `streakMax`. `work`: XP per Claude turn and the daily cap. `coinRate`: XP per coin. `skill`: skill levels cost `skill × (L − 1)²`. `tiers`: the skill levels for trophy cups and studio tiers. Tune these together: the defaults put ~2 focused hours a day at Lv.100 in 3 years. |
 | `maps[]` | Places unlocked by level: `id`, `icon`, `ko`, `en`, `unlock.level`, `scene`. `planned: true` marks a map that is not built yet ("곧 열려요"). |
 | `pathRules` | When paths open up: `minLevel` (15), `focusShare` (0.45: the share of recent XP that suggests a path), `balancedMax` (0.4: below this for every path suggests 🌿), `windowDays` (30). |
 | `paths[]` | `id`, `icon`, `ko`, `en`, `desc`, `categories` (category ids, or `"*"` for all), `balanced`, `stages[]`. |
